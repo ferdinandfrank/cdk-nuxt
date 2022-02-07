@@ -1,4 +1,4 @@
-import {Duration, RemovalPolicy, Stack, StackProps, Tags, aws_lambda} from 'aws-cdk-lib';
+import {Duration, RemovalPolicy, Stack, Tags} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {Certificate, ICertificate} from "aws-cdk-lib/aws-certificatemanager";
 import {
@@ -11,7 +11,7 @@ import {
   SecurityPolicyProtocol,
   ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
-import {Architecture, Code, LayerVersion, Runtime} from "aws-cdk-lib/aws-lambda";
+import {Architecture, Code, LayerVersion, Runtime, Function} from "aws-cdk-lib/aws-lambda";
 import {BlockPublicAccess, Bucket, BucketAccessControl, IBucket} from "aws-cdk-lib/aws-s3";
 import {ARecord, AaaaRecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
 import {BucketDeployment, CacheControl, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
@@ -22,12 +22,7 @@ import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import { HttpLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 import {HttpApi} from "@aws-cdk/aws-apigatewayv2-alpha";
 import {NuxtAppStaticAssets} from "./nuxt-app-static-assets";
-
-export interface AppStackProps extends StackProps {
-  readonly project: string;
-  readonly service: string;
-  readonly environment: string;
-}
+import {AppStackProps} from "./app-stack-props";
 
 export interface NuxtAppStackProps extends AppStackProps {
   readonly baseDomain: string;
@@ -46,7 +41,7 @@ export class NuxtAppStack extends Stack {
   private readonly cdnAccessIdentity: IOriginAccessIdentity;
   public staticAssetsBucket: IBucket;
   private readonly layer: LayerVersion;
-  private readonly lambdaFunction: aws_lambda.Function;
+  private readonly lambdaFunction: Function;
   private apiGateway: HttpApi;
   private readonly httpsForwardingBehavior: BehaviorOptions;
   private readonly cdn: Distribution;
@@ -110,10 +105,10 @@ export class NuxtAppStack extends Stack {
     });
   }
 
-  private createLambdaFunction(): aws_lambda.Function {
+  private createLambdaFunction(): Function {
     const funcName = `${this.resourceIdPrefix}-function`;
 
-    return new aws_lambda.Function(this, funcName, {
+    return new Function(this, funcName, {
       functionName: funcName,
       runtime: Runtime.NODEJS_12_X,
       architecture: Architecture.ARM_64,

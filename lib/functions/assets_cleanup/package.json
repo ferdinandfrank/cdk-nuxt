@@ -1,0 +1,20 @@
+{
+  "name": "cdk-nuxt-assets-cleanup",
+  "version": "0.1.1",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "install-layer": "yarn install --frozen-lockfile --production --modules-folder build/layer/nodejs/node_modules",
+    "build": "tsc --project ./tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.0",
+    "ts-node": "^10.3.0",
+    "typescript": "^4.4.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.37.0",
+    "@sentry/serverless": "^6.13.0"
+  }
+}

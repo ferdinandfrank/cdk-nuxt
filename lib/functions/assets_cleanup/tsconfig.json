@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "outDir": "./build/app",
+    "target": "ES2021",
+    "module": "CommonJS",
+    "lib": [
+      "es2021"
+    ],
+    "declaration": true,
+    "alwaysStrict": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "inlineSourceMap": false,
+    "sourceRoot": "/",
+    "noEmitHelpers": true,
+    "importHelpers": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "*": ["./node_modules/*"]
+    },
+    "typeRoots": ["./node_modules/@types"],
+    "skipLibCheck": true
+  },
+  "include": ["./"],
+  "exclude": ["./build", "./node_modules"]
+}
