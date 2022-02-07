@@ -13,7 +13,7 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 import {Architecture, Code, LayerVersion, Runtime} from "aws-cdk-lib/aws-lambda";
 import {BlockPublicAccess, Bucket, BucketAccessControl, IBucket} from "aws-cdk-lib/aws-s3";
-import {ARecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
+import {ARecord, AaaaRecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
 import {BucketDeployment, CacheControl, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
 import {HttpOrigin, S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {CloudFrontTarget} from "aws-cdk-lib/aws-route53-targets";
@@ -51,7 +51,6 @@ export class NuxtAppStack extends Stack {
   private readonly httpsForwardingBehavior: BehaviorOptions;
   private readonly cdn: Distribution;
   private readonly hostedZone: IHostedZone;
-  private dnsRecord: ARecord;
 
   constructor(scope: Construct, id: string, props: NuxtAppStackProps) {
     super(scope, id, props);
@@ -73,7 +72,7 @@ export class NuxtAppStack extends Stack {
     this.cdn = this.createCloudFrontDistribution(props);
     this.configureDeployments();
     this.hostedZone = this.findHostedZone(props);
-    this.dnsRecord = this.createDnsRecord(props);
+    this.createDnsRecords(props);
   }
 
   private findTlsCertificate(props: NuxtAppStackProps): ICertificate {
@@ -263,10 +262,18 @@ export class NuxtAppStack extends Stack {
     });
   }
 
-  private createDnsRecord(props: NuxtAppStackProps): ARecord {
+  private createDnsRecords(props: NuxtAppStackProps): void {
     const dnsTarget = RecordTarget.fromAlias(new CloudFrontTarget(this.cdn));
 
-    return new ARecord(this, `${this.resourceIdPrefix}-a-record`, {
+    // Create a record for IPv4
+    new ARecord(this, `${this.resourceIdPrefix}-ipv4-record`, {
+      recordName: props.subDomain ? `${props.subDomain}.${props.baseDomain}` : props.baseDomain,
+      zone: this.hostedZone,
+      target: dnsTarget,
+    });
+
+    // Create a record for IPv6
+    new AaaaRecord(this, `${this.resourceIdPrefix}-ipv6-record`, {
       recordName: props.subDomain ? `${props.subDomain}.${props.baseDomain}` : props.baseDomain,
       zone: this.hostedZone,
       target: dnsTarget,
