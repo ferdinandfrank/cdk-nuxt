@@ -23,6 +23,7 @@ import { HttpLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-al
 import {HttpApi} from "@aws-cdk/aws-apigatewayv2-alpha";
 import {NuxtAppStaticAssets} from "./nuxt-app-static-assets";
 import {AppStackProps} from "./app-stack-props";
+import * as fs from "fs";
 
 export interface NuxtAppStackProps extends AppStackProps {
   readonly baseDomain: string;
@@ -235,7 +236,7 @@ export class NuxtAppStack extends Stack {
     ];
 
     // Returns a deployment for every configured static asset type to respect the different cache settings
-    return NuxtAppStaticAssets.map((asset, assetIndex) => {
+    return NuxtAppStaticAssets.filter(asset => fs.existsSync(asset.source)).map((asset, assetIndex) => {
       return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
         sources: [Source.asset(asset.source)],
         destinationBucket: this.staticAssetsBucket,
