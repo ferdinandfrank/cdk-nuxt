@@ -16,7 +16,7 @@ export interface NuxtAppAssetsCleanupProps extends AppStackProps {
 /**
  * Contains a scheduled lambda function, that deletes outdated static assets of the PWA from S3.
  */
-export class AssetsCleanupStack extends Stack {
+export class NuxtAppAssetsCleanupStack extends Stack {
 
     private readonly resourceIdPrefix: string;
     private staticAssetsBucket: IBucket;

@@ -5,6 +5,9 @@
     "lib"
   ],
   "main": "./lib/nuxt-app-stack.js",
+  "bin": {
+    "nuxt-deploy": "./lib/cli/deploy.js"
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
@@ -21,6 +24,7 @@
     "@aws-cdk/aws-apigatewayv2-integrations-alpha": "^2.10.0-alpha.0",
     "aws-cdk-lib": "2.10.0",
     "constructs": "^10.0.0",
+    "shelljs": "^0.8.5",
     "source-map-support": "^0.5.16"
   }
 }
