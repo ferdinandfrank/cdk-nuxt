@@ -39,7 +39,7 @@ export class NuxtAppAssetsCleanupStack extends Stack {
 
         return new LayerVersion(this, layerName, {
             layerVersionName: layerName,
-            code: Code.fromAsset(path.join(__dirname, 'functions/assets_cleanup/build/layer')),
+            code: Code.fromAsset(path.join(__dirname, '../functions/assets_cleanup/build/layer')),
             compatibleRuntimes: [Runtime.NODEJS_14_X],
         });
     }
@@ -53,7 +53,7 @@ export class NuxtAppAssetsCleanupStack extends Stack {
             architecture: Architecture.ARM_64,
             layers: [this.layer],
             handler: `index.handler`,
-            code: Code.fromAsset(path.join(__dirname, 'functions/assets_cleanup/build/app')),
+            code: Code.fromAsset(path.join(__dirname, '../functions/assets_cleanup/build/app')),
             timeout: Duration.minutes(1),
             memorySize: 128,
             logRetention: RetentionDays.TWO_WEEKS,
