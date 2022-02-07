@@ -5,7 +5,7 @@ import {NuxtAppAssetsCleanupProps, NuxtAppAssetsCleanupStack} from "./stack/nuxt
 
 // Extract the environment vars
 const requiredEnvVars: {[key: string]: string} = {
-    environment: process.env.ENVIRONMENT || '',
+    environment: process.env.CDK_ENVIRONMENT || '',
     project: process.env.CDK_PROJECT || '',
     service: process.env.CDK_SERVICE || '',
     domain: process.env.CDK_DOMAIN || '',

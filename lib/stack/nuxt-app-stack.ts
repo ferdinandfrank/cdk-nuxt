@@ -114,7 +114,7 @@ export class NuxtAppStack extends Stack {
       architecture: Architecture.ARM_64,
       layers: [this.layer],
       handler: 'lambda-handler.render',
-      code: Code.fromAsset('./deployment', {
+      code: Code.fromAsset('.nuxt/cdk-deployment', {
         exclude: ['**.svg', '**.ico', '**.png', '**.jpg', 'chunk.*.js*', 'bundle.*.js*', 'bundle.*.js*', 'sw.js*'],
       }),
       timeout: Duration.seconds(10),
