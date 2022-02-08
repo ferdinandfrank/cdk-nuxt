@@ -29,15 +29,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # Install dependencies
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          cd lib/functions/assets_cleanup && yarn install --frozen-lockfile && cd ../../..
+          yarn install --frozen-lockfile
 
-      # Build files
-      - name: Build
-        run: yarn build
+      - name: Build project
+        run: |
+          cd lib/functions/assets_cleanup && yarn build && cd ../../..
+          yarn build
 
-      # Publish package
       - name: Publish
         uses: JS-DevTools/npm-publish@v1
         with:

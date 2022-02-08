@@ -1,10 +1,4 @@
-import {AWSLambda} from "@sentry/serverless";
 import {DeleteObjectsCommand, ListObjectsV2Command, S3Client} from "@aws-sdk/client-s3";
-
-AWSLambda.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.ENVIRONMENT,
-});
 
 const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7;
 
@@ -98,6 +92,5 @@ exports.handler = async (event: any, context: any) => {
         console.log('Cleanup of old static assets finished.');
     } catch (error) {
         console.error('### unexpected runtime error ###', error);
-        AWSLambda.captureException(error);
     }
 };
