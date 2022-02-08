@@ -4,8 +4,6 @@
   "license": "MIT",
   "files": [
     "lib",
-    "index.js",
-    "index.ts",
     "index.d.ts"
   ],
   "main": "index.js",
