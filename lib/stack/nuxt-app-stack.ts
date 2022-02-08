@@ -26,8 +26,7 @@ import {AppStackProps} from "./app-stack-props";
 import * as fs from "fs";
 
 export interface NuxtAppStackProps extends AppStackProps {
-  readonly baseDomain: string;
-  readonly subDomain?: string;
+  readonly domain: string;
 
   // Used by the CDN, must be issued in us-east-1 (global)
   readonly globalTlsCertificateArn: string;
@@ -186,7 +185,7 @@ export class NuxtAppStack extends Stack {
     const cdnName = `${this.resourceIdPrefix}-cdn`;
 
     return new Distribution(this, cdnName, {
-      domainNames: props.subDomain ? [`${props.subDomain}.${props.baseDomain}`] : [props.baseDomain, `*.${props.baseDomain}`],
+      domainNames: [props.domain],
       comment: `${this.resourceIdPrefix}-redirect`,
       minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2018,
       certificate: this.tlsCertificate,
@@ -247,9 +246,11 @@ export class NuxtAppStack extends Stack {
   }
 
   private findHostedZone(props: NuxtAppStackProps): IHostedZone {
+    const domainParts = props.domain.split('.');
+
     return HostedZone.fromHostedZoneAttributes(this, `${this.resourceIdPrefix}-hosted-zone`, {
       hostedZoneId: props.hostedZoneId,
-      zoneName: props.baseDomain,
+      zoneName: domainParts[domainParts.length - 1], // Support subdomains
     });
   }
 
@@ -258,14 +259,14 @@ export class NuxtAppStack extends Stack {
 
     // Create a record for IPv4
     new ARecord(this, `${this.resourceIdPrefix}-ipv4-record`, {
-      recordName: props.subDomain ? `${props.subDomain}.${props.baseDomain}` : props.baseDomain,
+      recordName: props.domain,
       zone: this.hostedZone,
       target: dnsTarget,
     });
 
     // Create a record for IPv6
     new AaaaRecord(this, `${this.resourceIdPrefix}-ipv6-record`, {
-      recordName: props.subDomain ? `${props.subDomain}.${props.baseDomain}` : props.baseDomain,
+      recordName: props.domain,
       zone: this.hostedZone,
       target: dnsTarget,
     });
