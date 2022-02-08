@@ -94,7 +94,7 @@ export class NuxtAppStack extends Stack {
     const layerName = `${this.resourceIdPrefix}-ssr-layer`;
     return new LayerVersion(this, layerName, {
       layerVersionName: layerName,
-      code: Code.fromAsset('./server/layer'),
+      code: Code.fromAsset('.nuxt/cdk-deployment/layer'),
       compatibleRuntimes: [Runtime.NODEJS_12_X],
       description: `Contains node_modules required for server-side of ${this.resourceIdPrefix}.`,
     });
@@ -109,7 +109,7 @@ export class NuxtAppStack extends Stack {
       architecture: Architecture.ARM_64,
       layers: [this.layer],
       handler: 'index.handler',
-      code: Code.fromAsset('.nuxt/cdk-deployment', {
+      code: Code.fromAsset('.nuxt/cdk-deployment/src', {
         exclude: ['**.svg', '**.ico', '**.png', '**.jpg', 'chunk.*.js*', 'bundle.*.js*', 'bundle.*.js*', 'sw.js*'],
       }),
       timeout: Duration.seconds(10),
