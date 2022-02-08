@@ -3,7 +3,10 @@
   "version": "0.2.4",
   "license": "MIT",
   "files": [
-    "lib"
+    "lib",
+    "index.js",
+    "index.ts",
+    "index.d.ts"
   ],
   "main": "index.js",
   "types": "index.d.ts",
