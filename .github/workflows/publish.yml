@@ -17,6 +17,27 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      # Init cache to speed up yarn install
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - uses: actions/cache@v2
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Install dependencies
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # Build files
+      - name: Build
+        run: yarn build
+
+      # Publish package
       - name: Publish
         uses: JS-DevTools/npm-publish@v1
         with:
