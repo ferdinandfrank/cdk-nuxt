@@ -51,11 +51,6 @@ export class NuxtAppStack extends Stack {
   constructor(scope: Construct, id: string, props: NuxtAppStackProps) {
     super(scope, id, props);
 
-    Tags.of(scope).add('project', props.project);
-    Tags.of(scope).add('domain', props.subDomain ? `${props.subDomain}.${props.baseDomain}` : props.baseDomain);
-    Tags.of(scope).add('service', props.service);
-    Tags.of(scope).add('environment', props.environment);
-
     this.resourceIdPrefix = `${props.project}-${props.service}-${props.environment}`;
     this.deploymentRevision = new Date().toISOString();
     this.tlsCertificate = this.findTlsCertificate(props);

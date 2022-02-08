@@ -27,6 +27,9 @@ export class NuxtAppAssetsCleanupStack extends Stack {
     constructor(scope: Construct, id: string, props: NuxtAppAssetsCleanupProps) {
         super(scope, id, props);
 
+        // Note, that this stack can't be tagged independently of the NuxtAppStack, as both are sharing the
+        // same scope (CDK App). This would overwrite previous set tags for the CDK App (last one wins).
+
         this.resourceIdPrefix = `${props.project}-${props.service}-${props.environment}`;
         this.staticAssetsBucket = props.staticAssetsBucket;
         this.layer = this.createLayer();
