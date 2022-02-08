@@ -5,8 +5,8 @@
   "files": [
     "lib"
   ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
   "bin": {
     "nuxt-deploy": "./lib/cli/deploy.js"
   },
