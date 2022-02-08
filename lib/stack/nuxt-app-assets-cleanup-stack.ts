@@ -55,7 +55,7 @@ export class NuxtAppAssetsCleanupStack extends Stack {
             runtime: Runtime.NODEJS_14_X,
             architecture: Architecture.ARM_64,
             layers: [this.layer],
-            handler: `index.handler`,
+            handler: 'index.handler',
             code: Code.fromAsset(path.join(__dirname, '../functions/assets_cleanup/build/app')),
             timeout: Duration.minutes(1),
             memorySize: 128,

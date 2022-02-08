@@ -1,6 +1,5 @@
 !jest.config.js
 *.d.ts
-*.js
 node_modules
 .idea
 
@@ -8,4 +7,7 @@ node_modules
 .cdk.staging
 cdk.out
 
-dist
+# TS build files
+lib/functions/assets_cleanup/*.js
+lib/stack/*.js
+index.js

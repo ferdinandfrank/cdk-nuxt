@@ -109,7 +109,7 @@ export class NuxtAppStack extends Stack {
       runtime: Runtime.NODEJS_12_X,
       architecture: Architecture.ARM_64,
       layers: [this.layer],
-      handler: 'lambda-handler.render',
+      handler: 'index.handler',
       code: Code.fromAsset('.nuxt/cdk-deployment', {
         exclude: ['**.svg', '**.ico', '**.png', '**.jpg', 'chunk.*.js*', 'bundle.*.js*', 'bundle.*.js*', 'sw.js*'],
       }),
