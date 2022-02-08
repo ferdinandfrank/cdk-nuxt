@@ -17,7 +17,6 @@
   "devDependencies": {
     "@types/node": "10.17.27",
     "aws-cdk": "2.10.0",
-    "dotenv": "^16.0.0",
     "fs": "^0.0.1-security",
     "ts-node": "^9.0.0",
     "typescript": "~3.9.7"
