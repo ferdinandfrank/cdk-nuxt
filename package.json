@@ -4,7 +4,7 @@
   "files": [
     "lib"
   ],
-  "main": "./lib/nuxt-app-stack.js",
+  "main": "./lib/index.js",
   "bin": {
     "nuxt-deploy": "./lib/cli/deploy.js"
   },
