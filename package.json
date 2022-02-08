@@ -1,6 +1,6 @@
 {
   "name": "cdk-nuxt",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "license": "MIT",
   "files": [
     "lib",
@@ -30,10 +30,10 @@
     "source-map-support": "^0.5.16"
   },
   "peerDependencies": {
-    "typescript": "~3.9.7",
     "aws-cdk": "^2.10.0",
-    "ts-node": "^9.0.0",
     "nuxt-aws-lambda": "^1.5.0",
-    "nuxt-start": "^2.15.8"
+    "nuxt-start": "^2.15.8",
+    "ts-node": "^9.0.0",
+    "typescript": "~3.9.7"
   }
 }
