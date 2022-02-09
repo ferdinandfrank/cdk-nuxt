@@ -129,6 +129,13 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
             target: customAssetsTargetPath,
             contentType: 'text/plain; charset=UTF-8',
             cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
-        }
+        },
+        {
+            pattern: 'sw.js',
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            contentType: 'application/javascript; charset=UTF-8',
+            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(2))],
+        },
     ]
 };
