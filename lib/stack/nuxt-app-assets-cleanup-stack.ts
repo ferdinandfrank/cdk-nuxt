@@ -10,7 +10,6 @@ import * as path from "path";
 
 export interface NuxtAppAssetsCleanupProps extends AppStackProps {
     readonly staticAssetsBucket: IBucket;
-    readonly sentryDsn: string;
 }
 
 /**
@@ -62,7 +61,6 @@ export class NuxtAppAssetsCleanupStack extends Stack {
             logRetention: RetentionDays.TWO_WEEKS,
             environment: {
                 STATIC_ASSETS_BUCKET: this.staticAssetsBucket.bucketName,
-                SENTRY_DSN: props.sentryDsn,
                 ENVIRONMENT: props.environment,
                 AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
                 NODE_OPTIONS: '--enable-source-maps',
