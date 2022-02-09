@@ -57,6 +57,7 @@ export class NuxtAppAssetsCleanupStack extends Stack {
 
         const result: Function = new Function(this, functionName, {
             functionName: functionName,
+            description: `Auto-deletes the outdated static assets in the ${props.staticAssetsBucket.bucketName} S3 bucket.`,
             runtime: Runtime.NODEJS_14_X,
             architecture: Architecture.ARM_64,
             layers: [this.createNodeModulesLayer()],
@@ -90,6 +91,7 @@ export class NuxtAppAssetsCleanupStack extends Stack {
             layerVersionName: `${this.resourceIdPrefix}-layer`,
             code: Code.fromAsset(path.join(__dirname, '../functions/assets_cleanup/build/layer')),
             compatibleRuntimes: [Runtime.NODEJS_14_X],
+            description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
         });
     }
 

@@ -195,7 +195,7 @@ export class NuxtAppStack extends Stack {
       layerVersionName: layerName,
       code: Code.fromAsset('.nuxt/cdk-deployment/layer'),
       compatibleRuntimes: [Runtime.NODEJS_12_X],
-      description: `Contains the node_modules required for SSR of ${this.resourceIdPrefix}.`,
+      description: `Provides the node_modules required for SSR of ${this.resourceIdPrefix}.`,
     });
   }
 
@@ -209,6 +209,7 @@ export class NuxtAppStack extends Stack {
 
     return new Function(this, funcName, {
       functionName: funcName,
+      description: `Renders the ${this.resourceIdPrefix} Nuxt app.`,
       runtime: Runtime.NODEJS_12_X,
       architecture: Architecture.ARM_64,
       layers: [this.createSsrLambdaLayer()],
@@ -233,6 +234,7 @@ export class NuxtAppStack extends Stack {
     const apiName = `${this.resourceIdPrefix}-api`;
     const apiGateway = new HttpApi(this, apiName, {
       apiName,
+      description: `Connects the ${this.resourceIdPrefix} cloudfront distribution with the ${this.resourceIdPrefix} lambda function to make it publicly available.`,
       // The app does not allow any cross-origin access by purpose: the app should not be embeddable anywhere
       corsPreflight: undefined,
       defaultIntegration: lambdaIntegration,
