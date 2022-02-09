@@ -96,7 +96,7 @@ export class NuxtAppStack extends Stack {
       layerVersionName: layerName,
       code: Code.fromAsset('.nuxt/cdk-deployment/layer'),
       compatibleRuntimes: [Runtime.NODEJS_12_X],
-      description: `Contains node_modules required for server-side of ${this.resourceIdPrefix}.`,
+      description: `Contains the node_modules required for SSR of ${this.resourceIdPrefix}.`,
     });
   }
 
