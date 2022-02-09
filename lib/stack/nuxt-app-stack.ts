@@ -1,4 +1,4 @@
-import {Duration, RemovalPolicy, Stack, Tags} from 'aws-cdk-lib';
+import {Duration, RemovalPolicy, Stack} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {Certificate, ICertificate} from "aws-cdk-lib/aws-certificatemanager";
 import {
@@ -27,27 +27,91 @@ import * as fs from "fs";
 import {Rule, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 
+/**
+ * Defines the props required for the {@see NuxtAppStack}.
+ */
 export interface NuxtAppStackProps extends AppStackProps {
+  /**
+   * The domain (without the protocol) at which the Nuxt app shall be publicly available.
+   * A DNS record will be automatically created in Route53 for the domain.
+   * This also supports subdomains.
+   * Examples: "example.com", "sub.example.com"
+   */
   readonly domain: string;
 
-  // Used by the CDN, must be issued in us-east-1 (global)
-  readonly globalTlsCertificateArn: string;
-
+  /**
+   * The id of the hosted zone to create a DNS record for the specified domain.
+   */
   readonly hostedZoneId: string;
+
+  /**
+   * The ARN of the certificate to use for the Nuxt app to make it accessible via HTTPS.
+   * The certificate must be issued for the specified domain in us-east-1 (global) regardless of the
+   * region used for the Nuxt app itself.
+   */
+  readonly globalTlsCertificateArn: string;
 }
 
+/**
+ * Creates a lambda function that renders the Nuxt app and is publicly reachable via a specified domain.
+ */
 export class NuxtAppStack extends Stack {
+
+  /**
+   * The identifier prefix of the resources created by the stack.
+   *
+   * @private
+   */
   private readonly resourceIdPrefix: string;
+
+  /**
+   * The identifier for the current deployment that is used as S3 folder name
+   * to store the static assets of the Nuxt app.
+   *
+   * @private
+   */
   private readonly deploymentRevision: string;
+
+  /**
+   * The certificate to use for the Nuxt app to make it accessible via HTTPS.
+   *
+   * @private
+   */
   private readonly tlsCertificate: ICertificate;
+
+  /**
+   * The identity to use for accessing the deployment assets on S3.
+   *
+   * @private
+   */
   private readonly cdnAccessIdentity: IOriginAccessIdentity;
+
+  /**
+   * The S3 bucket where the deployment assets gets stored.
+   */
   public staticAssetsBucket: IBucket;
-  private readonly layer: LayerVersion;
+
+  /**
+   * The lambda function to render the Nuxt app on the server side.
+   *
+   * @private
+   */
   private readonly lambdaFunction: Function;
+
+  /**
+   * The API gateway to make the lambda function to render the Nuxt app publicly available.
+   *
+   * @private
+   */
   private apiGateway: HttpApi;
-  private readonly httpsForwardingBehavior: BehaviorOptions;
+
+  /**
+   * The cloudfront distribution to route incoming requests to the Nuxt lambda function (via the API gateway)
+   * or the S3 assets folder (with caching).
+   *
+   * @private
+   */
   private readonly cdn: Distribution;
-  private readonly hostedZone: IHostedZone;
 
   constructor(scope: Construct, id: string, props: NuxtAppStackProps) {
     super(scope, id, props);
@@ -57,33 +121,46 @@ export class NuxtAppStack extends Stack {
     this.tlsCertificate = this.findTlsCertificate(props);
     this.cdnAccessIdentity = this.createCdnAccessIdentity();
     this.staticAssetsBucket = this.createStaticAssetsBucket();
-    this.layer = this.createSsrLambdaLayer();
     this.lambdaFunction = this.createLambdaFunction();
     this.apiGateway = this.createApiGateway();
-    this.httpsForwardingBehavior = this.createHttpsForwardingBehavior();
     this.cdn = this.createCloudFrontDistribution(props);
     this.configureDeployments();
-    this.hostedZone = this.findHostedZone(props);
     this.createDnsRecords(props);
     this.createPingRule();
   }
 
+  /**
+   * Finds the certificate to use for providing HTTPS requests to our Nuxt app.
+   *
+   * @param props
+   * @private
+   */
   private findTlsCertificate(props: NuxtAppStackProps): ICertificate {
     return Certificate.fromCertificateArn(this, `${this.resourceIdPrefix}-tls-certificate`, props.globalTlsCertificateArn);
   }
 
+  /**
+   * Creates the identity to access our S3 deployment asset files via the cloudfront distribution.
+   *
+   * @private
+   */
   private createCdnAccessIdentity(): IOriginAccessIdentity {
     const originAccessIdentityName = `${this.resourceIdPrefix}-cdn-s3-access`;
     return new OriginAccessIdentity(this, originAccessIdentityName);
   }
 
+  /**
+   * Creates the bucket to store the static deployment asset files of the Nuxt app.
+   *
+   * @private
+   */
   private createStaticAssetsBucket(): IBucket {
     const bucketName = `${this.resourceIdPrefix}-assets`;
     const bucket = new Bucket(this, bucketName, {
       accessControl: BucketAccessControl.AUTHENTICATED_READ,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       bucketName,
-      // the bucket and all of its objects can be deleted, because all the content is managed in this project
+      // The bucket and all of its objects can be deleted, because all the content is managed in this project
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
@@ -93,6 +170,11 @@ export class NuxtAppStack extends Stack {
     return bucket;
   }
 
+  /**
+   * Creates a lambda layer with the node_modules required to render the Nuxt app on the server side.
+   *
+   * @private
+   */
   private createSsrLambdaLayer(): LayerVersion {
     const layerName = `${this.resourceIdPrefix}-ssr-layer`;
     return new LayerVersion(this, layerName, {
@@ -103,6 +185,11 @@ export class NuxtAppStack extends Stack {
     });
   }
 
+  /**
+   * Creates the lambda function to render the Nuxt app.
+   *
+   * @private
+   */
   private createLambdaFunction(): Function {
     const funcName = `${this.resourceIdPrefix}-function`;
 
@@ -110,7 +197,7 @@ export class NuxtAppStack extends Stack {
       functionName: funcName,
       runtime: Runtime.NODEJS_12_X,
       architecture: Architecture.ARM_64,
-      layers: [this.layer],
+      layers: [this.createSsrLambdaLayer()],
       handler: 'index.handler',
       code: Code.fromAsset('.nuxt/cdk-deployment/src', {
         exclude: ['**.svg', '**.ico', '**.png', '**.jpg', 'chunk.*.js*', 'bundle.*.js*', 'bundle.*.js*', 'sw.js*'],
@@ -118,11 +205,15 @@ export class NuxtAppStack extends Stack {
       timeout: Duration.seconds(10),
       memorySize: 512,
       logRetention: RetentionDays.ONE_MONTH,
-      environment: {},
       allowPublicSubnet: false
     });
   }
 
+  /**
+   * Creates the API gateway to make the Nuxt app render lambda function publicly available.
+   *
+   * @private
+   */
   private createApiGateway(): HttpApi {
     const lambdaIntegration = new HttpLambdaIntegration(`${this.resourceIdPrefix}-lambda-integration`, this.lambdaFunction);
     const apiName = `${this.resourceIdPrefix}-api`;
@@ -141,7 +232,34 @@ export class NuxtAppStack extends Stack {
     return apiGateway;
   }
 
-  private createHttpsForwardingBehavior(): BehaviorOptions {
+  /**
+   * Creates the cloudfront distribution that routes incoming requests to the Nuxt lambda function (via the API gateway)
+   * or the S3 assets folder (with caching).
+   *
+   * @param props
+   * @private
+   */
+  private createCloudFrontDistribution(props: NuxtAppStackProps): Distribution {
+    const cdnName = `${this.resourceIdPrefix}-cdn`;
+
+    return new Distribution(this, cdnName, {
+      domainNames: [props.domain],
+      comment: `${this.resourceIdPrefix}-redirect`,
+      minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2018,
+      certificate: this.tlsCertificate,
+      defaultBehavior: this.createNuxtAppRouteBehavior(),
+      additionalBehaviors: this.createStaticAssetsRouteBehavior(),
+      priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
+    });
+  }
+
+  /**
+   * Creates a behavior for the cloudfront distribution to route incoming requests to the Nuxt render lambda function (via API gateway).
+   * Additionally, this automatically redirects HTTP requests to HTTPS.
+   *
+   * @private
+   */
+  private createNuxtAppRouteBehavior(): BehaviorOptions {
     return {
       origin: new HttpOrigin(`${this.apiGateway.httpApiId}.execute-api.${this.region}.amazonaws.com`, {
         connectionAttempts: 2,
@@ -158,13 +276,14 @@ export class NuxtAppStack extends Stack {
   }
 
   /**
-   * Eventhough we don't want to cache SSR requests, we still have to create a cache policy, in order to
+   * Creates a cache policy for the Nuxt app route behavior of our cloudfront distribution.
+   * Eventhough we don't want to cache SSR requests, we still have to create this cache policy in order to
    * forward required cookies, query params and headers. This doesn't make any sense, because if nothing
    * is cached, one would expect, that anything would/could be forwarded, but anyway...
    */
   private createSsrCachePolicy(): ICachePolicy {
 
-    // The headers to pass to the app
+    // The headers to make accessible in our Nuxt app code
     const headers = [
       'User-Agent', // Required to distinguish between mobile and desktop template
       'Authorization', // For authorization
@@ -175,7 +294,7 @@ export class NuxtAppStack extends Stack {
       comment: `Passes all required request data to the ${this.resourceIdPrefix} origin.`,
       defaultTtl: Duration.seconds(0),
       minTtl: Duration.seconds(0),
-      maxTtl: Duration.seconds(1), // the max TTL must not be 0 for a cache policy
+      maxTtl: Duration.seconds(1), // The max TTL must not be 0 for a cache policy
       queryStringBehavior: CacheQueryStringBehavior.all(),
       headerBehavior: CacheHeaderBehavior.allowList(...headers),
       cookieBehavior: CacheCookieBehavior.all(),
@@ -184,21 +303,13 @@ export class NuxtAppStack extends Stack {
     });
   }
 
-  private createCloudFrontDistribution(props: NuxtAppStackProps): Distribution {
-    const cdnName = `${this.resourceIdPrefix}-cdn`;
-
-    return new Distribution(this, cdnName, {
-      domainNames: [props.domain],
-      comment: `${this.resourceIdPrefix}-redirect`,
-      minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2018,
-      certificate: this.tlsCertificate,
-      defaultBehavior: this.httpsForwardingBehavior,
-      additionalBehaviors: this.createStaticAssetBehaviors(),
-      priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
-    });
-  }
-
-  private createStaticAssetBehaviors(): Record<string, BehaviorOptions> {
+  /**
+   * Creates a behavior for the cloudfront distribution to route matching incoming requests for our static assets
+   * to the S3 bucket that holds these static assets.
+   *
+   * @private
+   */
+  private createStaticAssetsRouteBehavior(): Record<string, BehaviorOptions> {
     const staticAssetsCacheConfig: BehaviorOptions = {
       origin: new S3Origin(this.staticAssetsBucket, {
         connectionAttempts: 2,
@@ -222,8 +333,10 @@ export class NuxtAppStack extends Stack {
   }
 
   /**
+   * Uploads the static assets of the Nuxt app as defined in {@see NuxtAppStaticAssets} to the static assets S3 bucket.
    * In order to enable a zero-downtime deployment, we use a new subdirectory (revision) for every deployment.
-   * The previous versions are retained to allow clients to continue to work with an older revision.
+   * The previous versions are retained to allow clients to continue to work with an older revision but gets cleaned up
+   * after a specified period of time via the lambda function in the {@see NuxtAppAssetsCleanupStack}.
    */
   private configureDeployments(): BucketDeployment[] {
     const defaultCacheConfig = [
@@ -248,6 +361,12 @@ export class NuxtAppStack extends Stack {
     });
   }
 
+  /**
+   * Resolves the hosted zone at which the DNS records shall be created to access our Nuxt app on the internet.
+   *
+   * @param props
+   * @private
+   */
   private findHostedZone(props: NuxtAppStackProps): IHostedZone {
     const domainParts = props.domain.split('.');
 
@@ -257,24 +376,37 @@ export class NuxtAppStack extends Stack {
     });
   }
 
+  /**
+   * Creates the DNS records to access our Nuxt app on the internet via our custom domain.
+   *
+   * @param props
+   * @private
+   */
   private createDnsRecords(props: NuxtAppStackProps): void {
+    const hostedZone = this.findHostedZone(props);
     const dnsTarget = RecordTarget.fromAlias(new CloudFrontTarget(this.cdn));
 
     // Create a record for IPv4
     new ARecord(this, `${this.resourceIdPrefix}-ipv4-record`, {
       recordName: props.domain,
-      zone: this.hostedZone,
+      zone: hostedZone,
       target: dnsTarget,
     });
 
     // Create a record for IPv6
     new AaaaRecord(this, `${this.resourceIdPrefix}-ipv6-record`, {
       recordName: props.domain,
-      zone: this.hostedZone,
+      zone: hostedZone,
       target: dnsTarget,
     });
   }
 
+  /**
+   * Creates a scheduled rule to ping our Nuxt app lambda function every 5 minutes in order to keep it warm
+   * and speed up initial SSR requests.
+   *
+   * @private
+   */
   private createPingRule(): void {
     new Rule(this, `${this.resourceIdPrefix}-pinger-rule`, {
       ruleName: `${this.resourceIdPrefix}-pinger`,

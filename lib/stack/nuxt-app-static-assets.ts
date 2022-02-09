@@ -2,11 +2,31 @@ import {CacheControl} from "aws-cdk-lib/aws-s3-deployment";
 import {Duration} from "aws-cdk-lib";
 
 interface StaticAssetConfig {
-    pattern: string, // The pattern to use for accessing the files
-    contentType: string, // The type of the files to upload
-    source: string, // The local directory to upload the files from
-    target: string, // The remote path at which to make the uploaded files accessible
-    cacheControl?: CacheControl[] // The custom cache settings
+    /**
+     * The file pattern for the incoming requests that should be forwarded to the target path in the static assets S3 bucket
+     * with the appropriate cache and content settings defined in the same object.
+     */
+    pattern: string,
+
+    /**
+     * The local directory to upload the files from.
+     */
+    source: string,
+
+    /**
+     * The remote path at which to make the uploaded files from source accessible.
+     */
+    target: string,
+
+    /**
+     * The content type to set for the files in the source folder when uploading them to the target.
+     */
+    contentType: string,
+
+    /**
+     * The cache settings to use for the uploaded source files when accessing them on the target path with the specified pattern.
+     */
+    cacheControl?: CacheControl[]
 }
 
 const buildAssetsSourcePath = './.nuxt/dist/client';
@@ -15,8 +35,10 @@ const buildAssetsTargetPath = '/assets/'; // Must match 'build.publicPath' in nu
 const customAssetsSourcePath = './src/static';
 const customAssetsTargetPath = '/';
 
-// Defines the paths with their cache settings that shall be public available in our app
-// These should match the files in 'src/.nuxt/dist/client' and 'static'
+/**
+ * Defines the static assets of the Nuxt app that shall be publicly available.
+ * These should match the files in '.nuxt/dist/client' and 'static'.
+ */
 export const NuxtAppStaticAssets: StaticAssetConfig[] = [
 
     // Build Assets

@@ -8,44 +8,50 @@ import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import * as path from "path";
 
+/**
+ * Defines the props required for the {@see NuxtAppAssetsCleanupStack}.
+ */
 export interface NuxtAppAssetsCleanupProps extends AppStackProps {
+    /**
+     * The S3 bucket where the static assets of the Nuxt app are located.
+     */
     readonly staticAssetsBucket: IBucket;
 }
 
 /**
- * Contains a scheduled lambda function, that deletes outdated static assets of the PWA from S3.
+ * Creates a scheduled lambda function that deletes outdated static assets of the Nuxt app from S3
+ * to keep it nice without any outdated files that aren't used anymore.
  */
 export class NuxtAppAssetsCleanupStack extends Stack {
 
+    /**
+     * The identifier prefix of the resources created by the stack.
+     *
+     * @private
+     */
     private readonly resourceIdPrefix: string;
-    private staticAssetsBucket: IBucket;
-    private readonly layer: LayerVersion;
+
+    /**
+     * A reference to the created lambda function that cleanups the outdated static assets of the Nuxt app.
+     *
+     * @private
+     */
     private readonly lambdaFunction: Function;
-    private scheduledRule: Rule;
 
     constructor(scope: Construct, id: string, props: NuxtAppAssetsCleanupProps) {
         super(scope, id, props);
 
-        // Note, that this stack can't be tagged independently of the NuxtAppStack, as both are sharing the
-        // same scope (CDK App). This would overwrite previous set tags for the CDK App (last one wins).
-
         this.resourceIdPrefix = `${props.project}-${props.service}-${props.environment}`;
-        this.staticAssetsBucket = props.staticAssetsBucket;
-        this.layer = this.createLayer();
         this.lambdaFunction = this.createLambdaFunction(props);
-        this.scheduledRule = this.createRule(props);
+        this.createRule(props);
     }
 
-    private createLayer(): LayerVersion {
-        const layerName = `${this.resourceIdPrefix}-layer`;
-
-        return new LayerVersion(this, layerName, {
-            layerVersionName: layerName,
-            code: Code.fromAsset(path.join(__dirname, '../functions/assets_cleanup/build/layer')),
-            compatibleRuntimes: [Runtime.NODEJS_14_X],
-        });
-    }
-
+    /**
+     * Creates the lambda function that cleanups the outdated static assets of the Nuxt app.
+     *
+     * @param props
+     * @private
+     */
     private createLambdaFunction(props: NuxtAppAssetsCleanupProps): Function {
         const functionName: string = `${this.resourceIdPrefix}-function`;
 
@@ -53,14 +59,14 @@ export class NuxtAppAssetsCleanupStack extends Stack {
             functionName: functionName,
             runtime: Runtime.NODEJS_14_X,
             architecture: Architecture.ARM_64,
-            layers: [this.layer],
+            layers: [this.createNodeModulesLayer()],
             handler: 'index.handler',
             code: Code.fromAsset(path.join(__dirname, '../functions/assets_cleanup/build/app')),
             timeout: Duration.minutes(1),
             memorySize: 128,
             logRetention: RetentionDays.TWO_WEEKS,
             environment: {
-                STATIC_ASSETS_BUCKET: this.staticAssetsBucket.bucketName,
+                STATIC_ASSETS_BUCKET: props.staticAssetsBucket.bucketName,
                 ENVIRONMENT: props.environment,
                 AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
                 NODE_OPTIONS: '--enable-source-maps',
@@ -68,18 +74,36 @@ export class NuxtAppAssetsCleanupStack extends Stack {
         });
 
         // grant function access to S3 bucket
-        this.staticAssetsBucket.grantRead(result);
-        this.staticAssetsBucket.grantDelete(result);
+        props.staticAssetsBucket.grantRead(result);
+        props.staticAssetsBucket.grantDelete(result);
 
         return result;
     }
 
-    private createRule(props: NuxtAppAssetsCleanupProps): Rule {
+    /**
+     * Creates a lambda layer for the cleanup function that holds the required node_modules.
+     *
+     * @private
+     */
+    private createNodeModulesLayer(): LayerVersion {
+        return new LayerVersion(this, `${this.resourceIdPrefix}-layer`, {
+            layerVersionName: `${this.resourceIdPrefix}-layer`,
+            code: Code.fromAsset(path.join(__dirname, '../functions/assets_cleanup/build/layer')),
+            compatibleRuntimes: [Runtime.NODEJS_14_X],
+        });
+    }
 
-        // Schedule every tuesday at 03:30 AM GMT
-        return new Rule(this, `${this.resourceIdPrefix}-scheduler-rule`, {
+    /**
+     * Creates a scheduled rule that runs every tuesday at 03:30 AM GMT to trigger
+     * our cleanup lamda function.
+     *
+     * @param props
+     * @private
+     */
+    private createRule(props: NuxtAppAssetsCleanupProps): void {
+        new Rule(this, `${this.resourceIdPrefix}-scheduler-rule`, {
             ruleName: `${this.resourceIdPrefix}-scheduler`,
-            description: `Triggers a cleanup of outdated static assets of the ${props.project} app.`,
+            description: `Triggers a cleanup of the outdated static assets at the ${props.staticAssetsBucket.bucketName} S3 bucket.`,
             enabled: true,
             schedule: Schedule.cron({weekDay: '3', hour: '3', minute: '30'}),
             targets: [new LambdaFunction(this.lambdaFunction)],
