@@ -24,6 +24,8 @@ import {HttpApi} from "@aws-cdk/aws-apigatewayv2-alpha";
 import {NuxtAppStaticAssets} from "./nuxt-app-static-assets";
 import {AppStackProps} from "./app-stack-props";
 import * as fs from "fs";
+import {Rule, Schedule} from "aws-cdk-lib/aws-events";
+import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 
 export interface NuxtAppStackProps extends AppStackProps {
   readonly domain: string;
@@ -63,6 +65,7 @@ export class NuxtAppStack extends Stack {
     this.configureDeployments();
     this.hostedZone = this.findHostedZone(props);
     this.createDnsRecords(props);
+    this.createPingRule();
   }
 
   private findTlsCertificate(props: NuxtAppStackProps): ICertificate {
@@ -269,6 +272,16 @@ export class NuxtAppStack extends Stack {
       recordName: props.domain,
       zone: this.hostedZone,
       target: dnsTarget,
+    });
+  }
+
+  private createPingRule(): void {
+    new Rule(this, `${this.resourceIdPrefix}-pinger-rule`, {
+      ruleName: `${this.resourceIdPrefix}-pinger`,
+      description: `Pings the lambda function of the ${this.resourceIdPrefix} app every 5 minutes to keep it warm.`,
+      enabled: true,
+      schedule: Schedule.rate(Duration.minutes(5)),
+      targets: [new LambdaFunction(this.lambdaFunction)],
     });
   }
 }

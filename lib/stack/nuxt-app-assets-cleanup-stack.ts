@@ -77,11 +77,10 @@ export class NuxtAppAssetsCleanupStack extends Stack {
     }
 
     private createRule(props: NuxtAppAssetsCleanupProps): Rule {
-        const ruleName = `${this.resourceIdPrefix}-scheduled-rule`;
 
         // Schedule every tuesday at 03:30 AM GMT
-        return new Rule(this, ruleName, {
-            ruleName,
+        return new Rule(this, `${this.resourceIdPrefix}-scheduler-rule`, {
+            ruleName: `${this.resourceIdPrefix}-scheduler`,
             description: `Triggers a cleanup of outdated static assets of the ${props.project} app.`,
             enabled: true,
             schedule: Schedule.cron({weekDay: '3', hour: '3', minute: '30'}),
