@@ -30,14 +30,10 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: |
-          cd lib/functions/assets_cleanup && yarn install --frozen-lockfile && cd ../../..
-          yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile
 
       - name: Build project
-        run: |
-          cd lib/functions/assets_cleanup && yarn build && cd ../../..
-          yarn build
+        run: yarn build
 
       - name: Publish
         uses: JS-DevTools/npm-publish@v1
