@@ -1,5 +1,7 @@
 import {CacheControl} from "aws-cdk-lib/aws-s3-deployment";
 import {Duration} from "aws-cdk-lib";
+// @ts-ignore
+import * as NuxtConfig from "./nuxt.config.js"
 
 interface StaticAssetConfig {
     /**
@@ -30,9 +32,9 @@ interface StaticAssetConfig {
 }
 
 const buildAssetsSourcePath = './.nuxt/dist/client';
-const buildAssetsTargetPath = '/assets/'; // Must match 'build.publicPath' in nuxt.config.js
+const buildAssetsTargetPath = NuxtConfig.build.publicPath ?? '/_nuxt/'; // Must match 'build.publicPath' in nuxt.config.js
 
-const customAssetsSourcePath = './src/static';
+const customAssetsSourcePath = `.${NuxtConfig.srcDir ? (NuxtConfig.srcDir + '/') : ''}/static`;
 const customAssetsTargetPath = '/';
 
 /**
