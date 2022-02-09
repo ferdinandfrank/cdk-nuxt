@@ -31,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd lib/functions/assets_cleanup && yarn install --frozen-lockfile && yarn install-layer && cd ../../..
+          cd lib/functions/assets_cleanup && yarn install --frozen-lockfile && cd ../../..
           yarn install --frozen-lockfile
 
       - name: Build project

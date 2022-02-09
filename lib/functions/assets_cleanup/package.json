@@ -2,10 +2,6 @@
   "name": "cdk-nuxt-assets-cleanup",
   "version": "0.1.2",
   "main": "index.js",
-  "files": [
-    "build",
-    "node_modules"
-  ],
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
