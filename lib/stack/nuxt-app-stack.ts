@@ -21,11 +21,12 @@ import {HttpMethod} from "aws-cdk-lib/aws-stepfunctions-tasks";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import { HttpLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 import {HttpApi} from "@aws-cdk/aws-apigatewayv2-alpha";
-import {NuxtAppStaticAssets} from "./nuxt-app-static-assets";
+import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "./nuxt-app-static-assets";
 import {AppStackProps} from "./app-stack-props";
 import * as fs from "fs";
 import {Rule, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
+import {NuxtConfig} from "./nuxt-config";
 
 /**
  * Defines the props required for the {@see NuxtAppStack}.
@@ -50,6 +51,11 @@ export interface NuxtAppStackProps extends AppStackProps {
    * region used for the Nuxt app itself.
    */
   readonly globalTlsCertificateArn: string;
+
+  /**
+   * The nuxt.config.js of the Nuxt app.
+   */
+  readonly nuxtConfig: NuxtConfig;
 }
 
 /**
@@ -106,6 +112,13 @@ export class NuxtAppStack extends Stack {
   private apiGateway: HttpApi;
 
   /**
+   * The configs for the static assets of the Nuxt app that shall be publicly available.
+   *
+   * @private
+   */
+  private staticAssetConfigs: StaticAssetConfig[];
+
+  /**
    * The cloudfront distribution to route incoming requests to the Nuxt lambda function (via the API gateway)
    * or the S3 assets folder (with caching).
    *
@@ -118,6 +131,7 @@ export class NuxtAppStack extends Stack {
 
     this.resourceIdPrefix = `${props.project}-${props.service}-${props.environment}`;
     this.deploymentRevision = new Date().toISOString();
+    this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.nuxtConfig);
     this.tlsCertificate = this.findTlsCertificate(props);
     this.cdnAccessIdentity = this.createCdnAccessIdentity();
     this.staticAssetsBucket = this.createStaticAssetsBucket();
@@ -325,7 +339,7 @@ export class NuxtAppStack extends Stack {
     };
 
     const rules: Record<string, BehaviorOptions> = {};
-    NuxtAppStaticAssets.forEach(asset => {
+    this.staticAssetConfigs.forEach(asset => {
       rules[`${asset.target}${asset.pattern}`] = staticAssetsCacheConfig
     })
 
@@ -333,7 +347,7 @@ export class NuxtAppStack extends Stack {
   }
 
   /**
-   * Uploads the static assets of the Nuxt app as defined in {@see NuxtAppStaticAssets} to the static assets S3 bucket.
+   * Uploads the static assets of the Nuxt app as defined in {@see getNuxtAppStaticAssetConfigs} to the static assets S3 bucket.
    * In order to enable a zero-downtime deployment, we use a new subdirectory (revision) for every deployment.
    * The previous versions are retained to allow clients to continue to work with an older revision but gets cleaned up
    * after a specified period of time via the lambda function in the {@see NuxtAppAssetsCleanupStack}.
@@ -346,7 +360,7 @@ export class NuxtAppStack extends Stack {
     ];
 
     // Returns a deployment for every configured static asset type to respect the different cache settings
-    return NuxtAppStaticAssets.filter(asset => fs.existsSync(asset.source)).map((asset, assetIndex) => {
+    return this.staticAssetConfigs.filter(asset => fs.existsSync(asset.source)).map((asset, assetIndex) => {
       return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
         sources: [Source.asset(asset.source)],
         destinationBucket: this.staticAssetsBucket,
