@@ -74,6 +74,12 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
             contentType: 'application/json; charset=UTF-8'
         },
         {
+            pattern: '*.png',
+            source: buildAssetsTargetPath,
+            target: buildAssetsSourcePath,
+            contentType: 'image/png',
+        },
+        {
             pattern: '*.svg',
             target: buildAssetsTargetPath,
             source: buildAssetsSourcePath,
