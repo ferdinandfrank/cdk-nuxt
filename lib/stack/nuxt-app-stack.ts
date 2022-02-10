@@ -215,7 +215,7 @@ export class NuxtAppStack extends Stack {
       layers: [this.createSsrLambdaLayer()],
       handler: 'index.handler',
       code: Code.fromAsset('.nuxt/cdk-deployment/src', {
-        exclude: ['**.svg', '**.ico', '**.png', '**.jpg', 'chunk.*.js*', 'bundle.*.js*', 'bundle.*.js*', 'sw.js*'],
+        exclude: ['**.svg', '**.ico', '**.png', '**.jpg', '**.js.map'],
       }),
       timeout: Duration.seconds(10),
       memorySize: 512,
