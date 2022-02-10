@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 import {App} from "aws-cdk-lib";
 import {NuxtAppStack, NuxtAppStackProps, NuxtAppAssetsCleanupProps, NuxtAppAssetsCleanupStack, AppStackProps} from "cdk-nuxt";
-import * as NuxtConfig from "../nuxt.config";
+const NuxtConfig = require('../nuxt.config');
 
 const app: App = new App();
 
 const commonProps: AppStackProps = {
     // The AWS environment (account/region) where this stack will be deployed.
     env: {
+        // The ID of your AWS account on which to deploy the stack.
         account: 'XXXXXXXX',
+
+        // The AWS region where to deploy the Nuxt app.
         region: 'eu-central-1'
     },
     // A string identifier for the project the Nuxt app is part of. A project might have multiple different services.
