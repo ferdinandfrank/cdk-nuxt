@@ -57,6 +57,12 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
             source: buildAssetsSourcePath,
             contentType: 'application/json; charset=UTF-8',
         },
+        {
+            pattern: '*.css',
+            target: buildAssetsTargetPath,
+            source: buildAssetsSourcePath,
+            contentType: 'text/css; charset=UTF-8',
+        },
 
         // Manifest created by PWA module
         {
