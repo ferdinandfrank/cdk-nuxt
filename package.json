@@ -9,7 +9,8 @@
   "main": "index.js",
   "types": "index.d.ts",
   "bin": {
-    "nuxt-deploy": "./lib/cli/deploy.js"
+    "cdk-nuxt-init": "./lib/cli/init.js",
+    "cdk-nuxt-deploy": "./lib/cli/deploy.js"
   },
   "scripts": {
     "build": "tsc"
@@ -30,7 +31,7 @@
     "source-map-support": "^0.5.16"
   },
   "peerDependencies": {
-    "aws-cdk": "^2.10.0",
+    "aws-cdk": "2.10.0",
     "nuxt-aws-lambda": "^1.5.0",
     "nuxt-start": "^2.15.8",
     "ts-node": "^10.5.0",
