@@ -28,7 +28,7 @@ Easily deploy a dynamic universal Nuxt application via CDK on AWS including the 
     ```bash
     yarn add cdk-nuxt --dev # The package itself
     yarn add ts-node typescript --dev # To compile the CDK stacks via typescript
-    yarn add aws-cdk@2.10.0 --dev # CDK cli with this exact version for successfull CDK deployments
+    yarn add aws-cdk@2.10.0 --dev # CDK cli with this exact version for the deployment
     yarn add nuxt-aws-lambda nuxt-start # To make the Nuxt app renderable via AWS Lambda
     ```
 
@@ -41,19 +41,16 @@ After the installation steps the `package.json` file should look something like 
 ```json
 {
   "name": "nuxt-app",
-  ...
   "devDependencies": {
     "aws-cdk": "2.10.0",
     "cdk-nuxt": "^X.X.X",
     "nuxt": "^X.X.X",
     "ts-node": "^X.X.X",
-    "typescript": "^X.X.X",
-    ...
+    "typescript": "^X.X.X"
   },
   "dependencies": {
     "nuxt-aws-lambda": "^X.X.X",
-    "nuxt-start": "^X.X.X",
-    ...
+    "nuxt-start": "^X.X.X"
   }
 }
 ```
