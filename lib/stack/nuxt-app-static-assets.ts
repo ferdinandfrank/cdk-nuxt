@@ -57,27 +57,13 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
             source: buildAssetsSourcePath,
             contentType: 'application/json; charset=UTF-8',
         },
-        {
-            pattern: 'sw.js',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'application/javascript; charset=UTF-8',
-            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
-        },
-        {
-            pattern: 'sw.js.map',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'application/json; charset=UTF-8',
-            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
-        },
+
         // Manifest created by PWA module
         {
             pattern: 'manifest.*.json',
             target: buildAssetsTargetPath,
             source: buildAssetsSourcePath,
-            contentType: 'application/json; charset=UTF-8',
-            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(2))],
+            contentType: 'application/json; charset=UTF-8'
         },
         {
             pattern: '*.svg',
