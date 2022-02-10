@@ -125,10 +125,12 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
             cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
         },
         {
-            pattern: 'sw.js',
+            pattern: '*.js',
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
             contentType: 'application/javascript; charset=UTF-8',
+            // The js files in the custom static directory are usually not versionized
+            // whereby we want to prevent any caching issues when updating them -> cache for only 2 days
             cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(2))],
         },
     ]
