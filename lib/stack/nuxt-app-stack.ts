@@ -373,6 +373,7 @@ export class NuxtAppStack extends Stack {
         include: [asset.pattern],
         cacheControl: asset.cacheControl ?? defaultCacheConfig,
         contentType: asset.contentType,
+        logRetention: RetentionDays.ONE_DAY,
         memoryLimit: 256 // Some Nuxt applications have a lot of assets to deploy whereby the function might run out of memory
       })
     });
