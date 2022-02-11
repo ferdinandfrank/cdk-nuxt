@@ -139,5 +139,12 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
             // whereby we want to prevent any caching issues when updating them -> cache for only 2 days
             cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(2))],
         },
+        {
+            pattern: '.well-known/*',
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            contentType: 'application/json; charset=UTF-8',
+            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
+        },
     ]
 };
