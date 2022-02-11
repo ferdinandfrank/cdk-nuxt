@@ -75,8 +75,8 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
         },
         {
             pattern: '*.png',
-            source: buildAssetsTargetPath,
-            target: buildAssetsSourcePath,
+            target: buildAssetsTargetPath,
+            source: buildAssetsSourcePath,
             contentType: 'image/png',
         },
         {
