@@ -124,6 +124,18 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
             contentType: 'image/jpg',
         },
         {
+            pattern: '*.svg',
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            contentType: 'image/svg+xml',
+        },
+        {
+            pattern: '*.ico', // Favicon
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            contentType: 'image/x-icon',
+        },
+        {
             pattern: 'robots.txt',
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
