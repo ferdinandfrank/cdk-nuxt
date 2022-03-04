@@ -30,9 +30,17 @@ const appStackProps: NuxtAppStackProps = {
     ...commonProps,
     // The domain (without the protocol) at which the Nuxt app shall be publicly available.
     domain: 'example.com',
-    // The ARN of the certificate to use for the Nuxt app to make it accessible via HTTPS.
-    // The certificate must be issued for the specified domain in us-east-1 (global) regardless of the region used for the Nuxt app itself.
+
+    // The ARN of the certificate to use on CloudFront for the Nuxt app to make it accessible via HTTPS.
+    // The certificate must be issued for the specified domain in us-east-1 (global) regardless of the
+    // region specified via 'env.region' as CloudFront only works globally.
     globalTlsCertificateArn: 'arn:aws:acm:us-east-1:XXXXXXXXXX:certificate/XXXXXXXXXXXXXXXXX',
+
+    // The ARN of the certificate to use at the ApiGateway for the Nuxt app to make it accessible via the custom domain
+    // and to provide the custom domain to the Nuxt app on server side rendering.
+    // The certificate must be issued in the same region as specified via 'env.region' as ApiGateway works regionally.
+    regionalTlsCertificateArn: 'arn:aws:acm:eu-central-1:XXXXXXXXXX:certificate/XXXXXXXXXXXXXXXXX',
+
     // The id of the hosted zone to create a DNS record for the specified domain.
     hostedZoneId: 'XXXXXXXXXXXXX',
 
