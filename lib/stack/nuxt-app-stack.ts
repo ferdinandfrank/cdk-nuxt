@@ -27,7 +27,7 @@ import {CloudFrontTarget} from "aws-cdk-lib/aws-route53-targets";
 import {HttpMethod} from "aws-cdk-lib/aws-stepfunctions-tasks";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import {HttpLambdaIntegration} from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
-import {DomainName, HttpApi} from "@aws-cdk/aws-apigatewayv2-alpha";
+import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "@aws-cdk/aws-apigatewayv2-alpha";
 import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "./nuxt-app-static-assets";
 import {AppStackProps} from "./app-stack-props";
 import * as fs from "fs";
@@ -245,8 +245,10 @@ export class NuxtAppStack extends Stack {
         // to be able to redirect the original 'Host' header to our Nuxt application, if requested.
         const domainName = new DomainName(this, `${this.resourceIdPrefix}-api-domain`, {
             domainName: props.domain,
-            certificate: this.tlsCertificate
-        })
+            certificate: this.tlsCertificate,
+            endpointType: EndpointType.REGIONAL,
+            securityPolicy: SecurityPolicy.TLS_1_2
+        });
 
         const apiGateway = new HttpApi(this, apiName, {
             apiName,
@@ -264,6 +266,7 @@ export class NuxtAppStack extends Stack {
             path: '/{proxy+}',
             methods: [HttpMethod.GET, HttpMethod.HEAD],
         });
+
         return apiGateway;
     }
 
