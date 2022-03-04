@@ -61,7 +61,7 @@ export interface NuxtAppStackProps extends AppStackProps {
 
     /**
      * The ARN of the certificate to use at the ApiGateway for the Nuxt app to make it accessible via the custom domain
-     * and to provide the custom domain to the Nuxt app on server side rendering.
+     * and to provide the custom domain to the Nuxt app via the 'Host' header for server side rendering use cases.
      * The certificate must be issued in the same region as specified via 'env.region' as ApiGateway works regionally.
      */
     readonly regionalTlsCertificateArn: string;
@@ -73,7 +73,7 @@ export interface NuxtAppStackProps extends AppStackProps {
 }
 
 /**
- * Creates a lambda function that renders the Nuxt app and is publicly reachable via a specified domain.
+ * Creates a Lambda function that renders the Nuxt app and is publicly reachable via a specified domain.
  */
 export class NuxtAppStack extends Stack {
 
@@ -105,14 +105,14 @@ export class NuxtAppStack extends Stack {
     public staticAssetsBucket: IBucket;
 
     /**
-     * The lambda function to render the Nuxt app on the server side.
+     * The Lambda function to render the Nuxt app on the server side.
      *
      * @private
      */
     private readonly lambdaFunction: Function;
 
     /**
-     * The API gateway to make the lambda function to render the Nuxt app publicly available.
+     * The API gateway to make the Lambda function to render the Nuxt app publicly available.
      *
      * @private
      */
@@ -126,7 +126,7 @@ export class NuxtAppStack extends Stack {
     private staticAssetConfigs: StaticAssetConfig[];
 
     /**
-     * The CloudFront distribution to route incoming requests to the Nuxt lambda function (via the API gateway)
+     * The CloudFront distribution to route incoming requests to the Nuxt Lambda function (via the API gateway)
      * or the S3 assets folder (with caching).
      *
      * @private
@@ -181,7 +181,7 @@ export class NuxtAppStack extends Stack {
     }
 
     /**
-     * Creates a lambda layer with the node_modules required to render the Nuxt app on the server side.
+     * Creates a Lambda layer with the node_modules required to render the Nuxt app on the server side.
      *
      * @private
      */
@@ -196,7 +196,7 @@ export class NuxtAppStack extends Stack {
     }
 
     /**
-     * Creates the lambda function to render the Nuxt app.
+     * Creates the Lambda function to render the Nuxt app.
      *
      * @private
      */
@@ -221,7 +221,7 @@ export class NuxtAppStack extends Stack {
     }
 
     /**
-     * Creates the API gateway to make the Nuxt app render lambda function publicly available.
+     * Creates the API gateway to make the Nuxt app render Lambda function publicly available.
      *
      * @private
      */
@@ -241,7 +241,7 @@ export class NuxtAppStack extends Stack {
 
         const apiGateway = new HttpApi(this, apiName, {
             apiName,
-            description: `Connects the ${this.resourceIdPrefix} CloudFront distribution with the ${this.resourceIdPrefix} lambda function to make it publicly available.`,
+            description: `Connects the ${this.resourceIdPrefix} CloudFront distribution with the ${this.resourceIdPrefix} Lambda function to make it publicly available.`,
             // The app does not allow any cross-origin access by purpose: the app should not be embeddable anywhere
             corsPreflight: undefined,
             defaultIntegration: lambdaIntegration,
@@ -260,7 +260,7 @@ export class NuxtAppStack extends Stack {
     }
 
     /**
-     * Creates the CloudFront distribution that routes incoming requests to the Nuxt lambda function (via the API gateway)
+     * Creates the CloudFront distribution that routes incoming requests to the Nuxt Lambda function (via the API gateway)
      * or the S3 assets folder (with caching).
      *
      * @param props
@@ -281,7 +281,7 @@ export class NuxtAppStack extends Stack {
     }
 
     /**
-     * Creates a behavior for the CloudFront distribution to route incoming requests to the Nuxt render lambda function (via API gateway).
+     * Creates a behavior for the CloudFront distribution to route incoming requests to the Nuxt render Lambda function (via API gateway).
      * Additionally, this automatically redirects HTTP requests to HTTPS.
      *
      * @private
@@ -365,7 +365,7 @@ export class NuxtAppStack extends Stack {
      * Uploads the static assets of the Nuxt app as defined in {@see getNuxtAppStaticAssetConfigs} to the static assets S3 bucket.
      * In order to enable a zero-downtime deployment, we use a new subdirectory (revision) for every deployment.
      * The previous versions are retained to allow clients to continue to work with an older revision but gets cleaned up
-     * after a specified period of time via the lambda function in the {@see NuxtAppAssetsCleanupStack}.
+     * after a specified period of time via the Lambda function in the {@see NuxtAppAssetsCleanupStack}.
      */
     private configureDeployments(): BucketDeployment[] {
         const defaultCacheConfig = [
@@ -433,7 +433,7 @@ export class NuxtAppStack extends Stack {
     }
 
     /**
-     * Creates a scheduled rule to ping the Nuxt app lambda function every 5 minutes in order to keep it warm
+     * Creates a scheduled rule to ping the Nuxt app Lambda function every 5 minutes in order to keep it warm
      * and speed up initial SSR requests.
      *
      * @private
@@ -441,7 +441,7 @@ export class NuxtAppStack extends Stack {
     private createPingRule(): void {
         new Rule(this, `${this.resourceIdPrefix}-pinger-rule`, {
             ruleName: `${this.resourceIdPrefix}-pinger`,
-            description: `Pings the lambda function of the ${this.resourceIdPrefix} app every 5 minutes to keep it warm.`,
+            description: `Pings the Lambda function of the ${this.resourceIdPrefix} app every 5 minutes to keep it warm.`,
             enabled: true,
             schedule: Schedule.rate(Duration.minutes(5)),
             targets: [new LambdaFunction(this.lambdaFunction)],
