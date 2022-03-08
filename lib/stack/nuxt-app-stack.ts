@@ -70,6 +70,12 @@ export interface NuxtAppStackProps extends AppStackProps {
      * The nuxt.config.js of the Nuxt app.
      */
     readonly nuxtConfig: NuxtConfig;
+
+    /**
+     * The memory size to apply to the Nuxt app's Lambda.
+     * Defaults to 512MB.
+     */
+    readonly memorySize?: number;
 }
 
 /**
@@ -141,7 +147,7 @@ export class NuxtAppStack extends Stack {
         this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.nuxtConfig);
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
-        this.lambdaFunction = this.createLambdaFunction();
+        this.lambdaFunction = this.createLambdaFunction(props);
         this.apiGateway = this.createApiGateway(props);
         this.cdn = this.createCloudFrontDistribution(props);
         this.configureDeployments();
@@ -200,7 +206,7 @@ export class NuxtAppStack extends Stack {
      *
      * @private
      */
-    private createLambdaFunction(): Function {
+    private createLambdaFunction(props: NuxtAppStackProps): Function {
         const funcName = `${this.resourceIdPrefix}-function`;
 
         return new Function(this, funcName, {
@@ -214,7 +220,7 @@ export class NuxtAppStack extends Stack {
                 exclude: ['**.svg', '**.ico', '**.png', '**.jpg', '**.js.map'],
             }),
             timeout: Duration.seconds(10),
-            memorySize: 512,
+            memorySize: props.memorySize ?? 512,
             logRetention: RetentionDays.ONE_MONTH,
             allowPublicSubnet: false
         });
