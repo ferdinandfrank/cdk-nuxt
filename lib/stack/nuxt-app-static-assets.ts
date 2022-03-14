@@ -112,6 +112,34 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
 
         // Custom Static Assets
         {
+            pattern: 'robots.txt', // See https://developers.google.com/search/docs/advanced/robots/intro
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            contentType: 'text/plain; charset=UTF-8',
+            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
+        },
+        {
+            pattern: '*sitemap.xml', // Support various sitemaps, e.g., sitemap.xml or google-news-sitemap.xml
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            contentType: 'text/xml; charset=UTF-8',
+            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
+        },
+        {
+            pattern: '/sitemaps/*.xml', // Nested sitemap files for sitemap index
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            contentType: 'text/xml; charset=UTF-8',
+            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
+        },
+        {
+            pattern: '.well-known/*', // Files for native app links
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            contentType: 'application/json; charset=UTF-8',
+            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
+        },
+        {
             pattern: '*.png',
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
@@ -136,13 +164,6 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
             contentType: 'image/x-icon',
         },
         {
-            pattern: 'robots.txt',
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-            contentType: 'text/plain; charset=UTF-8',
-            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
-        },
-        {
             pattern: '*.js',
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
@@ -150,13 +171,6 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
             // The js files in the custom static directory are usually not versionized
             // whereby we want to prevent any caching issues when updating them -> cache for only 2 days
             cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(2))],
-        },
-        {
-            pattern: '.well-known/*',
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-            contentType: 'application/json; charset=UTF-8',
-            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
-        },
+        }
     ]
 };
