@@ -126,7 +126,7 @@ export const getNuxtAppStaticAssetConfigs = (nuxtConfig: NuxtConfig): StaticAsse
             cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
         },
         {
-            pattern: '/sitemaps/*.xml', // Nested sitemap files for sitemap index
+            pattern: 'sitemaps/*.xml', // Nested sitemap files for sitemap index
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
             contentType: 'text/xml; charset=UTF-8',
