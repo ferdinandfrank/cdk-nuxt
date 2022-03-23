@@ -18,7 +18,7 @@ import {
     SecurityPolicyProtocol,
     ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
-import {Architecture, Code, Function, LayerVersion, Runtime} from "aws-cdk-lib/aws-lambda";
+import {Architecture, Code, Function, LayerVersion, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {BlockPublicAccess, Bucket, BucketAccessControl, IBucket} from "aws-cdk-lib/aws-s3";
 import {AaaaRecord, ARecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
 import {BucketDeployment, CacheControl, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
@@ -76,6 +76,11 @@ export interface NuxtAppStackProps extends AppStackProps {
      * Defaults to 512MB.
      */
     readonly memorySize?: number;
+
+    /**
+     * Whether to enable AWS X-Ray for the Nuxt Lambda function.
+     */
+    readonly enableTracing?: boolean;
 }
 
 /**
@@ -222,7 +227,8 @@ export class NuxtAppStack extends Stack {
             timeout: Duration.seconds(10),
             memorySize: props.memorySize ?? 512,
             logRetention: RetentionDays.ONE_MONTH,
-            allowPublicSubnet: false
+            allowPublicSubnet: false,
+            tracing: props.enableTracing ? Tracing.ACTIVE : Tracing.DISABLED
         });
     }
 
