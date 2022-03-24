@@ -29,7 +29,7 @@ Easily deploy a dynamic universal Nuxt application via CDK on AWS including the 
     yarn add cdk-nuxt --dev # The package itself
     yarn add ts-node typescript --dev # To compile the CDK stacks via typescript
     yarn add aws-cdk@2.15.0 --dev # CDK cli with this exact version for the deployment
-    yarn add nuxt-aws-lambda nuxt-start # To make the Nuxt app renderable via AWS Lambda
+    yarn add nuxt-aws-lambda nuxt-start # To make the Nuxt app renderable via the default Lambda handler (not required when using your own Lambda handler)
     ```
 
 2. Move the `nuxt` dependency to `devDependencies` as we installed `nuxt-start` to start our Nuxt app.<br/>Also, make sure that only the dependencies required for server-side rendering (SSR) are listed under `dependencies` to have the Lambda function and its layer as small as possible for better performance and to respect the [Lambda size limits](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html). Every other dependency should be under `devDependencies`. 
@@ -94,6 +94,21 @@ After the installation and the setup you are already good to go to build the Nux
    node_modules/.bin/cdk-nuxt-deploy
    ```
    The deployment script will take care of installing only the dependencies that are required for the Nuxt app and deploying the Nuxt build files to AWS according to the stack settings in `stack/index.ts`.<br/>See the section Used AWS Resources for details on which resources will exactly be created on AWS.
+
+## Optional: Customize the Lambda handler
+
+The package takes advantage of the `nuxt-start` and `aws-lambda` modules to automatically provide a Lambda handler for the Nuxt app. 
+If you need more control over the entrypoint of the Lambda function, e.g., for adding additional logging or performance monitoring, feel free to specify your own handler within a file `server/index.js` within your root directory.
+If a file `server/index.js` exists, the package will use this file as the entrypoint for the Lambda.
+The file `server/index.js` must export a function called `handler` to work properly.
+Feel free to take the following content of the package's default handler as a template:
+
+```js
+const { createNuxtHandler } = require('nuxt-aws-lambda')
+const config = require('./nuxt.config.js')
+
+module.exports.handler = createNuxtHandler(config)
+```
 
 ## Optional: Automatically deploy on every push (CD) via [GitHub Actions](https://github.com/features/actions)
 
