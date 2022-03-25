@@ -29,7 +29,7 @@ Easily deploy a dynamic universal Nuxt application via CDK on AWS including the 
     yarn add cdk-nuxt --dev # The package itself
     yarn add ts-node typescript --dev # To compile the CDK stacks via typescript
     yarn add aws-cdk@2.15.0 --dev # CDK cli with this exact version for the deployment
-    yarn add nuxt-aws-lambda nuxt-start # To make the Nuxt app renderable via the default Lambda handler (not required when using your own Lambda handler)
+    yarn add @vendia/serverless-express nuxt-start # To make the Nuxt app renderable via the default Lambda handler (not required when using your own Lambda handler)
     ```
 
 2. Move the `nuxt` dependency to `devDependencies` as we installed `nuxt-start` to start our Nuxt app.<br/>Also, make sure that only the dependencies required for server-side rendering (SSR) are listed under `dependencies` to have the Lambda function and its layer as small as possible for better performance and to respect the [Lambda size limits](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html). Every other dependency should be under `devDependencies`. 
@@ -49,7 +49,7 @@ After the installation steps the `package.json` file should look something like 
     "typescript": "^X.X.X"
   },
   "dependencies": {
-    "nuxt-aws-lambda": "^X.X.X",
+    "@vendia/serverless-express": "^X.X.X",
     "nuxt-start": "^X.X.X"
   }
 }
@@ -104,10 +104,32 @@ The file `server/index.js` must export a function called `handler` to work prope
 Feel free to take the following content of the package's default handler as a template:
 
 ```js
-const { createNuxtHandler } = require('nuxt-aws-lambda')
-const config = require('./nuxt.config.js')
+const serverlessExpress = require('@vendia/serverless-express');
+const config = require('./nuxt.config.js');
+const { Nuxt } = require('nuxt-start');
 
-module.exports.handler = createNuxtHandler(config)
+const nuxt = new Nuxt({
+   ...config,
+   dev: false,
+   _start: true,
+})
+const app = nuxt.server.app;
+
+let serverlessExpressInstance = null;
+async function initNuxt(event, context) {
+   await nuxt.ready();
+   serverlessExpressInstance = serverlessExpress({ app, eventSourceName: 'AWS_API_GATEWAY_V2' })
+
+   return serverlessExpressInstance(event, context)
+}
+
+exports.handler = async (event, context) => {
+   if (serverlessExpressInstance) {
+      return serverlessExpressInstance(event, context)
+   }
+
+   return await initNuxt(event, context)
+}
 ```
 
 ## Optional: Automatically deploy on every push (CD) via [GitHub Actions](https://github.com/features/actions)
