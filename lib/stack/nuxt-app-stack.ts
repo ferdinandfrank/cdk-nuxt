@@ -31,7 +31,7 @@ import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "@aws-cdk/aws-ap
 import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "./nuxt-app-static-assets";
 import {AppStackProps} from "./app-stack-props";
 import * as fs from "fs";
-import {Rule, Schedule} from "aws-cdk-lib/aws-events";
+import {Rule, RuleTargetInput, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import {NuxtConfig} from "./nuxt-config";
 
@@ -157,7 +157,7 @@ export class NuxtAppStack extends Stack {
         this.cdn = this.createCloudFrontDistribution(props);
         this.configureDeployments();
         this.createDnsRecords(props);
-        this.createPingRule();
+        this.createPingRule(props);
     }
 
     /**
@@ -450,13 +450,31 @@ export class NuxtAppStack extends Stack {
      *
      * @private
      */
-    private createPingRule(): void {
+    private createPingRule(props: NuxtAppStackProps): void {
+        const fakeApiGatewayEventData = {
+            "version": "2.0",
+            "routeKey": "GET /{proxy+}",
+            "rawPath": "/",
+            "rawQueryString": "",
+            "headers": {},
+            "requestContext": {
+                "domainName": props.domain,
+                "http": {
+                    "method": "GET",
+                    "path": "/",
+                    "protocol": "HTTP/1.1"
+                }
+            }
+        };
+
         new Rule(this, `${this.resourceIdPrefix}-pinger-rule`, {
             ruleName: `${this.resourceIdPrefix}-pinger`,
             description: `Pings the Lambda function of the ${this.resourceIdPrefix} app every 5 minutes to keep it warm.`,
             enabled: true,
             schedule: Schedule.rate(Duration.minutes(5)),
-            targets: [new LambdaFunction(this.lambdaFunction)],
+            targets: [new LambdaFunction(this.lambdaFunction, {
+                event: RuleTargetInput.fromObject(fakeApiGatewayEventData)
+            })],
         });
     }
 }

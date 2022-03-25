@@ -118,7 +118,7 @@ const app = nuxt.server.app;
 let serverlessExpressInstance = null;
 async function initNuxt(event, context) {
    await nuxt.ready();
-   serverlessExpressInstance = serverlessExpress({ app, eventSourceName: 'AWS_API_GATEWAY_V2' })
+   serverlessExpressInstance = serverlessExpress({ app })
 
    return serverlessExpressInstance(event, context)
 }
