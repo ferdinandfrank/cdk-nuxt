@@ -1,6 +1,6 @@
 {
   "name": "cdk-nuxt",
-  "version": "0.4.7",
+  "version": "0.5.0",
   "license": "MIT",
   "files": [
     "lib",
@@ -31,8 +31,8 @@
     "source-map-support": "^0.5.16"
   },
   "peerDependencies": {
-    "aws-cdk": "2.15.0",
     "@vendia/serverless-express": "^4.5.4",
+    "aws-cdk": "2.15.0",
     "nuxt-start": "^2.15.8",
     "ts-node": "^10.5.0",
     "typescript": "^4.5.5"
