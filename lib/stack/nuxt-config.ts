@@ -5,6 +5,7 @@
  */
 export interface NuxtConfig {
 
+    readonly target?: string;
     readonly srcDir?: string;
     readonly build?: {
         publicPath?: string

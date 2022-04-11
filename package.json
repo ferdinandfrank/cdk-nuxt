@@ -2,6 +2,10 @@
   "name": "cdk-nuxt",
   "version": "0.5.1",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ferdinandfrank/cdk-nuxt.git"
+  },
   "files": [
     "lib",
     "index.d.ts"
@@ -9,8 +13,10 @@
   "main": "index.js",
   "types": "index.d.ts",
   "bin": {
-    "cdk-nuxt-init": "./lib/cli/init.js",
-    "cdk-nuxt-deploy": "./lib/cli/deploy.js"
+    "cdk-nuxt-init-server": "lib/cli/init-server.js",
+    "cdk-nuxt-init-static": "lib/cli/init-static.js",
+    "cdk-nuxt-deploy-server": "lib/cli/deploy-server.js",
+    "cdk-nuxt-deploy-static": "lib/cli/deploy-static.js"
   },
   "scripts": {
     "build": "tsc"

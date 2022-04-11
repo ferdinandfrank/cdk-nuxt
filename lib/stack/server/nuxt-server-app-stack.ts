@@ -28,36 +28,17 @@ import {HttpMethod} from "aws-cdk-lib/aws-stepfunctions-tasks";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import {HttpLambdaIntegration} from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "@aws-cdk/aws-apigatewayv2-alpha";
-import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "./nuxt-app-static-assets";
-import {AppStackProps} from "./app-stack-props";
+import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "../nuxt-app-static-assets";
 import * as fs from "fs";
 import {Rule, RuleTargetInput, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
-import {NuxtConfig} from "./nuxt-config";
+import {NuxtAppStackProps} from "../nuxt-app-stack-props";
+import * as path from "path";
 
 /**
- * Defines the props required for the {@see NuxtAppStack}.
+ * Defines the props required for the {@see NuxtServerAppStack}.
  */
-export interface NuxtAppStackProps extends AppStackProps {
-    /**
-     * The domain (without the protocol) at which the Nuxt app shall be publicly available.
-     * A DNS record will be automatically created in Route53 for the domain.
-     * This also supports subdomains.
-     * Examples: "example.com", "sub.example.com"
-     */
-    readonly domain: string;
-
-    /**
-     * The id of the hosted zone to create a DNS record for the specified domain.
-     */
-    readonly hostedZoneId: string;
-
-    /**
-     * The ARN of the certificate to use on CloudFront for the Nuxt app to make it accessible via HTTPS.
-     * The certificate must be issued for the specified domain in us-east-1 (global) regardless of the
-     * region specified via 'env.region' as CloudFront only works globally.
-     */
-    readonly globalTlsCertificateArn: string;
+export interface NuxtServerAppStackProps extends NuxtAppStackProps {
 
     /**
      * The ARN of the certificate to use at the ApiGateway for the Nuxt app to make it accessible via the custom domain
@@ -65,11 +46,6 @@ export interface NuxtAppStackProps extends AppStackProps {
      * The certificate must be issued in the same region as specified via 'env.region' as ApiGateway works regionally.
      */
     readonly regionalTlsCertificateArn: string;
-
-    /**
-     * The nuxt.config.js of the Nuxt app.
-     */
-    readonly nuxtConfig: NuxtConfig;
 
     /**
      * The memory size to apply to the Nuxt app's Lambda.
@@ -84,9 +60,9 @@ export interface NuxtAppStackProps extends AppStackProps {
 }
 
 /**
- * Creates a Lambda function that renders the Nuxt app and is publicly reachable via a specified domain.
+ * CDK stack to deploy a dynamic Nuxt app (target=server) on AWS with Lambda, ApiGateway, S3 and CloudFront.
  */
-export class NuxtAppStack extends Stack {
+export class NuxtServerAppStack extends Stack {
 
     /**
      * The identifier prefix of the resources created by the stack.
@@ -120,7 +96,14 @@ export class NuxtAppStack extends Stack {
      *
      * @private
      */
-    private readonly lambdaFunction: Function;
+    private readonly appLambdaFunction: Function;
+
+    /**
+     * The Lambda function that cleanups the outdated static assets of the Nuxt app.
+     *
+     * @private
+     */
+    private readonly cleanupLambdaFunction: Function;
 
     /**
      * The API gateway to make the Lambda function to render the Nuxt app publicly available.
@@ -144,20 +127,26 @@ export class NuxtAppStack extends Stack {
      */
     private readonly cdn: Distribution;
 
-    constructor(scope: Construct, id: string, props: NuxtAppStackProps) {
+    constructor(scope: Construct, id: string, props: NuxtServerAppStackProps) {
         super(scope, id, props);
 
         this.resourceIdPrefix = `${props.project}-${props.service}-${props.environment}`;
+
+        // Nuxt app resources
         this.deploymentRevision = new Date().toISOString();
         this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.nuxtConfig);
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
-        this.lambdaFunction = this.createLambdaFunction(props);
+        this.appLambdaFunction = this.createAppLambdaFunction(props);
         this.apiGateway = this.createApiGateway(props);
         this.cdn = this.createCloudFrontDistribution(props);
         this.configureDeployments();
         this.createDnsRecords(props);
-        this.createPingRule(props);
+        this.createAppPingRule(props);
+
+        // Static assets cleanup resources
+        this.cleanupLambdaFunction = this.createCleanupLambdaFunction(props);
+        this.createCleanupTriggerRule();
     }
 
     /**
@@ -211,7 +200,7 @@ export class NuxtAppStack extends Stack {
      *
      * @private
      */
-    private createLambdaFunction(props: NuxtAppStackProps): Function {
+    private createAppLambdaFunction(props: NuxtServerAppStackProps): Function {
         const funcName = `${this.resourceIdPrefix}-function`;
 
         return new Function(this, funcName, {
@@ -233,13 +222,53 @@ export class NuxtAppStack extends Stack {
     }
 
     /**
+     * Creates the Lambda function that cleanups the outdated static assets of the Nuxt app.
+     *
+     * @param props
+     * @private
+     */
+    private createCleanupLambdaFunction(props: NuxtServerAppStackProps): Function {
+        const functionName: string = `${this.resourceIdPrefix}-function`;
+
+        const result: Function = new Function(this, functionName, {
+            functionName: functionName,
+            description: `Auto-deletes the outdated static assets in the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
+            runtime: Runtime.NODEJS_14_X,
+            architecture: Architecture.ARM_64,
+            layers: [new LayerVersion(this, `${this.resourceIdPrefix}-layer`, {
+                layerVersionName: `${this.resourceIdPrefix}-layer`,
+                code: Code.fromAsset(path.join(__dirname, '../functions/assets_cleanup/build/layer')),
+                compatibleRuntimes: [Runtime.NODEJS_14_X],
+                description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
+            })],
+            handler: 'index.handler',
+            code: Code.fromAsset(path.join(__dirname, '../functions/assets_cleanup/build/app')),
+            timeout: Duration.minutes(1),
+            memorySize: 128,
+            logRetention: RetentionDays.TWO_WEEKS,
+            environment: {
+                STATIC_ASSETS_BUCKET: this.staticAssetsBucket.bucketName,
+                ENVIRONMENT: props.environment,
+                AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
+                NODE_OPTIONS: '--enable-source-maps',
+            },
+        });
+
+        // grant function access to S3 bucket
+        this.staticAssetsBucket.grantRead(result);
+        this.staticAssetsBucket.grantDelete(result);
+
+        return result;
+    }
+
+    /**
      * Creates the API gateway to make the Nuxt app render Lambda function publicly available.
      *
      * @private
      */
-    private createApiGateway(props: NuxtAppStackProps): HttpApi {
+    private createApiGateway(props: NuxtServerAppStackProps): HttpApi {
         const apiName = `${this.resourceIdPrefix}-api`;
-        const lambdaIntegration = new HttpLambdaIntegration(`${this.resourceIdPrefix}-lambda-integration`, this.lambdaFunction);
+        const lambdaIntegration = new HttpLambdaIntegration(`${this.resourceIdPrefix}-lambda-integration`, this.appLambdaFunction);
 
         // We want the API gateway to be accessible by the custom domain name.
         // Even though we access the gateway via CloudFront (for auto http to https redirects), this is required
@@ -278,12 +307,12 @@ export class NuxtAppStack extends Stack {
      * @param props
      * @private
      */
-    private createCloudFrontDistribution(props: NuxtAppStackProps): Distribution {
+    private createCloudFrontDistribution(props: NuxtServerAppStackProps): Distribution {
         const cdnName = `${this.resourceIdPrefix}-cdn`;
 
         return new Distribution(this, cdnName, {
             domainNames: [props.domain],
-            comment: `${this.resourceIdPrefix}-redirect`,
+            comment: cdnName,
             minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2018,
             certificate: Certificate.fromCertificateArn(this, `${this.resourceIdPrefix}-global-certificate`, props.globalTlsCertificateArn),
             defaultBehavior: this.createNuxtAppRouteBehavior(),
@@ -398,6 +427,8 @@ export class NuxtAppStack extends Stack {
                 include: [asset.pattern],
                 cacheControl: asset.cacheControl ?? defaultCacheConfig,
                 contentType: asset.contentType,
+                distribution: asset.invalidateOnChange ? this.cdn : undefined,
+                distributionPaths: asset.invalidateOnChange ? (asset.pattern.endsWith('.html') ? ['/', '/*/', `/${asset.pattern}`] : [`/${asset.pattern}`]) : undefined,
                 logRetention: RetentionDays.ONE_DAY,
                 memoryLimit: 256 // Some Nuxt applications have a lot of assets to deploy whereby the function might run out of memory
             })
@@ -410,7 +441,7 @@ export class NuxtAppStack extends Stack {
      * @param props
      * @private
      */
-    private findHostedZone(props: NuxtAppStackProps): IHostedZone {
+    private findHostedZone(props: NuxtServerAppStackProps): IHostedZone {
         const domainParts = props.domain.split('.');
 
         return HostedZone.fromHostedZoneAttributes(this, `${this.resourceIdPrefix}-hosted-zone`, {
@@ -425,7 +456,7 @@ export class NuxtAppStack extends Stack {
      * @param props
      * @private
      */
-    private createDnsRecords(props: NuxtAppStackProps): void {
+    private createDnsRecords(props: NuxtServerAppStackProps): void {
         const hostedZone = this.findHostedZone(props);
         const dnsTarget = RecordTarget.fromAlias(new CloudFrontTarget(this.cdn));
 
@@ -450,7 +481,7 @@ export class NuxtAppStack extends Stack {
      *
      * @private
      */
-    private createPingRule(props: NuxtAppStackProps): void {
+    private createAppPingRule(props: NuxtServerAppStackProps): void {
         const fakeApiGatewayEventData = {
             "version": "2.0",
             "routeKey": "GET /{proxy+}",
@@ -472,9 +503,26 @@ export class NuxtAppStack extends Stack {
             description: `Pings the Lambda function of the ${this.resourceIdPrefix} app every 5 minutes to keep it warm.`,
             enabled: true,
             schedule: Schedule.rate(Duration.minutes(5)),
-            targets: [new LambdaFunction(this.lambdaFunction, {
+            targets: [new LambdaFunction(this.appLambdaFunction, {
                 event: RuleTargetInput.fromObject(fakeApiGatewayEventData)
             })],
+        });
+    }
+
+
+    /**
+     * Creates a scheduled rule that runs every tuesday at 03:30 AM GMT to trigger
+     * our cleanup Lambda function.
+     *
+     * @private
+     */
+    private createCleanupTriggerRule(): void {
+        new Rule(this, `${this.resourceIdPrefix}-scheduler-rule`, {
+            ruleName: `${this.resourceIdPrefix}-scheduler`,
+            description: `Triggers a cleanup of the outdated static assets at the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
+            enabled: true,
+            schedule: Schedule.cron({weekDay: '3', hour: '3', minute: '30'}),
+            targets: [new LambdaFunction(this.cleanupLambdaFunction)],
         });
     }
 }
