@@ -201,7 +201,7 @@ export class NuxtServerAppStack extends Stack {
      * @private
      */
     private createAppLambdaFunction(props: NuxtServerAppStackProps): Function {
-        const funcName = `${this.resourceIdPrefix}-function`;
+        const funcName = `${this.resourceIdPrefix}-app-function`;
 
         return new Function(this, funcName, {
             functionName: funcName,
@@ -228,7 +228,7 @@ export class NuxtServerAppStack extends Stack {
      * @private
      */
     private createCleanupLambdaFunction(props: NuxtServerAppStackProps): Function {
-        const functionName: string = `${this.resourceIdPrefix}-function`;
+        const functionName: string = `${this.resourceIdPrefix}-cleanup-function`;
 
         const result: Function = new Function(this, functionName, {
             functionName: functionName,
