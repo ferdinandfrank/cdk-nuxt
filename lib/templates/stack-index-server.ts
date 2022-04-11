@@ -42,7 +42,7 @@ const appStackProps: NuxtServerAppStackProps = {
     nuxtConfig: NuxtConfig,
 
     // The memory size to apply to the Nuxt app's Lambda.
-    memorySize: 512,
+    memorySize: 1792,
 
     // Whether to enable AWS X-Ray for the Nuxt Lambda function.
     enableTracing: false,

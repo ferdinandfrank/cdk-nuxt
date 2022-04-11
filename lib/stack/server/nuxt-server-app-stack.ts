@@ -49,7 +49,7 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
 
     /**
      * The memory size to apply to the Nuxt app's Lambda.
-     * Defaults to 512MB.
+     * Defaults to 1792MB (optimized for costs and performance for standard Nuxt apps).
      */
     readonly memorySize?: number;
 
@@ -214,7 +214,7 @@ export class NuxtServerAppStack extends Stack {
                 exclude: ['**.svg', '**.ico', '**.png', '**.jpg', '**.js.map'],
             }),
             timeout: Duration.seconds(10),
-            memorySize: props.memorySize ?? 512,
+            memorySize: props.memorySize ?? 1792,
             logRetention: RetentionDays.ONE_MONTH,
             allowPublicSubnet: false,
             tracing: props.enableTracing ? Tracing.ACTIVE : Tracing.DISABLED
