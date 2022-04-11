@@ -163,14 +163,14 @@ exports.handler = async (event, context) => {
 }
 ```
 
-### Target: 'server'
+### Target: 'static'
 1. Install the dependencies for the Nuxt app including the `devDependencies` as these are required to successfully build the app:
    ```bash
    yarn install --production=false
    ```
 2. Build the Nuxt app with the build settings you need for the app:
    ```bash
-   yarn build
+   yarn generate
    ```
 3. Run the CDK deployment:
    ```bash
@@ -224,7 +224,7 @@ jobs:
         run: yarn install --production=false # Important to install devDependencies for the build
 
       - name: Build project
-        run: yarn build # Should trigger 'nuxt build' according to the package.json
+        run: yarn build # (or yarn generate)
 
       - name: Deploy to AWS
         run: node_modules/.bin/cdk-nuxt-deploy-server # (or node_modules/.bin/cdk-nuxt-deploy-static)
