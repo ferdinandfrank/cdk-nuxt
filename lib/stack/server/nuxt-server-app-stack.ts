@@ -237,12 +237,12 @@ export class NuxtServerAppStack extends Stack {
             architecture: Architecture.ARM_64,
             layers: [new LayerVersion(this, `${this.resourceIdPrefix}-layer`, {
                 layerVersionName: `${this.resourceIdPrefix}-layer`,
-                code: Code.fromAsset(path.join(__dirname, '../functions/assets_cleanup/build/layer')),
+                code: Code.fromAsset(path.join(__dirname, '../../functions/assets_cleanup/build/layer')),
                 compatibleRuntimes: [Runtime.NODEJS_14_X],
                 description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
             })],
             handler: 'index.handler',
-            code: Code.fromAsset(path.join(__dirname, '../functions/assets_cleanup/build/app')),
+            code: Code.fromAsset(path.join(__dirname, '../../functions/assets_cleanup/build/app')),
             timeout: Duration.minutes(1),
             memorySize: 128,
             logRetention: RetentionDays.TWO_WEEKS,
@@ -345,7 +345,7 @@ export class NuxtServerAppStack extends Stack {
 
     /**
      * Creates a cache policy for the Nuxt app route behavior of the CloudFront distribution.
-     * Eventhough we don't want to cache SSR requests, we still have to create this cache policy in order to
+     * Even though we don't want to cache SSR requests, we still have to create this cache policy in order to
      * forward required cookies, query params and headers. This doesn't make any sense, because if nothing
      * is cached, one would expect, that anything would/could be forwarded, but anyway...
      */
