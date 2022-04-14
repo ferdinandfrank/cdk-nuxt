@@ -11,9 +11,10 @@ import {
     OriginAccessIdentity,
     PriceClass,
     SecurityPolicyProtocol,
-    ViewerProtocolPolicy
+    ViewerProtocolPolicy,
+    Function, FunctionCode, FunctionEventType
 } from "aws-cdk-lib/aws-cloudfront";
-import {Bucket, IBucket} from "aws-cdk-lib/aws-s3";
+import {BlockPublicAccess, Bucket, BucketAccessControl, IBucket} from "aws-cdk-lib/aws-s3";
 import {AaaaRecord, ARecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
 import {BucketDeployment, CacheControl, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
 import {S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
@@ -22,6 +23,7 @@ import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "../nuxt-app-static-assets";
 import * as fs from "fs";
 import {NuxtAppStackProps} from "../nuxt-app-stack-props";
+import * as path from "path";
 
 /**
  * Defines the props required for the {@see NuxtStaticAppStack}.
@@ -100,10 +102,9 @@ export class NuxtStaticAppStack extends Stack {
             // The bucket and all of its objects can be deleted, because all the content is managed in this project
             removalPolicy: RemovalPolicy.DESTROY,
             autoDeleteObjects: true,
-            // Configure S3 as a website host
-            publicReadAccess: true,
-            websiteIndexDocument: 'index.html',
-            websiteErrorDocument: '200.html'
+
+            // We only want the files to be reachable by our custom domain to prevent duplicate content issues
+            blockPublicAccess: BlockPublicAccess.BLOCK_ALL
         });
 
         bucket.grantRead(this.cdnAccessIdentity);
@@ -137,6 +138,15 @@ export class NuxtStaticAppStack extends Stack {
      * @private
      */
     private createNuxtStaticAppRouteBehavior(): BehaviorOptions {
+
+        const redirectFunction = new Function(this, `${this.resourceIdPrefix}-redirect-to-index`, {
+            functionName: `${this.resourceIdPrefix}-redirect-to-index`,
+            comment: `Redirects incoming requests to the ${this.resourceIdPrefix} service to their corresponding S3 bucket file.`,
+            code: FunctionCode.fromFile({
+                filePath: path.join(__dirname, '../../functions/cloudfront/redirect-to-index.js')
+            }),
+        });
+
         return {
             origin: new S3Origin(this.staticAssetsBucket, {
                 connectionAttempts: 2,
@@ -147,7 +157,11 @@ export class NuxtStaticAppStack extends Stack {
             allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
             cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
             cachePolicy: CachePolicy.CACHING_OPTIMIZED,
-            viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+            viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            functionAssociations: [{
+                function: redirectFunction,
+                eventType: FunctionEventType.VIEWER_REQUEST,
+            }]
         };
     }
 
@@ -165,6 +179,7 @@ export class NuxtStaticAppStack extends Stack {
         ];
 
         // Returns a deployment for every configured static asset type to respect the different cache settings
+        // TODO: Only when pattern exists
         return this.staticAssetConfigs.filter(asset => fs.existsSync(asset.source)).map((asset, assetIndex) => {
             return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
                 sources: [Source.asset(asset.source)],
