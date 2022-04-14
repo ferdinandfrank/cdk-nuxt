@@ -128,6 +128,14 @@ export class NuxtStaticAppStack extends Stack {
             certificate: Certificate.fromCertificateArn(this, `${this.resourceIdPrefix}-global-certificate`, props.globalTlsCertificateArn),
             defaultBehavior: this.createNuxtStaticAppRouteBehavior(),
             priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
+            errorResponses: [404, 403].map(errorCode => {
+                return {
+                    ttl: Duration.seconds(10),
+                    httpStatus: errorCode,
+                    responseHttpStatus: errorCode,
+                    responsePagePath: '/200.html'
+                }
+            })
         });
     }
 
