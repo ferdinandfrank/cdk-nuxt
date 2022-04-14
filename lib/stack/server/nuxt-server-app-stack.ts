@@ -428,7 +428,7 @@ export class NuxtServerAppStack extends Stack {
                 cacheControl: asset.cacheControl ?? defaultCacheConfig,
                 contentType: asset.contentType,
                 distribution: asset.invalidateOnChange ? this.cdn : undefined,
-                distributionPaths: asset.invalidateOnChange ? (asset.pattern.endsWith('.html') ? ['/', '/*/', `/${asset.pattern}`] : [`/${asset.pattern}`]) : undefined,
+                distributionPaths: asset.invalidateOnChange ? [`/${asset.pattern}`] : undefined,
                 logRetention: RetentionDays.ONE_DAY,
                 memoryLimit: 256 // Some Nuxt applications have a lot of assets to deploy whereby the function might run out of memory
             })

@@ -187,7 +187,6 @@ export class NuxtStaticAppStack extends Stack {
         ];
 
         // Returns a deployment for every configured static asset type to respect the different cache settings
-        // TODO: Only when pattern exists
         return this.staticAssetConfigs.filter(asset => fs.existsSync(asset.source)).map((asset, assetIndex) => {
             return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
                 sources: [Source.asset(asset.source)],
