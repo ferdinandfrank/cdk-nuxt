@@ -51,7 +51,7 @@ const getNuxtAppCustomAssetConfigs = (nuxtConfig: NuxtConfig): StaticAssetConfig
 
         // Custom Static Assets
         {
-            pattern: 'robots.txt', // See https://developers.google.com/search/docs/advanced/robots/intro
+            pattern: '*.txt', // E.g., robots.txt, ads.txt, ...
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
             contentType: 'text/plain; charset=UTF-8',
