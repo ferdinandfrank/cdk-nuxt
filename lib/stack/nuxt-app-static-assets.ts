@@ -58,14 +58,7 @@ const getNuxtAppCustomAssetConfigs = (nuxtConfig: NuxtConfig): StaticAssetConfig
             cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
         },
         {
-            pattern: '*sitemap.xml', // Support various sitemaps, e.g., sitemap.xml or google-news-sitemap.xml
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-            contentType: 'text/xml; charset=UTF-8',
-            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
-        },
-        {
-            pattern: 'sitemaps/*.xml', // Nested sitemap files for sitemap index
+            pattern: '*.xml', // E.g., sitemap.xml ...
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
             contentType: 'text/xml; charset=UTF-8',

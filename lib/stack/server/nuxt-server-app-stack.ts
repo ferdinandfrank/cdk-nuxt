@@ -19,7 +19,7 @@ import {
     ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
 import {Architecture, Code, Function, LayerVersion, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
-import {BlockPublicAccess, Bucket, BucketAccessControl, IBucket} from "aws-cdk-lib/aws-s3";
+import {BlockPublicAccess, Bucket, BucketAccessControl, BucketEncryption, IBucket} from "aws-cdk-lib/aws-s3";
 import {AaaaRecord, ARecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
 import {BucketDeployment, CacheControl, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
 import {HttpOrigin, S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
@@ -57,6 +57,11 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
      * Whether to enable AWS X-Ray for the Nuxt Lambda function.
      */
     readonly enableTracing?: boolean;
+
+    /**
+     * Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
+     */
+    readonly enableSitemap?: boolean;
 }
 
 /**
@@ -90,6 +95,11 @@ export class NuxtServerAppStack extends Stack {
      * The S3 bucket where the deployment assets gets stored.
      */
     public staticAssetsBucket: IBucket;
+
+    /**
+     * The S3 bucket where the sitemap assets gets stored.
+     */
+    public sitemapBucket: IBucket|undefined;
 
     /**
      * The Lambda function to render the Nuxt app on the server side.
@@ -137,12 +147,19 @@ export class NuxtServerAppStack extends Stack {
         this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.nuxtConfig);
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
+
+        if (props.enableSitemap) {
+            this.sitemapBucket = this.createSitemapBucket();
+        }
+
         this.appLambdaFunction = this.createAppLambdaFunction(props);
         this.apiGateway = this.createApiGateway(props);
         this.cdn = this.createCloudFrontDistribution(props);
         this.configureDeployments();
         this.createDnsRecords(props);
         this.createAppPingRule(props);
+
+
 
         // Static assets cleanup resources
         this.cleanupLambdaFunction = this.createCleanupLambdaFunction(props);
@@ -170,6 +187,29 @@ export class NuxtServerAppStack extends Stack {
             accessControl: BucketAccessControl.AUTHENTICATED_READ,
             blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
             bucketName,
+            // The bucket and all of its objects can be deleted, because all the content is managed in this project
+            removalPolicy: RemovalPolicy.DESTROY,
+            autoDeleteObjects: true,
+        });
+
+        bucket.grantReadWrite(this.cdnAccessIdentity);
+
+        return bucket;
+    }
+
+    /**
+     * Creates the bucket to store the sitemap assets of the Nuxt app.
+     *
+     * @private
+     */
+    private createSitemapBucket(): Bucket {
+        const bucketName = `${this.resourceIdPrefix}-sitemap`;
+        const bucket = new Bucket(this, bucketName, {
+            bucketName,
+            accessControl: BucketAccessControl.PRIVATE,
+            blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+            encryption: BucketEncryption.S3_MANAGED,
+            enforceSSL: true,
             // The bucket and all of its objects can be deleted, because all the content is managed in this project
             removalPolicy: RemovalPolicy.DESTROY,
             autoDeleteObjects: true,
@@ -316,7 +356,7 @@ export class NuxtServerAppStack extends Stack {
             minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2018,
             certificate: Certificate.fromCertificateArn(this, `${this.resourceIdPrefix}-global-certificate`, props.globalTlsCertificateArn),
             defaultBehavior: this.createNuxtAppRouteBehavior(),
-            additionalBehaviors: this.createStaticAssetsRouteBehavior(),
+            additionalBehaviors: this.setupCloudFrontRouting(props),
             priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
         });
     }
@@ -341,6 +381,19 @@ export class NuxtServerAppStack extends Stack {
             originRequestPolicy: undefined,
             cachePolicy: this.createSsrCachePolicy(),
         };
+    }
+
+    private setupCloudFrontRouting(props: NuxtServerAppStackProps): Record<string, BehaviorOptions> {
+        let routingBehaviours: Record<string, BehaviorOptions> = {};
+
+        // Specific ones first
+        if (props.enableSitemap) {
+            routingBehaviours = {...routingBehaviours, ...this.createSitemapRouteBehavior()};
+        }
+
+        routingBehaviours = {...routingBehaviours, ...this.createStaticAssetsRouteBehavior()};
+
+        return routingBehaviours;
     }
 
     /**
@@ -400,6 +453,38 @@ export class NuxtServerAppStack extends Stack {
         })
 
         return rules
+    }
+
+    /**
+     * Creates a behavior for the CloudFront distribution to route matching incoming requests for the sitemap assets
+     * to the S3 bucket that holds these sitemap assets.
+     *
+     * @private
+     */
+    private createSitemapRouteBehavior(): Record<string, BehaviorOptions> {
+        if (!this.sitemapBucket) {
+            throw new Error("Sitemap bucket must exist before creating sitemap route behavior.");
+        }
+
+        const sitemapCacheConfig: BehaviorOptions = {
+            origin: new S3Origin(this.sitemapBucket, {
+                connectionAttempts: 2,
+                connectionTimeout: Duration.seconds(3),
+                originAccessIdentity: this.cdnAccessIdentity,
+            }),
+            compress: true,
+            allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+            cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+            cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+            viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+        };
+
+        const rules: Record<string, BehaviorOptions> = {};
+        rules['*sitemap.xml'] = sitemapCacheConfig;
+        rules['*sitemap-gone.xml'] = sitemapCacheConfig;
+        rules['/sitemaps/*'] = sitemapCacheConfig;
+
+        return rules;
     }
 
     /**
