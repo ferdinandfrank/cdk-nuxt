@@ -1,5 +1,4 @@
 import {StackProps} from "aws-cdk-lib";
-import {NuxtConfig} from "./nuxt-config";
 
 /**
  * Defines the common props required to deploy Nuxt apps on AWS.
