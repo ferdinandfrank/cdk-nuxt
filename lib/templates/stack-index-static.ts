@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import {App} from "aws-cdk-lib";
 import {NuxtStaticAppStack, NuxtStaticAppStackProps} from "cdk-nuxt";
-const NuxtConfig = require('../nuxt.config');
 
 const appStackProps: NuxtStaticAppStackProps = {
     // The AWS environment (account/region) where this stack will be deployed.
@@ -32,9 +31,6 @@ const appStackProps: NuxtStaticAppStackProps = {
 
     // The id of the hosted zone to create a DNS record for the specified domain.
     hostedZoneId: 'XXXXXXXXXXXXX',
-
-    // The nuxt.config.js of the Nuxt app.
-    nuxtConfig: NuxtConfig,
 
     // Stack tags that will be applied to all the taggable resources and the stack itself.
     tags: {

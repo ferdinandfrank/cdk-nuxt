@@ -72,7 +72,7 @@ export class NuxtStaticAppStack extends Stack {
         super(scope, id, props);
 
         this.resourceIdPrefix = `${props.project}-${props.service}-${props.environment}`;
-        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.nuxtConfig);
+        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs();
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
         this.cdn = this.createCloudFrontDistribution(props);

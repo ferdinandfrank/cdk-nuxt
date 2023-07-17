@@ -9,7 +9,7 @@ import {
     CacheHeaderBehavior,
     CachePolicy,
     CacheQueryStringBehavior,
-    Distribution,
+    Distribution, HttpVersion,
     ICachePolicy,
     IOriginAccessIdentity,
     OriginAccessIdentity,
@@ -19,7 +19,14 @@ import {
     ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
 import {Architecture, Code, Function, LayerVersion, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
-import {BlockPublicAccess, Bucket, BucketAccessControl, BucketEncryption, IBucket} from "aws-cdk-lib/aws-s3";
+import {
+    BlockPublicAccess,
+    Bucket,
+    BucketAccessControl,
+    BucketEncryption,
+    IBucket,
+    ObjectOwnership
+} from "aws-cdk-lib/aws-s3";
 import {AaaaRecord, ARecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
 import {BucketDeployment, CacheControl, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
 import {HttpOrigin, S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
@@ -144,7 +151,7 @@ export class NuxtServerAppStack extends Stack {
 
         // Nuxt app resources
         this.deploymentRevision = new Date().toISOString();
-        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.nuxtConfig);
+        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs();
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
 
@@ -158,8 +165,6 @@ export class NuxtServerAppStack extends Stack {
         this.configureDeployments();
         this.createDnsRecords(props);
         this.createAppPingRule(props);
-
-
 
         // Static assets cleanup resources
         this.cleanupLambdaFunction = this.createCleanupLambdaFunction(props);
@@ -190,6 +195,7 @@ export class NuxtServerAppStack extends Stack {
             // The bucket and all of its objects can be deleted, because all the content is managed in this project
             removalPolicy: RemovalPolicy.DESTROY,
             autoDeleteObjects: true,
+            objectOwnership: ObjectOwnership.BUCKET_OWNER_ENFORCED,
         });
 
         bucket.grantReadWrite(this.cdnAccessIdentity);
@@ -221,21 +227,6 @@ export class NuxtServerAppStack extends Stack {
     }
 
     /**
-     * Creates a Lambda layer with the node_modules required to render the Nuxt app on the server side.
-     *
-     * @private
-     */
-    private createSsrLambdaLayer(): LayerVersion {
-        const layerName = `${this.resourceIdPrefix}-ssr-layer`;
-        return new LayerVersion(this, layerName, {
-            layerVersionName: layerName,
-            code: Code.fromAsset('.nuxt/cdk-deployment/layer'),
-            compatibleRuntimes: [Runtime.NODEJS_12_X],
-            description: `Provides the node_modules required for SSR of ${this.resourceIdPrefix}.`,
-        });
-    }
-
-    /**
      * Creates the Lambda function to render the Nuxt app.
      *
      * @private
@@ -246,13 +237,10 @@ export class NuxtServerAppStack extends Stack {
         return new Function(this, funcName, {
             functionName: funcName,
             description: `Renders the ${this.resourceIdPrefix} Nuxt app.`,
-            runtime: Runtime.NODEJS_12_X,
+            runtime: Runtime.NODEJS_16_X,
             architecture: Architecture.ARM_64,
-            layers: [this.createSsrLambdaLayer()],
             handler: 'index.handler',
-            code: Code.fromAsset('.nuxt/cdk-deployment/src', {
-                exclude: ['**.svg', '**.ico', '**.png', '**.jpg', '**.js.map'],
-            }),
+            code: Code.fromAsset('.output/server'),
             timeout: Duration.seconds(10),
             memorySize: props.memorySize ?? 1792,
             logRetention: RetentionDays.ONE_MONTH,
@@ -273,16 +261,16 @@ export class NuxtServerAppStack extends Stack {
         const result: Function = new Function(this, functionName, {
             functionName: functionName,
             description: `Auto-deletes the outdated static assets in the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
-            runtime: Runtime.NODEJS_14_X,
+            runtime: Runtime.NODEJS_16_X,
             architecture: Architecture.ARM_64,
             layers: [new LayerVersion(this, `${this.resourceIdPrefix}-layer`, {
                 layerVersionName: `${this.resourceIdPrefix}-layer`,
-                code: Code.fromAsset(path.join(__dirname, '../../functions/assets_cleanup/build/layer')),
-                compatibleRuntimes: [Runtime.NODEJS_14_X],
+                code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/layer')),
+                compatibleRuntimes: [Runtime.NODEJS_16_X],
                 description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
             })],
             handler: 'index.handler',
-            code: Code.fromAsset(path.join(__dirname, '../../functions/assets_cleanup/build/app')),
+            code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/app')),
             timeout: Duration.minutes(1),
             memorySize: 128,
             logRetention: RetentionDays.TWO_WEEKS,
@@ -355,6 +343,7 @@ export class NuxtServerAppStack extends Stack {
             comment: cdnName,
             minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2018,
             certificate: Certificate.fromCertificateArn(this, `${this.resourceIdPrefix}-global-certificate`, props.globalTlsCertificateArn),
+            httpVersion: HttpVersion.HTTP2_AND_3,
             defaultBehavior: this.createNuxtAppRouteBehavior(),
             additionalBehaviors: this.setupCloudFrontRouting(props),
             priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe

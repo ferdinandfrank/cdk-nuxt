@@ -44,8 +44,4 @@ export interface NuxtAppStackProps extends StackProps {
      */
     readonly globalTlsCertificateArn: string;
 
-    /**
-     * The nuxt.config.js of the Nuxt app.
-     */
-    readonly nuxtConfig: NuxtConfig;
 }
