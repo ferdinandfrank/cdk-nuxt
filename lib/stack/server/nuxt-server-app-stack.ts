@@ -25,7 +25,6 @@ import {
     BucketAccessControl,
     BucketEncryption,
     IBucket,
-    ObjectOwnership
 } from "aws-cdk-lib/aws-s3";
 import {AaaaRecord, ARecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
 import {BucketDeployment, CacheControl, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
@@ -194,8 +193,7 @@ export class NuxtServerAppStack extends Stack {
             bucketName,
             // The bucket and all of its objects can be deleted, because all the content is managed in this project
             removalPolicy: RemovalPolicy.DESTROY,
-            autoDeleteObjects: true,
-            objectOwnership: ObjectOwnership.BUCKET_OWNER_ENFORCED,
+            autoDeleteObjects: true
         });
 
         bucket.grantReadWrite(this.cdnAccessIdentity);
