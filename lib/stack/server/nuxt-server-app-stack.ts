@@ -238,13 +238,18 @@ export class NuxtServerAppStack extends Stack {
             description: `Renders the ${this.resourceIdPrefix} Nuxt app.`,
             runtime: Runtime.NODEJS_16_X,
             architecture: Architecture.ARM_64,
-            handler: 'index.handler',
+            handler: props.sentryDsn ? 'sentry.handler' : 'index.handler',
             code: Code.fromAsset('.output/server'),
             timeout: Duration.seconds(10),
             memorySize: props.memorySize ?? 1792,
             logRetention: RetentionDays.ONE_MONTH,
             allowPublicSubnet: false,
-            tracing: props.enableTracing ? Tracing.ACTIVE : Tracing.DISABLED
+            tracing: props.enableTracing ? Tracing.ACTIVE : Tracing.DISABLED,
+            environment: {
+                SENTRY_DSN: props.sentryDsn ?? '',
+                ENVIRONMENT: props.environment,
+                NODE_OPTIONS: '--enable-source-maps',
+            },
         });
     }
 

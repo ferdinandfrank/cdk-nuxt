@@ -43,4 +43,9 @@ export interface NuxtAppStackProps extends StackProps {
      */
     readonly globalTlsCertificateArn: string;
 
+    /**
+     * The DSN of the Sentry integration for error reporting.
+     */
+    readonly sentryDsn?: string;
+
 }
