@@ -246,9 +246,8 @@ export class NuxtServerAppStack extends Stack {
             allowPublicSubnet: false,
             tracing: props.enableTracing ? Tracing.ACTIVE : Tracing.DISABLED,
             environment: {
-                ...JSON.parse(props.entrypointEnv ?? '{}'),
-                ENVIRONMENT: props.environment,
                 NODE_OPTIONS: '--enable-source-maps',
+                ...JSON.parse(props.entrypointEnv ?? '{}'),
             },
         });
     }
