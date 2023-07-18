@@ -44,8 +44,14 @@ export interface NuxtAppStackProps extends StackProps {
     readonly globalTlsCertificateArn: string;
 
     /**
-     * The DSN of the Sentry integration for error reporting.
+     * The file name (without extension) of the Lambda entrypoint within the 'server' directory exporting a handler.
+     * Defaults to "index".
      */
-    readonly sentryDsn?: string;
+    readonly entrypoint?: string;
+
+    /**
+     * A JSON serialized string of environment variables to pass to the Lambda function.
+     */
+    readonly entrypointEnv?: string;
 
 }
