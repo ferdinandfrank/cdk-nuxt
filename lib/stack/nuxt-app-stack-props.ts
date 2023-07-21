@@ -1,5 +1,4 @@
 import {StackProps} from "aws-cdk-lib";
-import {NuxtConfig} from "./nuxt-config";
 
 /**
  * Defines the common props required to deploy Nuxt apps on AWS.
@@ -44,8 +43,4 @@ export interface NuxtAppStackProps extends StackProps {
      */
     readonly globalTlsCertificateArn: string;
 
-    /**
-     * The nuxt.config.js of the Nuxt app.
-     */
-    readonly nuxtConfig: NuxtConfig;
 }

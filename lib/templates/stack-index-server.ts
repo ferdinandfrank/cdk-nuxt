@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import {App} from "aws-cdk-lib";
 import {NuxtServerAppStack, NuxtServerAppStackProps} from "cdk-nuxt";
-const NuxtConfig = require('../nuxt.config');
 
 const appStackProps: NuxtServerAppStackProps = {
     // The AWS environment (account/region) where this stack will be deployed.
@@ -37,9 +36,6 @@ const appStackProps: NuxtServerAppStackProps = {
 
     // The id of the hosted zone to create a DNS record for the specified domain.
     hostedZoneId: 'XXXXXXXXXXXXX',
-
-    // The nuxt.config.js of the Nuxt app.
-    nuxtConfig: NuxtConfig,
 
     // The memory size to apply to the Nuxt app's Lambda.
     memorySize: 1792,

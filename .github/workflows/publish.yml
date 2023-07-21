@@ -31,12 +31,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd lib/functions/assets_cleanup && yarn install --frozen-lockfile && yarn install-layer && cd ../../..
+          cd lib/functions/assets-cleanup && yarn install --frozen-lockfile && yarn install-layer && cd ../../..
           yarn install --frozen-lockfile
 
       - name: Build project
         run: |
-          cd lib/functions/assets_cleanup && yarn build && cd ../../..
+          cd lib/functions/assets-cleanup && yarn build && cd ../../..
           yarn build
 
       - name: Publish

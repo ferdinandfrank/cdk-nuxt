@@ -1,6 +1,6 @@
 {
   "name": "cdk-nuxt",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -19,27 +19,25 @@
     "cdk-nuxt-deploy-static": "lib/cli/deploy-static.js"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "release": "yarn run build && yarn publish && git push --follow-tags"
   },
   "devDependencies": {
-    "@types/node": "10.17.27",
-    "aws-cdk": "2.15.0",
+    "@types/node": "^12.12.14",
     "fs": "^0.0.1-security",
     "ts-node": "^10.5.0",
     "typescript": "^4.5.5"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigatewayv2-alpha": "^2.15.0-alpha.0",
-    "@aws-cdk/aws-apigatewayv2-integrations-alpha": "^2.15.0-alpha.0",
-    "aws-cdk-lib": "2.15.0",
-    "constructs": "10.0.57",
-    "shelljs": "^0.8.5",
-    "source-map-support": "^0.5.16"
+    "@aws-cdk/aws-apigatewayv2-alpha": "^2.76.0-alpha.0",
+    "@aws-cdk/aws-apigatewayv2-integrations-alpha": "^2.76.0-alpha.0",
+    "aws-cdk": "2.76.0",
+    "aws-cdk-lib": "2.76.0",
+    "constructs": "^10.2.31",
+    "shelljs": "^0.8.5"
   },
   "peerDependencies": {
-    "@vendia/serverless-express": "^4.5.4",
-    "aws-cdk": "2.15.0",
-    "nuxt-start": "^2.15.8",
+    "aws-cdk": "2.76.0",
     "ts-node": "^10.5.0",
     "typescript": "^4.5.5"
   }

@@ -8,6 +8,6 @@ node_modules
 cdk.out
 
 # TS build files
-lib/functions/assets_cleanup/*.js
+lib/functions/assets-cleanup/*.js
 lib/stack/*.js
 index.js

@@ -9,7 +9,7 @@ import {
     CacheHeaderBehavior,
     CachePolicy,
     CacheQueryStringBehavior,
-    Distribution,
+    Distribution, HttpVersion,
     ICachePolicy,
     IOriginAccessIdentity,
     OriginAccessIdentity,
@@ -19,7 +19,14 @@ import {
     ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
 import {Architecture, Code, Function, LayerVersion, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
-import {BlockPublicAccess, Bucket, BucketAccessControl, BucketEncryption, IBucket} from "aws-cdk-lib/aws-s3";
+import {
+    BlockPublicAccess,
+    Bucket,
+    BucketAccessControl,
+    BucketEncryption,
+    IBucket,
+    ObjectOwnership
+} from "aws-cdk-lib/aws-s3";
 import {AaaaRecord, ARecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
 import {BucketDeployment, CacheControl, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
 import {HttpOrigin, S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
@@ -48,6 +55,17 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
     readonly regionalTlsCertificateArn: string;
 
     /**
+     * The file name (without extension) of the Lambda entrypoint within the 'server' directory exporting a handler.
+     * Defaults to "index".
+     */
+    readonly entrypoint?: string;
+
+    /**
+     * A JSON serialized string of environment variables to pass to the Lambda function.
+     */
+    readonly entrypointEnv?: string;
+
+    /**
      * The memory size to apply to the Nuxt app's Lambda.
      * Defaults to 1792MB (optimized for costs and performance for standard Nuxt apps).
      */
@@ -62,6 +80,42 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
      * Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
      */
     readonly enableSitemap?: boolean;
+
+    /**
+     * An array of headers to pass to the Nuxt app on SSR requests.
+     * The more headers are passed, the weaker the cache performance will be, as the cache key
+     * is based on the headers.
+     * No headers are passed by default.
+     */
+    readonly allowHeaders?: string[];
+
+    /**
+     * An array of cookies to pass to the Nuxt app on SSR requests.
+     * The more cookies are passed, the weaker the cache performance will be, as the cache key
+     * is based on the cookies.
+     * No cookies are passed by default.
+     */
+    readonly allowCookies?: string[];
+
+    /**
+     * An array of query param keys to pass to the Nuxt app on SSR requests.
+     * The more query params are passed, the weaker the cache performance will be, as the cache key
+     * is based on the query params.
+     * Note that this config can not be combined with {@see denyQueryParams}.
+     * If both are specified, the {@see denyQueryParams} will be ignored.
+     * All query params are passed by default.
+     */
+    readonly allowQueryParams?: string[];
+
+    /**
+     * An array of query param keys to deny passing to the Nuxt app on SSR requests.
+     * It might be useful to prevent specific external query params, e.g., fbclid, utm_campaign, ...,
+     * to improve cache performance, as the cache key is based on the specified query params.
+     * Note that this config can not be combined with {@see allowQueryParams}.
+     * If both are specified, the {@see denyQueryParams} will be ignored.
+     * All query params are passed by default.
+     */
+    readonly denyQueryParams?: string[];
 }
 
 /**
@@ -144,7 +198,7 @@ export class NuxtServerAppStack extends Stack {
 
         // Nuxt app resources
         this.deploymentRevision = new Date().toISOString();
-        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.nuxtConfig);
+        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs();
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
 
@@ -158,8 +212,6 @@ export class NuxtServerAppStack extends Stack {
         this.configureDeployments();
         this.createDnsRecords(props);
         this.createAppPingRule(props);
-
-
 
         // Static assets cleanup resources
         this.cleanupLambdaFunction = this.createCleanupLambdaFunction(props);
@@ -184,12 +236,12 @@ export class NuxtServerAppStack extends Stack {
     private createStaticAssetsBucket(): IBucket {
         const bucketName = `${this.resourceIdPrefix}-assets`;
         const bucket = new Bucket(this, bucketName, {
-            accessControl: BucketAccessControl.AUTHENTICATED_READ,
             blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
             bucketName,
             // The bucket and all of its objects can be deleted, because all the content is managed in this project
             removalPolicy: RemovalPolicy.DESTROY,
             autoDeleteObjects: true,
+            objectOwnership: ObjectOwnership.BUCKET_OWNER_ENFORCED,
         });
 
         bucket.grantReadWrite(this.cdnAccessIdentity);
@@ -221,21 +273,6 @@ export class NuxtServerAppStack extends Stack {
     }
 
     /**
-     * Creates a Lambda layer with the node_modules required to render the Nuxt app on the server side.
-     *
-     * @private
-     */
-    private createSsrLambdaLayer(): LayerVersion {
-        const layerName = `${this.resourceIdPrefix}-ssr-layer`;
-        return new LayerVersion(this, layerName, {
-            layerVersionName: layerName,
-            code: Code.fromAsset('.nuxt/cdk-deployment/layer'),
-            compatibleRuntimes: [Runtime.NODEJS_12_X],
-            description: `Provides the node_modules required for SSR of ${this.resourceIdPrefix}.`,
-        });
-    }
-
-    /**
      * Creates the Lambda function to render the Nuxt app.
      *
      * @private
@@ -246,18 +283,21 @@ export class NuxtServerAppStack extends Stack {
         return new Function(this, funcName, {
             functionName: funcName,
             description: `Renders the ${this.resourceIdPrefix} Nuxt app.`,
-            runtime: Runtime.NODEJS_12_X,
+            runtime: Runtime.NODEJS_16_X,
             architecture: Architecture.ARM_64,
-            layers: [this.createSsrLambdaLayer()],
-            handler: 'index.handler',
-            code: Code.fromAsset('.nuxt/cdk-deployment/src', {
+            handler: `${props.entrypoint ?? 'index'}.handler`,
+            code: Code.fromAsset('.output/server', {
                 exclude: ['**.svg', '**.ico', '**.png', '**.jpg', '**.js.map'],
             }),
             timeout: Duration.seconds(10),
             memorySize: props.memorySize ?? 1792,
             logRetention: RetentionDays.ONE_MONTH,
             allowPublicSubnet: false,
-            tracing: props.enableTracing ? Tracing.ACTIVE : Tracing.DISABLED
+            tracing: props.enableTracing ? Tracing.ACTIVE : Tracing.DISABLED,
+            environment: {
+                NODE_OPTIONS: '--enable-source-maps',
+                ...JSON.parse(props.entrypointEnv ?? '{}'),
+            },
         });
     }
 
@@ -273,16 +313,16 @@ export class NuxtServerAppStack extends Stack {
         const result: Function = new Function(this, functionName, {
             functionName: functionName,
             description: `Auto-deletes the outdated static assets in the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
-            runtime: Runtime.NODEJS_14_X,
+            runtime: Runtime.NODEJS_16_X,
             architecture: Architecture.ARM_64,
             layers: [new LayerVersion(this, `${this.resourceIdPrefix}-layer`, {
                 layerVersionName: `${this.resourceIdPrefix}-layer`,
-                code: Code.fromAsset(path.join(__dirname, '../../functions/assets_cleanup/build/layer')),
-                compatibleRuntimes: [Runtime.NODEJS_14_X],
+                code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/layer')),
+                compatibleRuntimes: [Runtime.NODEJS_16_X],
                 description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
             })],
             handler: 'index.handler',
-            code: Code.fromAsset(path.join(__dirname, '../../functions/assets_cleanup/build/app')),
+            code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/app')),
             timeout: Duration.minutes(1),
             memorySize: 128,
             logRetention: RetentionDays.TWO_WEEKS,
@@ -355,7 +395,8 @@ export class NuxtServerAppStack extends Stack {
             comment: cdnName,
             minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2018,
             certificate: Certificate.fromCertificateArn(this, `${this.resourceIdPrefix}-global-certificate`, props.globalTlsCertificateArn),
-            defaultBehavior: this.createNuxtAppRouteBehavior(),
+            httpVersion: HttpVersion.HTTP2_AND_3,
+            defaultBehavior: this.createNuxtAppRouteBehavior(props),
             additionalBehaviors: this.setupCloudFrontRouting(props),
             priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
         });
@@ -367,7 +408,7 @@ export class NuxtServerAppStack extends Stack {
      *
      * @private
      */
-    private createNuxtAppRouteBehavior(): BehaviorOptions {
+    private createNuxtAppRouteBehavior(props: NuxtServerAppStackProps): BehaviorOptions {
         return {
             origin: new HttpOrigin(`${this.apiGateway.httpApiId}.execute-api.${this.region}.amazonaws.com`, {
                 connectionAttempts: 2,
@@ -379,7 +420,7 @@ export class NuxtServerAppStack extends Stack {
             compress: true,
             viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             originRequestPolicy: undefined,
-            cachePolicy: this.createSsrCachePolicy(),
+            cachePolicy: this.createSsrCachePolicy(props),
         };
     }
 
@@ -402,25 +443,16 @@ export class NuxtServerAppStack extends Stack {
      * forward required cookies, query params and headers. This doesn't make any sense, because if nothing
      * is cached, one would expect, that anything would/could be forwarded, but anyway...
      */
-    private createSsrCachePolicy(): ICachePolicy {
-
-        // The headers to make accessible in the Nuxt app code.
-        // There is no 'CacheHeaderBehavior.all()' option, so we have to explicitly define them.
-        const headers = [
-            'User-Agent', // Required to distinguish between mobile and desktop template
-            'Authorization', // For authorization
-            'Host' // To access the domain name on SSR requests
-        ];
-
+    private createSsrCachePolicy(props: NuxtServerAppStackProps): ICachePolicy {
         return new CachePolicy(this, `${this.resourceIdPrefix}-cache-policy`, {
             cachePolicyName: `${this.resourceIdPrefix}-cdn-cache-policy`,
-            comment: `Passes all required request data to the ${this.resourceIdPrefix} origin.`,
+            comment: `Defines which request data to pass to the ${this.resourceIdPrefix} origin and how the cache key is calculated.`,
             defaultTtl: Duration.seconds(0),
             minTtl: Duration.seconds(0),
-            maxTtl: Duration.seconds(1), // The max TTL must not be 0 for a cache policy
-            queryStringBehavior: CacheQueryStringBehavior.all(),
-            headerBehavior: CacheHeaderBehavior.allowList(...headers),
-            cookieBehavior: CacheCookieBehavior.all(),
+            maxTtl: Duration.days(365),
+            queryStringBehavior: props.allowQueryParams ? CacheQueryStringBehavior.allowList(...props.allowQueryParams) : (props.denyQueryParams ? CacheQueryStringBehavior.denyList(...props.denyQueryParams) : CacheQueryStringBehavior.all()),
+            headerBehavior: props.allowHeaders ? CacheHeaderBehavior.allowList(...props.allowHeaders) : CacheHeaderBehavior.none(),
+            cookieBehavior: props.allowCookies ? CacheCookieBehavior.allowList(...props.allowCookies) : CacheCookieBehavior.none(),
             enableAcceptEncodingBrotli: true,
             enableAcceptEncodingGzip: true,
         });
