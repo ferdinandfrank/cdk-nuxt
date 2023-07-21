@@ -55,6 +55,17 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
     readonly regionalTlsCertificateArn: string;
 
     /**
+     * The file name (without extension) of the Lambda entrypoint within the 'server' directory exporting a handler.
+     * Defaults to "index".
+     */
+    readonly entrypoint?: string;
+
+    /**
+     * A JSON serialized string of environment variables to pass to the Lambda function.
+     */
+    readonly entrypointEnv?: string;
+
+    /**
      * The memory size to apply to the Nuxt app's Lambda.
      * Defaults to 1792MB (optimized for costs and performance for standard Nuxt apps).
      */
