@@ -90,6 +90,10 @@ The ARN of the certificate to use at the ApiGateway for the Nuxt app to make it 
 and to provide the custom domain to the Nuxt app via the 'Host' header for server side rendering use cases.
 The certificate must be issued in the same region as specified via 'env.region' as ApiGateway works regionally.
 
+### srcDir?: string;
+The value of the srcDir from the nuxt.config.ts file.
+Required to deploy the public static assets.
+
 ### entrypoint?: string
 The file name (without extension) of the Lambda entrypoint within the 'server' directory exporting a handler.
 Defaults to "index".

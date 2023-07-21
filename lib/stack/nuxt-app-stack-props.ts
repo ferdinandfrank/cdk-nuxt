@@ -43,4 +43,10 @@ export interface NuxtAppStackProps extends StackProps {
      */
     readonly globalTlsCertificateArn: string;
 
+    /**
+     * The value of the srcDir from the nuxt.config.ts file.
+     * Required to deploy the public static assets.
+     */
+    readonly srcDir?: string;
+
 }

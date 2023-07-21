@@ -198,7 +198,7 @@ export class NuxtServerAppStack extends Stack {
 
         // Nuxt app resources
         this.deploymentRevision = new Date().toISOString();
-        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs();
+        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.srcDir);
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
 
@@ -526,12 +526,6 @@ export class NuxtServerAppStack extends Stack {
      * after a specified period of time via the Lambda function in the {@see NuxtAppAssetsCleanupStack}.
      */
     private configureDeployments(): BucketDeployment[] {
-        const defaultCacheConfig = [
-            CacheControl.setPublic(),
-            CacheControl.maxAge(Duration.days(365)),
-            CacheControl.fromString('immutable'),
-        ];
-
         // Returns a deployment for every configured static asset type to respect the different cache settings
         return this.staticAssetConfigs.filter(asset => fs.existsSync(asset.source)).map((asset, assetIndex) => {
             return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
@@ -542,7 +536,7 @@ export class NuxtServerAppStack extends Stack {
                 storageClass: StorageClass.STANDARD,
                 exclude: ['*'],
                 include: [asset.pattern],
-                cacheControl: asset.cacheControl ?? defaultCacheConfig,
+                cacheControl: asset.cacheControl,
                 contentType: asset.contentType,
                 distribution: asset.invalidateOnChange ? this.cdn : undefined,
                 distributionPaths: asset.invalidateOnChange ? [`/${asset.pattern}`] : undefined,
