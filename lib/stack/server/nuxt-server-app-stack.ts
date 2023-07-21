@@ -69,6 +69,42 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
      * Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
      */
     readonly enableSitemap?: boolean;
+
+    /**
+     * An array of headers to pass to the Nuxt app on SSR requests.
+     * The more headers are passed, the weaker the cache performance will be, as the cache key
+     * is based on the headers.
+     * No headers are passed by default.
+     */
+    readonly allowHeaders?: string[];
+
+    /**
+     * An array of cookies to pass to the Nuxt app on SSR requests.
+     * The more cookies are passed, the weaker the cache performance will be, as the cache key
+     * is based on the cookies.
+     * No cookies are passed by default.
+     */
+    readonly allowCookies?: string[];
+
+    /**
+     * An array of query param keys to pass to the Nuxt app on SSR requests.
+     * The more query params are passed, the weaker the cache performance will be, as the cache key
+     * is based on the query params.
+     * Note that this config can not be combined with {@see denyQueryParams}.
+     * If both are specified, the {@see denyQueryParams} will be ignored.
+     * All query params are passed by default.
+     */
+    readonly allowQueryParams?: string[];
+
+    /**
+     * An array of query param keys to deny passing to the Nuxt app on SSR requests.
+     * It might be useful to prevent specific external query params, e.g., fbclid, utm_campaign, ...,
+     * to improve cache performance, as the cache key is based on the specified query params.
+     * Note that this config can not be combined with {@see allowQueryParams}.
+     * If both are specified, the {@see denyQueryParams} will be ignored.
+     * All query params are passed by default.
+     */
+    readonly denyQueryParams?: string[];
 }
 
 /**
@@ -349,7 +385,7 @@ export class NuxtServerAppStack extends Stack {
             minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2018,
             certificate: Certificate.fromCertificateArn(this, `${this.resourceIdPrefix}-global-certificate`, props.globalTlsCertificateArn),
             httpVersion: HttpVersion.HTTP2_AND_3,
-            defaultBehavior: this.createNuxtAppRouteBehavior(),
+            defaultBehavior: this.createNuxtAppRouteBehavior(props),
             additionalBehaviors: this.setupCloudFrontRouting(props),
             priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
         });
@@ -361,7 +397,7 @@ export class NuxtServerAppStack extends Stack {
      *
      * @private
      */
-    private createNuxtAppRouteBehavior(): BehaviorOptions {
+    private createNuxtAppRouteBehavior(props: NuxtServerAppStackProps): BehaviorOptions {
         return {
             origin: new HttpOrigin(`${this.apiGateway.httpApiId}.execute-api.${this.region}.amazonaws.com`, {
                 connectionAttempts: 2,
@@ -373,7 +409,7 @@ export class NuxtServerAppStack extends Stack {
             compress: true,
             viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             originRequestPolicy: undefined,
-            cachePolicy: this.createSsrCachePolicy(),
+            cachePolicy: this.createSsrCachePolicy(props),
         };
     }
 
@@ -396,25 +432,16 @@ export class NuxtServerAppStack extends Stack {
      * forward required cookies, query params and headers. This doesn't make any sense, because if nothing
      * is cached, one would expect, that anything would/could be forwarded, but anyway...
      */
-    private createSsrCachePolicy(): ICachePolicy {
-
-        // The headers to make accessible in the Nuxt app code.
-        // There is no 'CacheHeaderBehavior.all()' option, so we have to explicitly define them.
-        const headers = [
-            'User-Agent', // Required to distinguish between mobile and desktop template
-            'Authorization', // For authorization
-            'Host' // To access the domain name on SSR requests
-        ];
-
+    private createSsrCachePolicy(props: NuxtServerAppStackProps): ICachePolicy {
         return new CachePolicy(this, `${this.resourceIdPrefix}-cache-policy`, {
             cachePolicyName: `${this.resourceIdPrefix}-cdn-cache-policy`,
-            comment: `Passes all required request data to the ${this.resourceIdPrefix} origin.`,
+            comment: `Defines which request data to pass to the ${this.resourceIdPrefix} origin and how the cache key is calculated.`,
             defaultTtl: Duration.seconds(0),
             minTtl: Duration.seconds(0),
-            maxTtl: Duration.seconds(1), // The max TTL must not be 0 for a cache policy
-            queryStringBehavior: CacheQueryStringBehavior.all(),
-            headerBehavior: CacheHeaderBehavior.allowList(...headers),
-            cookieBehavior: CacheCookieBehavior.all(),
+            maxTtl: Duration.days(365),
+            queryStringBehavior: props.allowQueryParams ? CacheQueryStringBehavior.allowList(...props.allowQueryParams) : (props.denyQueryParams ? CacheQueryStringBehavior.denyList(...props.denyQueryParams) : CacheQueryStringBehavior.all()),
+            headerBehavior: props.allowHeaders ? CacheHeaderBehavior.allowList(...props.allowHeaders) : CacheHeaderBehavior.none(),
+            cookieBehavior: props.allowCookies ? CacheCookieBehavior.allowList(...props.allowCookies) : CacheCookieBehavior.none(),
             enableAcceptEncodingBrotli: true,
             enableAcceptEncodingGzip: true,
         });
