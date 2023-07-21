@@ -121,6 +121,12 @@ const getNuxtAppBuildAssetConfigs = (): StaticAssetConfig[] => {
             contentType: 'application/javascript; charset=UTF-8',
         },
         {
+            pattern: '*.js.map',
+            target: buildAssetsTargetPath,
+            source: buildAssetsSourcePath,
+            contentType: 'application/json; charset=UTF-8',
+        },
+        {
             pattern: '*.css',
             target: buildAssetsTargetPath,
             source: buildAssetsSourcePath,
