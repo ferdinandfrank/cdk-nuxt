@@ -44,7 +44,14 @@ export interface NuxtAppStackProps extends StackProps {
     readonly globalTlsCertificateArn: string;
 
     /**
-     * The value of the srcDir from the nuxt.config.ts file.
+     * The path to the root directory of the Nuxt app (at which the `nuxt.config.ts` file is located).
+     * Defaults to '.'.
+     */
+    readonly rootDir?: string;
+
+    /**
+     * The path to the source files within the root directory (`rootDir`) of the Nuxt app (at which the `.vue` files are located).
+     * Should match the `srcDir` prop of the `nuxt.config.ts` file.
      * Required to deploy the public static assets.
      */
     readonly srcDir?: string;

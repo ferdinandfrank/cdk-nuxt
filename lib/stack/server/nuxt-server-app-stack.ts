@@ -198,7 +198,7 @@ export class NuxtServerAppStack extends Stack {
 
         // Nuxt app resources
         this.deploymentRevision = new Date().toISOString();
-        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.srcDir);
+        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.srcDir, props.rootDir ?? '.');
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
 
@@ -286,7 +286,7 @@ export class NuxtServerAppStack extends Stack {
             runtime: Runtime.NODEJS_16_X,
             architecture: Architecture.ARM_64,
             handler: `${props.entrypoint ?? 'index'}.handler`,
-            code: Code.fromAsset('.output/server', {
+            code: Code.fromAsset(`${props.rootDir ?? '.' }/.output/server`, {
                 exclude: ['**.svg', '**.ico', '**.png', '**.jpg', '**.js.map'],
             }),
             timeout: Duration.seconds(10),

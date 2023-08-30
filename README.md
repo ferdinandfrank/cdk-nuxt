@@ -90,8 +90,13 @@ The ARN of the certificate to use at the ApiGateway for the Nuxt app to make it 
 and to provide the custom domain to the Nuxt app via the 'Host' header for server side rendering use cases.
 The certificate must be issued in the same region as specified via 'env.region' as ApiGateway works regionally.
 
+### rootDir?: string;
+The path to the root directory of the Nuxt app (at which the `nuxt.config.ts` file is located).
+Defaults to '.'.
+
 ### srcDir?: string;
-The value of the srcDir from the nuxt.config.ts file.
+The path to the source files within the root directory (`rootDir`) of the Nuxt app (at which the `.vue` files are located).
+Should match the `srcDir` prop of the `nuxt.config.ts` file.
 Required to deploy the public static assets.
 
 ### entrypoint?: string
