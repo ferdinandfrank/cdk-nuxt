@@ -1,9 +1,8 @@
-name: Publish
+name: Build
 
+# Build project on every push
 on:
   push:
-    tags:
-      - '**' # Listen to push of every tag format, including hierarchical tags like v1.0/beta
 
 jobs:
   build:
@@ -16,11 +15,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: Create release
-        uses: ncipollo/release-action@v1
-        with:
-          generateReleaseNotes: true
 
       # Init cache to speed up yarn install
       - name: Get yarn cache directory path
@@ -43,8 +37,3 @@ jobs:
         run: |
           cd lib/functions/assets-cleanup && yarn build && cd ../../..
           yarn build
-
-      - name: Publish
-        run: yarn publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

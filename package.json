@@ -20,7 +20,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "release": "yarn run build && yarn publish && git push --follow-tags"
+    "release": "yarn run build && yarn version && git push --follow-tags"
   },
   "devDependencies": {
     "@types/node": "^12.12.14",
