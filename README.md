@@ -1,4 +1,4 @@
-# CDK Nuxt 3 Plugin
+# AWS CDK Nuxt 3 Deployment Stack
 
 <p>
     <a href="https://github.com/ferdinandfrank/cdk-nuxt/actions/workflows/publish.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/ferdinandfrank/cdk-nuxt/publish.yml?logo=github" /></a>
