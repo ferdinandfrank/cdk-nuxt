@@ -88,6 +88,13 @@ const getNuxtAppCustomAssetConfigs = (srcDir: string|undefined = undefined, root
             cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
         },
         {
+            pattern: 'manifest.webmanifest', // Manifest created by PWA module
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            contentType: 'application/manifest+json; charset=UTF-8',
+            cacheControl: [CacheControl.setPublic(), CacheControl.maxAge(Duration.days(1))],
+        },
+        {
             pattern: '*.ico', // Favicon
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
@@ -173,7 +180,7 @@ const getNuxtAppBuildAssetConfigs = (rootDir: string = '.'): StaticAssetConfig[]
             invalidateOnChange: true
         },
 
-        // Manifest created by PWA module
+        // Manifest created by legacy PWA module
         {
             pattern: 'manifest.*.json',
             target: buildAssetsTargetPath,
