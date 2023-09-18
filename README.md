@@ -116,6 +116,11 @@ Whether to enable AWS X-Ray for the Nuxt Lambda function.
 ### enableSitemap?: boolean
 Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
 
+### outdatedAssetsRetentionDays?: boolean
+The number of days to retain static assets of outdated deployments in the S3 bucket.
+Useful to allow users to still access old assets after a new deployment when they are still browsing on an old version.
+Defaults to 30 days.
+
 ### allowHeaders?: string[]
 An array of headers to pass to the Nuxt app on SSR requests.
 The more headers are passed, the weaker the cache performance will be, as the cache key

@@ -55,6 +55,18 @@ const getNuxtAppCustomAssetConfigs = (srcDir: string|undefined = undefined, root
 
     return [
         {
+            pattern: 'app-revision',
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            contentType: 'text/plain; charset=UTF-8',
+            cacheControl: [
+                CacheControl.setPublic(),
+                CacheControl.maxAge(Duration.seconds(10)),
+                CacheControl.sMaxAge(Duration.days(14)),
+            ],
+            invalidateOnChange: true
+        },
+        {
             pattern: '*.txt', // E.g., robots.txt, ads.txt, ...
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,

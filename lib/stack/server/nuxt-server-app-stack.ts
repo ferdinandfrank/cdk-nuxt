@@ -28,7 +28,7 @@ import {
     ObjectOwnership
 } from "aws-cdk-lib/aws-s3";
 import {AaaaRecord, ARecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
-import {BucketDeployment, CacheControl, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
+import {BucketDeployment, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
 import {HttpOrigin, S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {CloudFrontTarget} from "aws-cdk-lib/aws-route53-targets";
 import {HttpMethod} from "aws-cdk-lib/aws-stepfunctions-tasks";
@@ -41,6 +41,7 @@ import {Rule, RuleTargetInput, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import {NuxtAppStackProps} from "../nuxt-app-stack-props";
 import * as path from "path";
+import {writeFileSync} from "fs";
 
 /**
  * Defines the props required for the {@see NuxtServerAppStack}.
@@ -80,6 +81,13 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
      * Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
      */
     readonly enableSitemap?: boolean;
+
+    /**
+     * The number of days to retain static assets of outdated deployments in the S3 bucket.
+     * Useful to allow users to still access old assets after a new deployment when they are still browsing on an old version.
+     * Defaults to 30 days.
+     */
+    readonly outdatedAssetsRetentionDays?: number;
 
     /**
      * An array of headers to pass to the Nuxt app on SSR requests.
@@ -131,8 +139,8 @@ export class NuxtServerAppStack extends Stack {
     private readonly resourceIdPrefix: string;
 
     /**
-     * The identifier for the current deployment that is used as S3 folder name
-     * to store the static assets of the Nuxt app.
+     * The identifier for the current deployment that is used to tag the static assets of the deployment
+     * to later be able to clean up outdated assets.
      *
      * @private
      */
@@ -197,7 +205,7 @@ export class NuxtServerAppStack extends Stack {
         this.resourceIdPrefix = `${props.project}-${props.service}-${props.environment}`;
 
         // Nuxt app resources
-        this.deploymentRevision = new Date().toISOString();
+        this.deploymentRevision = this.createDeploymentRevision(props);
         this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.srcDir, props.rootDir ?? '.');
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
@@ -216,6 +224,19 @@ export class NuxtServerAppStack extends Stack {
         // Static assets cleanup resources
         this.cleanupLambdaFunction = this.createCleanupLambdaFunction(props);
         this.createCleanupTriggerRule();
+    }
+
+    /**
+     * Creates the current deployment revision file in the public folder of the Nuxt app to be accessible
+     * and returns the current revision.
+     */
+    private createDeploymentRevision(props: NuxtServerAppStackProps): string {
+        const revisionFilePath = `${props.rootDir ?? '.'}${props.srcDir ? `/${props.srcDir}` : ''}/public/app-revision`;
+        const appRevision = new Date().toISOString();
+
+        writeFileSync(revisionFilePath, appRevision, {encoding: 'utf-8'});
+
+        return appRevision;
     }
 
     /**
@@ -328,6 +349,7 @@ export class NuxtServerAppStack extends Stack {
             logRetention: RetentionDays.TWO_WEEKS,
             environment: {
                 STATIC_ASSETS_BUCKET: this.staticAssetsBucket.bucketName,
+                OUTDATED_ASSETS_RETENTION_DAYS: `${props.outdatedAssetsRetentionDays ?? 30}`,
                 ENVIRONMENT: props.environment,
                 AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
                 NODE_OPTIONS: '--enable-source-maps',
@@ -470,7 +492,6 @@ export class NuxtServerAppStack extends Stack {
                 connectionAttempts: 2,
                 connectionTimeout: Duration.seconds(3),
                 originAccessIdentity: this.cdnAccessIdentity,
-                originPath: this.deploymentRevision,
             }),
             compress: true,
             allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
@@ -521,9 +542,10 @@ export class NuxtServerAppStack extends Stack {
 
     /**
      * Uploads the static assets of the Nuxt app as defined in {@see getNuxtAppStaticAssetConfigs} to the static assets S3 bucket.
-     * In order to enable a zero-downtime deployment, we use a new subdirectory (revision) for every deployment.
-     * The previous versions are retained to allow clients to continue to work with an older revision but gets cleaned up
-     * after a specified period of time via the Lambda function in the {@see NuxtAppAssetsCleanupStack}.
+     * In order to enable a zero-downtime deployment with minimal storage load,
+     * we deploy the static assets of every deployment into the same folder but mark them with a deployment revision.
+     * By doing so, the files of previous deployments are retained to allow clients to continue to work with an older revision
+     * but gets cleaned up after a specified period of time via the cleanup Lambda function.
      */
     private configureDeployments(): BucketDeployment[] {
         // Returns a deployment for every configured static asset type to respect the different cache settings
@@ -531,7 +553,7 @@ export class NuxtServerAppStack extends Stack {
             return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
                 sources: [Source.asset(asset.source)],
                 destinationBucket: this.staticAssetsBucket,
-                destinationKeyPrefix: this.deploymentRevision + asset.target,
+                destinationKeyPrefix: asset.target.replace(/^\/+/g, ''), // Remove leading slash
                 prune: false,
                 storageClass: StorageClass.STANDARD,
                 exclude: ['*'],
@@ -541,7 +563,15 @@ export class NuxtServerAppStack extends Stack {
                 distribution: asset.invalidateOnChange ? this.cdn : undefined,
                 distributionPaths: asset.invalidateOnChange ? [`/${asset.pattern}`] : undefined,
                 logRetention: RetentionDays.ONE_DAY,
-                memoryLimit: 256 // Some Nuxt applications have a lot of assets to deploy whereby the function might run out of memory
+
+                metadata: {
+                    // Store build revision on every asset to allow cleanup of outdated assets
+                    revision: this.deploymentRevision,
+                },
+
+                // Some Nuxt applications have a lot of assets to deploy whereby the function might run out of memory.
+                // Additionally, a high memory limit might speed up deployments.
+                memoryLimit: 1792
             })
         });
     }
