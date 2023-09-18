@@ -1,8 +1,10 @@
 name: Build
 
-# Build project on every push
+# Build project on develop pushes
 on:
   push:
+    branches:
+      - develop
 
 jobs:
   build:
