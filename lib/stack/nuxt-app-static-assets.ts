@@ -20,8 +20,9 @@ export interface StaticAssetConfig {
 
     /**
      * The content type to set for the files in the source folder when uploading them to the target.
+     * Useful to override force content types for specific files.
      */
-    contentType: string,
+    contentType?: string,
 
     /**
      * The cache settings to use for the uploaded source files when accessing them on the target path with the specified pattern.
@@ -56,6 +57,8 @@ const getNuxtAppCustomAssetConfigs = (srcDir: string|undefined = undefined, root
     ];
 
     return [
+
+        // File to detect current deployment revision to delete outdated files of old deployments
         {
             pattern: 'app-revision',
             source: customAssetsSourcePath,
@@ -69,69 +72,25 @@ const getNuxtAppCustomAssetConfigs = (srcDir: string|undefined = undefined, root
             ],
             invalidateOnChange: true
         },
+
+        // Files for native app links
         {
-            pattern: '*.txt', // E.g., robots.txt, ads.txt, ...
+            pattern: '.well-known/*',
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
-            contentType: 'text/plain; charset=UTF-8',
+            contentType: 'application/json; charset=UTF-8', // Explicitly provided as these file usually have no extension
             cacheControl: defaultCacheConfig,
         },
+
+        // E.g., robots.txt, ads.txt, sitemap.xml, *.js, manifest.webmanifest ...
+        // But exclude .gitignore and other hidden files
         {
-            pattern: '*.xml', // E.g., sitemap.xml ...
+            pattern: '?*.*',
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
-            contentType: 'text/xml; charset=UTF-8',
+            contentType: undefined,
             cacheControl: defaultCacheConfig,
         },
-        {
-            pattern: '.well-known/*', // Files for native app links
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-            contentType: 'application/json; charset=UTF-8',
-            cacheControl: defaultCacheConfig,
-        },
-        {
-            pattern: 'manifest.webmanifest', // Manifest created by PWA module
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-            contentType: 'application/manifest+json; charset=UTF-8',
-            cacheControl: defaultCacheConfig,
-        },
-        {
-            pattern: '*.ico', // Favicon
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-            contentType: 'image/x-icon',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.png',
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-            contentType: 'image/png',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.jpg',
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-            contentType: 'image/jpg',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.svg',
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-            contentType: 'image/svg+xml',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.js',
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-            contentType: 'application/javascript; charset=UTF-8',
-            cacheControl: defaultCacheConfig,
-        }
     ];
 };
 
@@ -154,29 +113,6 @@ const getNuxtAppBuildAssetConfigs = (rootDir: string = '.'): StaticAssetConfig[]
     ];
 
     return [
-
-        // Build Assets
-        {
-            pattern: '*.js',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'application/javascript; charset=UTF-8',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.js.map',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'application/json; charset=UTF-8',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.css',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'text/css; charset=UTF-8',
-            cacheControl: defaultCacheConfig
-        },
         {
             pattern: '*.html',
             target: buildAssetsTargetPath,
@@ -187,62 +123,11 @@ const getNuxtAppBuildAssetConfigs = (rootDir: string = '.'): StaticAssetConfig[]
             cacheControl: [CacheControl.setPublic(), CacheControl.sMaxAge(Duration.days(7))],
             invalidateOnChange: true
         },
-
-        // Manifest created by legacy PWA module
         {
-            pattern: 'manifest.*.json',
+            pattern: '*.*',
             target: buildAssetsTargetPath,
             source: buildAssetsSourcePath,
-            contentType: 'application/json; charset=UTF-8',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.png',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'image/png',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.jpg',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'image/jpg',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.svg',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'image/svg+xml',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.eot',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'application/vnd.ms-fontobject',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.ttf',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'application/font-sfnt',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.woff',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'font/woff',
-            cacheControl: defaultCacheConfig
-        },
-        {
-            pattern: '*.woff2',
-            target: buildAssetsTargetPath,
-            source: buildAssetsSourcePath,
-            contentType: 'font/woff2',
+            contentType: undefined,
             cacheControl: defaultCacheConfig
         }
     ]
