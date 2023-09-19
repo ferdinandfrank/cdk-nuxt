@@ -94,11 +94,6 @@ The certificate must be issued in the same region as specified via 'env.region' 
 The path to the root directory of the Nuxt app (at which the `nuxt.config.ts` file is located).
 Defaults to '.'.
 
-### srcDir?: string;
-The path to the source files within the root directory (`rootDir`) of the Nuxt app (at which the `.vue` files are located).
-Should match the `srcDir` prop of the `nuxt.config.ts` file.
-Required to deploy the public static assets.
-
 ### entrypoint?: string
 The file name (without extension) of the Lambda entrypoint within the 'server' directory exporting a handler.
 Defaults to "index".

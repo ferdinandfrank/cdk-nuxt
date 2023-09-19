@@ -206,7 +206,7 @@ export class NuxtServerAppStack extends Stack {
 
         // Nuxt app resources
         this.deploymentRevision = this.createDeploymentRevision(props);
-        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.srcDir, props.rootDir ?? '.');
+        this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.rootDir ?? '.');
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
 
@@ -231,7 +231,7 @@ export class NuxtServerAppStack extends Stack {
      * and returns the current revision.
      */
     private createDeploymentRevision(props: NuxtServerAppStackProps): string {
-        const revisionFilePath = `${props.rootDir ?? '.'}${props.srcDir ? `/${props.srcDir}` : ''}/public/app-revision`;
+        const revisionFilePath = `${props.rootDir ?? '.'}/.output/public/app-revision`;
         const appRevision = new Date().toISOString();
 
         writeFileSync(revisionFilePath, appRevision, {encoding: 'utf-8'});
