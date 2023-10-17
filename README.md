@@ -146,10 +146,25 @@ If both are specified, the {@see denyQueryParams} will be ignored.
 All query params are passed by default.
 
 
-## Build and Deploy
+## Deployment
 
-After the installation and the setup you are already good to go to build the Nuxt app and to deploy it to AWS with this package.
-By running the following script, the packages of the Nuxt app will be installed and the Nuxt app will be built.
+After the installation and the setup you are already good to go to build the Nuxt app and to deploy it to AWS with this package
+by following the steps below:
+
+### 1. Bootstrap CDK
+Deploying stacks with the AWS CDK requires dedicated Amazon S3 buckets and other containers to be available to AWS CloudFormation during deployment. 
+Creating these is called bootstrapping and is **only required once** per account and region. 
+To bootstrap, run the following command:
+
+```bash
+cdk bootstrap aws://ACCOUNT-NUMBER/REGION
+```
+
+See https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html for details.
+
+### 2. Build and Deploy
+
+By running the following script, the packages of the Nuxt app will be installed and the Nuxt app will be built automatically.
 Afterwards, the CDK stack will be deployed to AWS.
 
 ```bash
