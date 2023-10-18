@@ -210,6 +210,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
       - name: Build and deploy to AWS
         run: node_modules/.bin/cdk-nuxt-deploy-server
         env:
