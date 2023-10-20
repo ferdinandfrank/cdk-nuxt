@@ -23,7 +23,7 @@
     "release": "yarn run build && yarn version && git push --follow-tags"
   },
   "devDependencies": {
-    "@types/node": "^16.11.0",
+    "@types/node": "^18.18.6",
     "fs": "^0.0.1-security",
     "ts-node": "^10.5.0",
     "typescript": "^4.5.5"

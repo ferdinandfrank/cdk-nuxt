@@ -304,7 +304,7 @@ export class NuxtServerAppStack extends Stack {
         return new Function(this, funcName, {
             functionName: funcName,
             description: `Renders the ${this.resourceIdPrefix} Nuxt app.`,
-            runtime: Runtime.NODEJS_16_X,
+            runtime: Runtime.NODEJS_18_X,
             architecture: Architecture.ARM_64,
             handler: `${props.entrypoint ?? 'index'}.handler`,
             code: Code.fromAsset(`${props.rootDir ?? '.' }/.output/server`, {
@@ -334,12 +334,12 @@ export class NuxtServerAppStack extends Stack {
         const result: Function = new Function(this, functionName, {
             functionName: functionName,
             description: `Auto-deletes the outdated static assets in the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
-            runtime: Runtime.NODEJS_16_X,
+            runtime: Runtime.NODEJS_18_X,
             architecture: Architecture.ARM_64,
             layers: [new LayerVersion(this, `${this.resourceIdPrefix}-layer`, {
                 layerVersionName: `${this.resourceIdPrefix}-layer`,
                 code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/layer')),
-                compatibleRuntimes: [Runtime.NODEJS_16_X],
+                compatibleRuntimes: [Runtime.NODEJS_18_X],
                 description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
             })],
             handler: 'index.handler',
