@@ -41,12 +41,28 @@ export interface StaticAssetConfig {
  * @param rootDir The path to the root directory of the Nuxt app at which the `.output` build folder is located.
  */
 export const getNuxtAppStaticAssetConfigs = (rootDir: string = '.'): StaticAssetConfig[] => {
-    // We copy the custom assets from the source directory to prevent overriding the build assets cache behavior
-    // when copying from outputs directory
     const customAssetsSourcePath = `${rootDir}/.output/public`;
     const customAssetsTargetPath = '/';
 
     return [
+
+        // All custom files from the public dir, e.g., robots.txt, ads.txt, sitemap.xml, *.js, manifest.webmanifest, etc.,
+        // but exclude .gitignore and other hidden files.
+        // As this is a generic pattern which also matches the build files and potentially other specific files,
+        // we define it first to let the specific patterns below override it.
+        {
+            pattern: '?*.*',
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+
+            // Custom assets might not be versioned whereby we want to prevent any caching issues when updating them
+            // -> cache for only 1 day on CDN and 1 hour on browser
+            cacheControl: [
+                CacheControl.setPublic(),
+                CacheControl.maxAge(Duration.days(1)),
+                CacheControl.sMaxAge(Duration.hours(1)),
+            ],
+        },
 
         // File to detect current deployment revision to delete outdated files of old deployments
         {
@@ -86,24 +102,8 @@ export const getNuxtAppStaticAssetConfigs = (rootDir: string = '.'): StaticAsset
             cacheControl: [
                 CacheControl.setPublic(),
                 CacheControl.maxAge(Duration.days(1)),
-                CacheControl.sMaxAge(Duration.minutes(1)),
+                CacheControl.sMaxAge(Duration.hours(1)),
             ],
-        },
-
-        // All custom files from the public dir, e.g., robots.txt, ads.txt, sitemap.xml, *.js, manifest.webmanifest ...
-        // But exclude .gitignore and other hidden files
-        {
-            pattern: '?*.*',
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-
-            // Custom assets might not be versioned whereby we want to prevent any caching issues when updating them
-            // -> cache for only 1 day on CDN and 1 minute on browser
-            cacheControl: [
-                CacheControl.setPublic(),
-                CacheControl.maxAge(Duration.days(1)),
-                CacheControl.sMaxAge(Duration.minutes(1)),
-            ],
-        },
+        }
     ];
 };
