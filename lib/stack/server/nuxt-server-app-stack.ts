@@ -344,7 +344,7 @@ export class NuxtServerAppStack extends Stack {
             })],
             handler: 'index.handler',
             code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/app')),
-            timeout: Duration.minutes(1),
+            timeout: Duration.minutes(5),
             memorySize: 128,
             logRetention: RetentionDays.TWO_WEEKS,
             environment: {
