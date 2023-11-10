@@ -78,8 +78,6 @@ const deleteAssets = async (
 };
 
 exports.handler = async (event: any, context: any) => {
-    console.log('Starting cleanup of static assets older than 1 week...');
-
     try {
         const client = new S3Client({region: process.env.AWS_REGION});
         const bucketName = process.env.STATIC_ASSETS_BUCKET;
@@ -93,6 +91,8 @@ exports.handler = async (event: any, context: any) => {
         const retainAssetsInDays = Number.parseInt(process.env.OUTDATED_ASSETS_RETENTION_DAYS);
         const currentRevision = await getCurrentRevision(client, bucketName);
         const deleteOlderThan = new Date(currentRevision.getTime() - retainAssetsInDays * ONE_DAY_IN_MILLISECONDS);
+
+        console.log(`Starting cleanup of static assets older than ${deleteOlderThan.toISOString()}...`);
 
         let assetKeysToDelete: string[] = [];
         let lastToken = undefined;
