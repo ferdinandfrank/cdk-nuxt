@@ -34,7 +34,7 @@ import {HttpMethod} from "aws-cdk-lib/aws-stepfunctions-tasks";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import {HttpLambdaIntegration} from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "@aws-cdk/aws-apigatewayv2-alpha";
-import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "../nuxt-app-static-assets";
+import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "../NuxtAppStaticAssets";
 import * as fs from "fs";
 import {Rule, RuleTargetInput, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
