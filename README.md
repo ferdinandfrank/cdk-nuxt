@@ -15,6 +15,7 @@ Easily deploy Nuxt 3 applications via CDK on AWS including the following feature
 - Automatic upload of the build files for CSR and static assets to [S3](https://aws.amazon.com/s3/) with optimized caching rules
 - Scheduled pings of the Nuxt app to keep the Lambda warm for fast responses via [EventBridge](https://aws.amazon.com/eventbridge/) rules
 - Automatic cleanup of outdated static assets and build files
+- Access logs analysis via [Athena](https://aws.amazon.com/athena/) for the Nuxt app's CloudFront distribution
 
 ## Prerequisites
 
@@ -112,6 +113,13 @@ Whether to enable AWS X-Ray for the Nuxt Lambda function.
 
 ### enableSitemap?: boolean
 Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
+
+### enableAccessLogsAnalysis?: boolean
+Whether to enable access logs analysis for the Nuxt app's CloudFront distribution via Athena.
+
+### accessLogCookies?: string[]
+An array of cookies to include for reporting in the access logs analysis.
+Only has an effect when `enableAccessLogsAnalysis` is set to `true`.
 
 ### outdatedAssetsRetentionDays?: boolean
 The number of days to retain static assets of outdated deployments in the S3 bucket.

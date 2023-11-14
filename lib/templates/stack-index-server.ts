@@ -43,6 +43,12 @@ const appStackProps: NuxtServerAppStackProps = {
     // Whether to enable AWS X-Ray for the Nuxt Lambda function.
     enableTracing: false,
 
+    // Whether to enable reporting of CloudFront access logs via Athena.
+    enableAccessLogsAnalysis: false,
+
+    // Array of cookie names to include in the access logs (whitelist).
+    accessLogCookies: [],
+
     // Stack tags that will be applied to all the taggable resources and the stack itself.
     tags: {
         service: 'nuxt-app'
