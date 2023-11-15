@@ -105,8 +105,7 @@ export abstract class AccessLogsAnalysis extends Construct {
                 resultConfiguration: {
                     outputLocation: `s3://${this.bucket.bucketName}/${AccessLogsAnalysis.ACCESS_LOGS_FOLDER_ATHENA_RESULTS}`,
                 },
-                enforceWorkGroupConfiguration: true,
-                engineVersion: {selectedEngineVersion: 'Athena engine version 3'},
+                enforceWorkGroupConfiguration: true
             },
             tags,
         });
