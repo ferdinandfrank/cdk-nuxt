@@ -24,7 +24,6 @@ import {
     Bucket,
     BucketAccessControl,
     BucketEncryption,
-    IBucket,
     ObjectOwnership
 } from "aws-cdk-lib/aws-s3";
 import {AaaaRecord, ARecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
@@ -35,96 +34,14 @@ import {HttpMethod} from "aws-cdk-lib/aws-stepfunctions-tasks";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import {HttpLambdaIntegration} from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "@aws-cdk/aws-apigatewayv2-alpha";
-import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "../nuxt-app-static-assets";
+import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "../NuxtAppStaticAssets";
 import * as fs from "fs";
 import {Rule, RuleTargetInput, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
-import {NuxtAppStackProps} from "../nuxt-app-stack-props";
 import * as path from "path";
 import {writeFileSync} from "fs";
-
-/**
- * Defines the props required for the {@see NuxtServerAppStack}.
- */
-export interface NuxtServerAppStackProps extends NuxtAppStackProps {
-
-    /**
-     * The ARN of the certificate to use at the ApiGateway for the Nuxt app to make it accessible via the custom domain
-     * and to provide the custom domain to the Nuxt app via the 'Host' header for server side rendering use cases.
-     * The certificate must be issued in the same region as specified via 'env.region' as ApiGateway works regionally.
-     */
-    readonly regionalTlsCertificateArn: string;
-
-    /**
-     * The file name (without extension) of the Lambda entrypoint within the 'server' directory exporting a handler.
-     * Defaults to "index".
-     */
-    readonly entrypoint?: string;
-
-    /**
-     * A JSON serialized string of environment variables to pass to the Lambda function.
-     */
-    readonly entrypointEnv?: string;
-
-    /**
-     * The memory size to apply to the Nuxt app's Lambda.
-     * Defaults to 1792MB (optimized for costs and performance for standard Nuxt apps).
-     */
-    readonly memorySize?: number;
-
-    /**
-     * Whether to enable AWS X-Ray for the Nuxt Lambda function.
-     */
-    readonly enableTracing?: boolean;
-
-    /**
-     * Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
-     */
-    readonly enableSitemap?: boolean;
-
-    /**
-     * The number of days to retain static assets of outdated deployments in the S3 bucket.
-     * Useful to allow users to still access old assets after a new deployment when they are still browsing on an old version.
-     * Defaults to 30 days.
-     */
-    readonly outdatedAssetsRetentionDays?: number;
-
-    /**
-     * An array of headers to pass to the Nuxt app on SSR requests.
-     * The more headers are passed, the weaker the cache performance will be, as the cache key
-     * is based on the headers.
-     * No headers are passed by default.
-     */
-    readonly allowHeaders?: string[];
-
-    /**
-     * An array of cookies to pass to the Nuxt app on SSR requests.
-     * The more cookies are passed, the weaker the cache performance will be, as the cache key
-     * is based on the cookies.
-     * No cookies are passed by default.
-     */
-    readonly allowCookies?: string[];
-
-    /**
-     * An array of query param keys to pass to the Nuxt app on SSR requests.
-     * The more query params are passed, the weaker the cache performance will be, as the cache key
-     * is based on the query params.
-     * Note that this config can not be combined with {@see denyQueryParams}.
-     * If both are specified, the {@see denyQueryParams} will be ignored.
-     * All query params are passed by default.
-     */
-    readonly allowQueryParams?: string[];
-
-    /**
-     * An array of query param keys to deny passing to the Nuxt app on SSR requests.
-     * It might be useful to prevent specific external query params, e.g., fbclid, utm_campaign, ...,
-     * to improve cache performance, as the cache key is based on the specified query params.
-     * Note that this config can not be combined with {@see allowQueryParams}.
-     * If both are specified, the {@see denyQueryParams} will be ignored.
-     * All query params are passed by default.
-     */
-    readonly denyQueryParams?: string[];
-}
+import {NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
+import {CloudFrontAccessLogsAnalysis} from "../access-logs-analysis/CloudFrontAccessLogsAnalysis";
 
 /**
  * CDK stack to deploy a dynamic Nuxt app (target=server) on AWS with Lambda, ApiGateway, S3 and CloudFront.
@@ -156,12 +73,17 @@ export class NuxtServerAppStack extends Stack {
     /**
      * The S3 bucket where the deployment assets gets stored.
      */
-    public staticAssetsBucket: IBucket;
+    public staticAssetsBucket: Bucket;
+
+    /**
+     * The S3 bucket where the access logs of the CloudFront distribution gets stored.
+     */
+    public accessLogsBucket: Bucket|undefined;
 
     /**
      * The S3 bucket where the sitemap assets gets stored.
      */
-    public sitemapBucket: IBucket|undefined;
+    public sitemapBucket: Bucket|undefined;
 
     /**
      * The Lambda function to render the Nuxt app on the server side.
@@ -210,6 +132,11 @@ export class NuxtServerAppStack extends Stack {
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
 
+        if (props.enableAccessLogsAnalysis) {
+            this.accessLogsBucket = this.createAccessLogsBucket();
+            this.createAccessLogsAnalysis(props);
+        }
+
         if (props.enableSitemap) {
             this.sitemapBucket = this.createSitemapBucket();
         }
@@ -254,7 +181,7 @@ export class NuxtServerAppStack extends Stack {
      *
      * @private
      */
-    private createStaticAssetsBucket(): IBucket {
+    private createStaticAssetsBucket(): Bucket {
         const bucketName = `${this.resourceIdPrefix}-assets`;
         const bucket = new Bucket(this, bucketName, {
             blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
@@ -421,6 +348,9 @@ export class NuxtServerAppStack extends Stack {
             defaultBehavior: this.createNuxtAppRouteBehavior(props),
             additionalBehaviors: this.setupCloudFrontRouting(props),
             priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
+            logBucket: this.accessLogsBucket,
+            logFilePrefix: props.enableAccessLogsAnalysis ? CloudFrontAccessLogsAnalysis.getLogFilePrefix() : undefined,
+            logIncludesCookies: true,
         });
     }
 
@@ -551,7 +481,9 @@ export class NuxtServerAppStack extends Stack {
         // Returns a deployment for every configured static asset type to respect the different cache settings
         return this.staticAssetConfigs.filter(asset => fs.existsSync(asset.source)).map((asset, assetIndex) => {
             return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
-                sources: [Source.asset(asset.source)],
+                sources: [Source.asset(asset.source, {
+                    exclude: asset.exclude,
+                })],
                 destinationBucket: this.staticAssetsBucket,
                 destinationKeyPrefix: asset.target.replace(/^\/+/g, ''), // Remove leading slash
                 prune: false,
@@ -664,6 +596,36 @@ export class NuxtServerAppStack extends Stack {
             enabled: true,
             schedule: Schedule.cron({weekDay: '3', hour: '3', minute: '30'}),
             targets: [new LambdaFunction(this.cleanupLambdaFunction)],
+        });
+    }
+
+    /**
+     * Creates a S3 bucket to store the access logs of the CloudFront distribution.
+     */
+    private createAccessLogsBucket(): Bucket {
+        const bucketName = `${this.resourceIdPrefix}-access-logs`;
+        const bucket = new Bucket(this, bucketName, {
+            bucketName,
+            blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+            objectOwnership: ObjectOwnership.BUCKET_OWNER_PREFERRED,
+            // When the stack is destroyed, we expect everything to be deleted
+            removalPolicy: RemovalPolicy.DESTROY,
+            autoDeleteObjects: true,
+        });
+
+        bucket.grantReadWrite(this.cdnAccessIdentity);
+
+        return bucket;
+    }
+
+    private createAccessLogsAnalysis(props: NuxtServerAppStackProps): CloudFrontAccessLogsAnalysis {
+        if (!this.accessLogsBucket) {
+            throw new Error('Access bucket not set');
+        }
+        return new CloudFrontAccessLogsAnalysis(this, `${this.resourceIdPrefix}-access-logs-analysis`, {
+            bucket: this.accessLogsBucket,
+            resourcePrefix: `${this.resourceIdPrefix}-access-logs`,
+            accessLogCookies: props.accessLogCookies,
         });
     }
 }

@@ -27,6 +27,11 @@
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2-integrations-alpha/-/aws-apigatewayv2-integrations-alpha-2.76.0-alpha.0.tgz#f7069bdefb7ebb142bd6b2cc0bdcd7ec60edfa49"
   integrity sha512-lxlcTctPXVa/lZI8pVtN+7LxstErhQ13h8FYZx6JZb4Ip19y7L2yHp+TpwQOQAtYeX6CMlVf7WHzoWQYNnmikg==
 
+"@aws-cdk/aws-glue-alpha@^2.76.0-alpha.0":
+  version "2.76.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-glue-alpha/-/aws-glue-alpha-2.76.0-alpha.0.tgz#a65245d68f92030736c839884aca9785e2d483ad"
+  integrity sha512-zXTb/zvFJaE5G4ofsu+sOoeueahtna9ecjxYJgwJepCBeeWsZZ2QT01J3DGiKm8YL07A7c30q4DWIXWmkcfV2g==
+
 "@balena/dockerignore@^1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@balena/dockerignore/-/dockerignore-1.0.2.tgz#9ffe4726915251e8eb69f44ef3547e0da2c03e0d"

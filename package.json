@@ -1,6 +1,6 @@
 {
   "name": "cdk-nuxt",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -16,6 +16,7 @@
     "cdk-nuxt-init-server": "lib/cli/init-server.js",
     "cdk-nuxt-init-static": "lib/cli/init-static.js",
     "cdk-nuxt-deploy-server": "lib/cli/deploy-server.js",
+    "cdk-nuxt-destroy-server": "lib/cli/destroy-server.js",
     "cdk-nuxt-deploy-static": "lib/cli/deploy-static.js"
   },
   "scripts": {
@@ -31,6 +32,7 @@
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2-alpha": "^2.76.0-alpha.0",
     "@aws-cdk/aws-apigatewayv2-integrations-alpha": "^2.76.0-alpha.0",
+    "@aws-cdk/aws-glue-alpha": "^2.76.0-alpha.0",
     "aws-cdk": "2.76.0",
     "aws-cdk-lib": "2.76.0",
     "constructs": "^10.2.31",

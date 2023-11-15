@@ -15,6 +15,7 @@ Easily deploy Nuxt 3 applications via CDK on AWS including the following feature
 - Automatic upload of the build files for CSR and static assets to [S3](https://aws.amazon.com/s3/) with optimized caching rules
 - Scheduled pings of the Nuxt app to keep the Lambda warm for fast responses via [EventBridge](https://aws.amazon.com/eventbridge/) rules
 - Automatic cleanup of outdated static assets and build files
+- Access logs analysis via [Athena](https://aws.amazon.com/athena/) for the Nuxt app's CloudFront distribution
 
 ## Prerequisites
 
@@ -113,6 +114,13 @@ Whether to enable AWS X-Ray for the Nuxt Lambda function.
 ### enableSitemap?: boolean
 Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
 
+### enableAccessLogsAnalysis?: boolean
+Whether to enable access logs analysis for the Nuxt app's CloudFront distribution via Athena.
+
+### accessLogCookies?: string[]
+An array of cookies to include for reporting in the access logs analysis.
+Only has an effect when `enableAccessLogsAnalysis` is set to `true`.
+
 ### outdatedAssetsRetentionDays?: boolean
 The number of days to retain static assets of outdated deployments in the S3 bucket.
 Useful to allow users to still access old assets after a new deployment when they are still browsing on an old version.
@@ -172,7 +180,42 @@ Afterwards, the CDK stack will be deployed to AWS.
 node_modules/.bin/cdk-nuxt-deploy-server
 ```
 
-## Optional: Automatically deploy on every push (CD) via [GitHub Actions](https://github.com/features/actions)
+## Destroy the Stack
+
+If you want to destroy the stack and all its resources (including storage, e.g., access logs), run the following script:
+
+```bash
+node_modules/.bin/cdk-nuxt-destroy-server
+```
+
+## Reference: Created AWS Resources
+
+In the following, you can find an overview of the AWS resources that will be created by this package for reference.
+
+### NuxtServerAppStack
+
+This stack is responsible for deploying dynamic Nuxt 3 apps to AWS.
+The following AWS resources will be created by this stack:
+
+- [Lambda](https://aws.amazon.com/lambda/):
+    - A Lambda function to render the Nuxt app including a separated Lambda layer to provide the `node_modules` of the Nuxt app required for server-side rendering.
+    - A Lambda function that deletes the outdated static assets of the Nuxt app from S3.
+- [S3](https://aws.amazon.com/s3/):
+    - A bucket to store the client files and static assets of the Nuxt build (`.nuxt/dist/client`) with optimized cache settings.
+    - A bucket to store the CloudFront access logs for analysis via Athena. Only created if `enableAccessLogsAnalysis` is set to `true`.
+- [Route53](https://aws.amazon.com/route53/): Two DNS records (`A` for IPv4 and `AAAA` for IPv6) in the configured hosted zone to make the Nuxt app available on the internet via the configured custom domain.
+- [API Gateway](https://aws.amazon.com/api-gateway/): An HTTP API to make the Nuxt Lambda function publicly available.
+- [CloudFront](https://aws.amazon.com/cloudfront/): A distribution to route incoming requests to the Nuxt Lambda function (via the API Gateway) and the S3 bucket to serve the static assets for the Nuxt app.
+- [EventBridge](https://aws.amazon.com/eventbridge/):
+    - A scheduled rule to ping the Nuxt app's Lambda function every 5 minutes in order to keep it warm and to speed up initial SSR requests.
+    - A scheduled rule to trigger the cleanup Lambda function for deleting the outdated static assets of the Nuxt app from S3 every tuesday at 03:30 AM GMT.
+- [Athena](https://aws.amazon.com/athena/): A database and table to analyze the access logs of the Nuxt app's CloudFront distribution. Only created if `enableAccessLogsAnalysis` is set to `true`.
+
+## Guidelines
+
+In the following, you can find some guidelines for the deployment and usages of this package.
+
+### Automatically deploy on every push (CD) via [GitHub Actions](https://github.com/features/actions)
 
 Feel free to copy the following GitHub Actions YAML file content into a YAML file at `.github/workflows/deploy.yml` to automatically build and deploy the Nuxt app to AWS on every push to a specific branch.<br/>This only works if you're using GitHub for the project's VCS repository.
 
@@ -222,21 +265,3 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 ```
-
-## Advanced: Used AWS Resources
-
-### NuxtServerAppStack
-
-This stack is responsible for deploying dynamic Nuxt 3 apps to AWS.
-The following AWS resources will be created by this stack:
-
-- [Lambda](https://aws.amazon.com/lambda/): 
-  - A Lambda function to render the Nuxt app including a separated Lambda layer to provide the `node_modules` of the Nuxt app required for server-side rendering.
-  - A Lambda function that deletes the outdated static assets of the Nuxt app from S3.
-- [S3](https://aws.amazon.com/s3/): A bucket to store the client files of the Nuxt build (`.nuxt/dist/client`) and the custom static files of the Nuxt app (`static`) with optimized cache settings.
-- [Route53](https://aws.amazon.com/route53/): Two DNS records (`A` for IPv4 and `AAAA` for IPv6) in the configured hosted zone to make the Nuxt app available on the internet via the configured custom domain.
-- [API Gateway](https://aws.amazon.com/api-gateway/): An HTTP API to make the Nuxt Lambda function publicly available.
-- [CloudFront](https://aws.amazon.com/cloudfront/): A distribution to route incoming requests to the Nuxt Lambda function (via the API Gateway) and the S3 bucket to serve the static assets for the Nuxt app.
-- [EventBridge](https://aws.amazon.com/eventbridge/): 
-  - A scheduled rule to ping the Nuxt app's Lambda function every 5 minutes in order to keep it warm and to speed up initial SSR requests.
-  - A scheduled rule to trigger the cleanup Lambda function for deleting the outdated static assets of the Nuxt app from S3 every tuesday at 03:30 AM GMT.

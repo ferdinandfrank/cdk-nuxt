@@ -2,16 +2,23 @@ import {CacheControl} from "aws-cdk-lib/aws-s3-deployment";
 import {Duration} from "aws-cdk-lib";
 
 export interface StaticAssetConfig {
-    /**
-     * The file pattern for the incoming requests that should be forwarded to the target path in the static assets S3 bucket
-     * with the appropriate cache and content settings defined in the same object.
-     */
-    pattern: string,
 
     /**
      * The local directory to upload the files from.
      */
     source: string,
+
+    /**
+     * The file pattern that matches files to upload (recursively) from the source prop directory.
+     * Also defines the pattern for the incoming requests that should be forwarded to the target path in the
+     * static assets S3 bucket with the appropriate cache and content settings defined in the same object.
+     */
+    pattern: string,
+
+    /**
+     * An array of file patterns to exclude from the upload.
+     */
+    exclude?: string[],
 
     /**
      * The remote path at which to make the uploaded files from source accessible.
@@ -44,25 +51,7 @@ export const getNuxtAppStaticAssetConfigs = (rootDir: string = '.'): StaticAsset
     const customAssetsSourcePath = `${rootDir}/.output/public`;
     const customAssetsTargetPath = '/';
 
-    return [
-
-        // All custom files from the public dir, e.g., robots.txt, ads.txt, sitemap.xml, *.js, manifest.webmanifest, etc.,
-        // but exclude .gitignore and other hidden files.
-        // As this is a generic pattern which also matches the build files and potentially other specific files,
-        // we define it first to let the specific patterns below override it.
-        {
-            pattern: '?*.*',
-            source: customAssetsSourcePath,
-            target: customAssetsTargetPath,
-
-            // Custom assets might not be versioned whereby we want to prevent any caching issues when updating them
-            // -> cache for only 1 day on CDN and 1 hour on browser
-            cacheControl: [
-                CacheControl.setPublic(),
-                CacheControl.maxAge(Duration.days(1)),
-                CacheControl.sMaxAge(Duration.hours(1)),
-            ],
-        },
+    const configs: StaticAssetConfig[] = [
 
         // File to detect current deployment revision to delete outdated files of old deployments
         {
@@ -106,4 +95,22 @@ export const getNuxtAppStaticAssetConfigs = (rootDir: string = '.'): StaticAsset
             ],
         }
     ];
+
+    // All custom files from the public dir, e.g., robots.txt, ads.txt, sitemap.xml, *.js, manifest.webmanifest, etc.
+    configs.push({
+        pattern: '?*.*', // exclude .gitignore and other hidden files
+        exclude: configs.map(config => config.pattern), // exclude our specific configs
+        source: customAssetsSourcePath,
+        target: customAssetsTargetPath,
+
+        // Custom assets might not be versioned whereby we want to prevent any caching issues when updating them
+        // -> cache for only 1 day on CDN and 1 hour on browser
+        cacheControl: [
+            CacheControl.setPublic(),
+            CacheControl.maxAge(Duration.days(1)),
+            CacheControl.sMaxAge(Duration.hours(1)),
+        ],
+    })
+
+    return configs;
 };
