@@ -481,7 +481,9 @@ export class NuxtServerAppStack extends Stack {
         // Returns a deployment for every configured static asset type to respect the different cache settings
         return this.staticAssetConfigs.filter(asset => fs.existsSync(asset.source)).map((asset, assetIndex) => {
             return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
-                sources: [Source.asset(asset.source)],
+                sources: [Source.asset(asset.source, {
+                    exclude: asset.exclude,
+                })],
                 destinationBucket: this.staticAssetsBucket,
                 destinationKeyPrefix: asset.target.replace(/^\/+/g, ''), // Remove leading slash
                 prune: false,
@@ -605,8 +607,10 @@ export class NuxtServerAppStack extends Stack {
         const bucket = new Bucket(this, bucketName, {
             bucketName,
             blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-            removalPolicy: RemovalPolicy.RETAIN,
             objectOwnership: ObjectOwnership.BUCKET_OWNER_PREFERRED,
+            // When the stack is destroyed, we expect everything to be deleted
+            removalPolicy: RemovalPolicy.DESTROY,
+            autoDeleteObjects: true,
         });
 
         bucket.grantReadWrite(this.cdnAccessIdentity);
