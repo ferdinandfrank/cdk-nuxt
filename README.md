@@ -180,6 +180,14 @@ Afterwards, the CDK stack will be deployed to AWS.
 node_modules/.bin/cdk-nuxt-deploy-server
 ```
 
+## Destroy the Stack
+
+If you want to destroy the stack and all its resources, run the following script:
+
+```bash
+node_modules/.bin/cdk-nuxt-destroy-server
+```
+
 ## Reference: Created AWS Resources
 
 In the following, you can find an overview of the AWS resources that will be created by this package for reference.

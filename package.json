@@ -16,6 +16,7 @@
     "cdk-nuxt-init-server": "lib/cli/init-server.js",
     "cdk-nuxt-init-static": "lib/cli/init-static.js",
     "cdk-nuxt-deploy-server": "lib/cli/deploy-server.js",
+    "cdk-nuxt-destroy-server": "lib/cli/destroy-server.js",
     "cdk-nuxt-deploy-static": "lib/cli/deploy-static.js"
   },
   "scripts": {
