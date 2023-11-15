@@ -182,7 +182,7 @@ node_modules/.bin/cdk-nuxt-deploy-server
 
 ## Destroy the Stack
 
-If you want to destroy the stack and all its resources, run the following script:
+If you want to destroy the stack and all its resources (including storage, e.g., access logs), run the following script:
 
 ```bash
 node_modules/.bin/cdk-nuxt-destroy-server
