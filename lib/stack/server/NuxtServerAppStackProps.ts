@@ -40,6 +40,12 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
     readonly enableSitemap?: boolean;
 
     /**
+     * Whether to enable (HTTPS only) API access to the Nuxt app via the `/api` path which support all HTTP methods.
+     * See https://nuxt.com/docs/guide/directory-structure/server#recipes for details.
+     */
+    readonly enableApi?: boolean;
+
+    /**
      * Whether to enable reporting of CloudFront access logs via Athena.
      */
     readonly enableAccessLogsAnalysis?: boolean;

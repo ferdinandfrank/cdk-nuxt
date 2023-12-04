@@ -111,6 +111,10 @@ Defaults to 1792MB (optimized for costs and performance for standard Nuxt apps).
 ### enableTracing?: boolean
 Whether to enable AWS X-Ray for the Nuxt Lambda function.
 
+### enableApi?: boolean
+Whether to enable (HTTPS only) API access to the Nuxt app via the `/api` path which support all HTTP methods. 
+See https://nuxt.com/docs/guide/directory-structure/server#recipes for details.
+
 ### enableSitemap?: boolean
 Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
 
