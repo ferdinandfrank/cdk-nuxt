@@ -100,6 +100,7 @@ export abstract class AccessLogsAnalysis extends Construct {
 
         return new CfnWorkGroup(this, workgroupName, {
             name: workgroupName,
+            recursiveDeleteOption: true,
             workGroupConfiguration: {
                 publishCloudWatchMetricsEnabled: false,
                 resultConfiguration: {

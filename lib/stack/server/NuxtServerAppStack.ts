@@ -114,6 +114,16 @@ export class NuxtServerAppStack extends Stack {
     private staticAssetConfigs: StaticAssetConfig[];
 
     /**
+     * The CloudFront distribution origin for the API gateway to route incoming requests to the Nuxt Lambda function.
+     */
+    private httpOrigin: HttpOrigin;
+
+    /**
+     * The cache policy for the Nuxt app route behaviors of the CloudFront distribution.
+     */
+    private appCachePolicy: CachePolicy;
+
+    /**
      * The CloudFront distribution to route incoming requests to the Nuxt Lambda function (via the API gateway)
      * or the S3 assets folder (with caching).
      *
@@ -143,6 +153,8 @@ export class NuxtServerAppStack extends Stack {
 
         this.appLambdaFunction = this.createAppLambdaFunction(props);
         this.apiGateway = this.createApiGateway(props);
+        this.httpOrigin = this.createNuxtAppHttpOrigin();
+        this.appCachePolicy = this.createNuxtAppCachePolicy(props)
         this.cdn = this.createCloudFrontDistribution(props);
         this.configureDeployments();
         this.createDnsRecords(props);
@@ -345,7 +357,7 @@ export class NuxtServerAppStack extends Stack {
             minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2018,
             certificate: Certificate.fromCertificateArn(this, `${this.resourceIdPrefix}-global-certificate`, props.globalTlsCertificateArn),
             httpVersion: HttpVersion.HTTP2_AND_3,
-            defaultBehavior: this.createNuxtAppRouteBehavior(props),
+            defaultBehavior: this.createNuxtAppRouteBehavior(),
             additionalBehaviors: this.setupCloudFrontRouting(props),
             priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
             logBucket: this.accessLogsBucket,
@@ -355,24 +367,30 @@ export class NuxtServerAppStack extends Stack {
     }
 
     /**
-     * Creates a behavior for the CloudFront distribution to route incoming requests to the Nuxt render Lambda function (via API gateway).
-     * Additionally, this automatically redirects HTTP requests to HTTPS.
-     *
-     * @private
+     * Creates the CloudFront distribution behavior origin to route incoming requests to the Nuxt render Lambda function (via API gateway).
      */
-    private createNuxtAppRouteBehavior(props: NuxtServerAppStackProps): BehaviorOptions {
+    private createNuxtAppHttpOrigin(): HttpOrigin {
+        return new HttpOrigin(`${this.apiGateway.httpApiId}.execute-api.${this.region}.amazonaws.com`, {
+            connectionAttempts: 2,
+            connectionTimeout: Duration.seconds(2),
+            readTimeout: Duration.seconds(10),
+            protocolPolicy: OriginProtocolPolicy.HTTPS_ONLY,
+        });
+    }
+
+    /**
+     * Creates a behavior for the CloudFront distribution to route incoming web requests
+     * to the Nuxt render Lambda function (via API gateway).
+     * Additionally, this automatically redirects HTTP requests to HTTPS.
+     */
+    private createNuxtAppRouteBehavior(): BehaviorOptions {
         return {
-            origin: new HttpOrigin(`${this.apiGateway.httpApiId}.execute-api.${this.region}.amazonaws.com`, {
-                connectionAttempts: 2,
-                connectionTimeout: Duration.seconds(2),
-                readTimeout: Duration.seconds(10),
-                protocolPolicy: OriginProtocolPolicy.HTTPS_ONLY,
-            }),
+            origin: this.httpOrigin,
             allowedMethods: AllowedMethods.ALLOW_GET_HEAD,
             compress: true,
             viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             originRequestPolicy: undefined,
-            cachePolicy: this.createSsrCachePolicy(props),
+            cachePolicy: this.appCachePolicy
         };
     }
 
@@ -380,6 +398,9 @@ export class NuxtServerAppStack extends Stack {
         let routingBehaviours: Record<string, BehaviorOptions> = {};
 
         // Specific ones first
+        if (props.enableApi) {
+            routingBehaviours = {...routingBehaviours, ...this.createApiRouteBehavior()};
+        }
         if (props.enableSitemap) {
             routingBehaviours = {...routingBehaviours, ...this.createSitemapRouteBehavior()};
         }
@@ -391,11 +412,8 @@ export class NuxtServerAppStack extends Stack {
 
     /**
      * Creates a cache policy for the Nuxt app route behavior of the CloudFront distribution.
-     * Even though we don't want to cache SSR requests, we still have to create this cache policy in order to
-     * forward required cookies, query params and headers. This doesn't make any sense, because if nothing
-     * is cached, one would expect, that anything would/could be forwarded, but anyway...
      */
-    private createSsrCachePolicy(props: NuxtServerAppStackProps): ICachePolicy {
+    private createNuxtAppCachePolicy(props: NuxtServerAppStackProps): CachePolicy {
         return new CachePolicy(this, `${this.resourceIdPrefix}-cache-policy`, {
             cachePolicyName: `${this.resourceIdPrefix}-cdn-cache-policy`,
             comment: `Defines which request data to pass to the ${this.resourceIdPrefix} origin and how the cache key is calculated.`,
@@ -408,6 +426,25 @@ export class NuxtServerAppStack extends Stack {
             enableAcceptEncodingBrotli: true,
             enableAcceptEncodingGzip: true,
         });
+    }
+
+    /**
+     * Creates a behavior for the CloudFront distribution to route matching Nuxt app API requests to the API gateway.
+     */
+    private createApiRouteBehavior(): Record<string, BehaviorOptions> {
+        const apiBehavior: BehaviorOptions = {
+            origin: this.httpOrigin,
+            compress: true,
+            allowedMethods: AllowedMethods.ALLOW_ALL,
+            cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
+            cachePolicy: this.appCachePolicy,
+            viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY
+        };
+
+        const rules: Record<string, BehaviorOptions> = {};
+        rules['/api/*'] = apiBehavior;
+
+        return rules;
     }
 
     /**
