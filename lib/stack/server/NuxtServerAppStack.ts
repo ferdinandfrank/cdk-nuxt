@@ -243,7 +243,7 @@ export class NuxtServerAppStack extends Stack {
         return new Function(this, funcName, {
             functionName: funcName,
             description: `Renders the ${this.resourceIdPrefix} Nuxt app.`,
-            runtime: Runtime.NODEJS_18_X,
+            runtime: Runtime.NODEJS_20_X,
             architecture: Architecture.ARM_64,
             handler: `${props.entrypoint ?? 'index'}.handler`,
             code: Code.fromAsset(`${props.rootDir ?? '.' }/.output/server`, {
