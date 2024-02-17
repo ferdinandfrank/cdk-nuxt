@@ -10,7 +10,6 @@ import {
     CachePolicy,
     CacheQueryStringBehavior,
     Distribution, HttpVersion,
-    ICachePolicy,
     IOriginAccessIdentity,
     OriginAccessIdentity,
     OriginProtocolPolicy,
