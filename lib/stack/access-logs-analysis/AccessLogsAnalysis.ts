@@ -3,9 +3,9 @@ import {Construct} from 'constructs';
 import {CfnWorkGroup} from 'aws-cdk-lib/aws-athena';
 import {CloudFrontAccessLogsByDateTable} from './CloudFrontAccessLogsByDateTable';
 import {AccessLogsParquetTable} from './AccessLogsParquetTable';
-import {Architecture, Code, Function, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
+import {Architecture, Code, Function, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {Rule, RuleTargetInput, Schedule} from 'aws-cdk-lib/aws-events';
-import {CfnTag, Duration, RemovalPolicy, Stack} from 'aws-cdk-lib';
+import {CfnTag, Duration, Stack} from 'aws-cdk-lib';
 import {Column, Database} from '@aws-cdk/aws-glue-alpha';
 import {S3EventSource} from 'aws-cdk-lib/aws-lambda-event-sources';
 import {RetentionDays} from 'aws-cdk-lib/aws-logs';
@@ -33,9 +33,7 @@ export abstract class AccessLogsAnalysis extends Construct {
     protected readonly database: Database;
     protected readonly accessLogsByDateTable: CloudFrontAccessLogsByDateTable;
     protected readonly accessLogsParquetTable: AccessLogsParquetTable;
-    protected readonly groupByDateLayer: LayerVersion;
     protected readonly groupByDateLambda: Function;
-    protected readonly partitioningLayer: LayerVersion;
     protected readonly createPartitionLambda: Function;
     protected readonly transformPartitionLambda: Function;
     protected readonly createPartitionsScheduler: Rule;
@@ -50,9 +48,7 @@ export abstract class AccessLogsAnalysis extends Construct {
         this.database = this.createGlueDatabase();
         this.accessLogsByDateTable = this.createAccessLogsByDateTable();
         this.accessLogsParquetTable = this.createAccessLogsParquetTable();
-        this.groupByDateLayer = this.createGroupByDateLayer();
         this.groupByDateLambda = this.createGroupByDateLambda();
-        this.partitioningLayer = this.createPartitioningLayer();
         this.createPartitionLambda = this.createCreatePartitionLambda();
         this.transformPartitionLambda = this.createTransformPartitionLambda();
         this.createPartitionsScheduler = this.createCreatePartitionsScheduler();
@@ -124,31 +120,11 @@ export abstract class AccessLogsAnalysis extends Construct {
 
     protected abstract createAccessLogsParquetTable(): CloudFrontAccessLogsByDateTable;
 
-    private createGroupByDateLayer(): LayerVersion {
-        const layerVersionName = `${this.resourceIdPrefix}-group-by-date-dependencies`;
-        return new LayerVersion(this, layerVersionName, {
-            layerVersionName,
-            compatibleArchitectures: [Architecture.ARM_64, Architecture.X86_64],
-            compatibleRuntimes: [Runtime.NODEJS_18_X, Runtime.NODEJS_20_X],
-            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/layer')),
-            removalPolicy: RemovalPolicy.DESTROY,
-        });
-    }
-
-    private createPartitioningLayer(): LayerVersion {
-        const layerVersionName = `${this.resourceIdPrefix}-partitioning-dependencies`;
-        return new LayerVersion(this, layerVersionName, {
-            layerVersionName,
-            compatibleArchitectures: [Architecture.ARM_64, Architecture.X86_64],
-            compatibleRuntimes: [Runtime.NODEJS_18_X, Runtime.NODEJS_20_X],
-            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/layer')),
-            removalPolicy: RemovalPolicy.DESTROY,
-        });
-    }
-
     /**
      * A Lambda function to be triggered whenever a new access log is created.
      * It moves the raw access logs into a sub folder hierarchy by year, month, day and hour.
+     * Note that we use the bundled AWS SDK for Node to avoid the need for a custom layer
+     * which restricts the consumer to a specific yarn or npm version.
      */
     private createGroupByDateLambda(): Function {
         const functionName = `${this.resourceIdPrefix}-group-by-date`;
@@ -157,11 +133,12 @@ export abstract class AccessLogsAnalysis extends Construct {
             functionName,
             architecture: Architecture.ARM_64,
             runtime: Runtime.NODEJS_20_X,
-            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/app')),
+            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/app'), {
+                exclude: ['*.d.ts']
+            }),
             memorySize: 512,
             timeout: Duration.seconds(20),
             handler: 'index.handler',
-            layers: [this.groupByDateLayer],
             events: [
                 new S3EventSource(this.bucket, {
                     events: [EventType.OBJECT_CREATED],
@@ -190,6 +167,8 @@ export abstract class AccessLogsAnalysis extends Construct {
 
     /**
      * Creates a new partition for the upcoming hour in the access log database.
+     * Note that we use the bundled AWS SDK for Node to avoid the need for a custom layer
+     * which restricts the consumer to a specific yarn or npm version.
      */
     private createCreatePartitionLambda(): Function {
         const functionName = `${this.resourceIdPrefix}-create-part`;
@@ -199,12 +178,11 @@ export abstract class AccessLogsAnalysis extends Construct {
             architecture: Architecture.ARM_64,
             runtime: Runtime.NODEJS_20_X,
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), {
-                exclude: ['transform-partition*', '*.d.ts'],
+                exclude: ['*.d.ts']
             }),
             memorySize: 128,
             timeout: Duration.seconds(20),
             handler: 'create-partition.handler',
-            layers: [this.partitioningLayer],
             logRetention: RetentionDays.TWO_WEEKS,
             environment: {
                 AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
@@ -238,6 +216,8 @@ export abstract class AccessLogsAnalysis extends Construct {
 
     /**
      * Transforms partitions from the Hive format to Parquet.
+     * Note that we use the bundled AWS SDK for Node to avoid the need for a custom layer
+     * which restricts the consumer to a specific yarn or npm version.
      */
     private createTransformPartitionLambda(): Function {
         const functionName = `${this.resourceIdPrefix}-transform-part`;
@@ -247,12 +227,11 @@ export abstract class AccessLogsAnalysis extends Construct {
             architecture: Architecture.ARM_64,
             runtime: Runtime.NODEJS_20_X,
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), {
-                exclude: ['create-partition*', '*.d.ts'],
+                exclude: ['create-partition*', '*.d.ts']
             }),
             memorySize: 128,
             timeout: Duration.seconds(20),
             handler: 'transform-partition.handler',
-            layers: [this.partitioningLayer],
             logRetention: RetentionDays.TWO_WEEKS,
             environment: {
                 AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',

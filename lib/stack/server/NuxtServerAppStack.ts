@@ -17,7 +17,7 @@ import {
     SecurityPolicyProtocol,
     ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
-import {Architecture, Code, Function, LayerVersion, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
+import {Architecture, Code, Function, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {
     BlockPublicAccess,
     Bucket,
@@ -262,26 +262,22 @@ export class NuxtServerAppStack extends Stack {
 
     /**
      * Creates the Lambda function that cleanups the outdated static assets of the Nuxt app.
-     *
-     * @param props
-     * @private
+     * Note that we use the bundled AWS SDK for Node to avoid the need for a custom layer
+     * which restricts the consumer to a specific yarn or npm version.
      */
     private createCleanupLambdaFunction(props: NuxtServerAppStackProps): Function {
         const functionName: string = `${this.resourceIdPrefix}-cleanup-function`;
+        const functionDirPath = path.join(__dirname, '../../functions/assets-cleanup');
 
         const result: Function = new Function(this, functionName, {
             functionName: functionName,
             description: `Auto-deletes the outdated static assets in the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
             runtime: Runtime.NODEJS_20_X,
             architecture: Architecture.ARM_64,
-            layers: [new LayerVersion(this, `${this.resourceIdPrefix}-layer`, {
-                layerVersionName: `${this.resourceIdPrefix}-layer`,
-                code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/layer')),
-                compatibleRuntimes: [Runtime.NODEJS_20_X],
-                description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
-            })],
             handler: 'index.handler',
-            code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/app')),
+            code: Code.fromAsset(`${functionDirPath}/build/app`, {
+                exclude: ['*.d.ts']
+            }),
             timeout: Duration.minutes(5),
             memorySize: 128,
             logRetention: RetentionDays.TWO_WEEKS,

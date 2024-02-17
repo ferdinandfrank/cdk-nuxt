@@ -19,7 +19,7 @@ Easily deploy Nuxt 3 applications via CDK on AWS including the following feature
 
 ## Prerequisites
 
-- This package currently relies on using [yarn](https://yarnpkg.com/) instead of npm for deployment. Therefore, make sure to have yarn available on the deployment system.
+- This package currently relies on using [Yarn](https://yarnpkg.com/) instead of NPM for deployment. Therefore, make sure to have Yarn available on the deployment system.
 - You need an [AWS account](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/?nc1=h_ls) to create and deploy the required resources for the Nuxt app on AWS.
 
 ## Installation
@@ -177,11 +177,18 @@ See https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html for details.
 
 ### 2. Build and Deploy
 
-By running the following script, the packages of the Nuxt app will be installed and the Nuxt app will be built automatically.
-Afterwards, the CDK stack will be deployed to AWS.
+By running the following script, the Nuxt app will be built automatically via `yarn build` 
+and the CDK stack will be deployed to AWS.
 
 ```bash
 node_modules/.bin/cdk-nuxt-deploy-server
+```
+
+Alternatively, you can run the following commands separately to customize the deployment process:
+
+```bash
+yarn build
+yarn cdk deploy --require-approval never --all --app="yarn ts-node stack/index.ts"
 ```
 
 ## Destroy the Stack
@@ -252,7 +259,7 @@ jobs:
         run: yarn install --frozen-lockfile # or `yarn install --immutable` for Yarn >= 2
 
       - name: Build and deploy to AWS
-        run: node_modules/.bin/cdk-nuxt-deploy-server
+        run: node_modules/.bin/cdk-nuxt-deploy-server # Or run a customized deployment, see 'Build and Deploy' section
         env:
            # Create an IAM user on AWS for the deployment and create the appropriate secrets in the GitHub repository secrets
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

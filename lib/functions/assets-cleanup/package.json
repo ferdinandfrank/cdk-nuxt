@@ -6,7 +6,6 @@
   "private": true,
   "scripts": {
     "install-layer": "yarn install --frozen-lockfile --production --modules-folder build/layer/nodejs/node_modules",
-    "install-layer-berry": "yarn install --immutable && cp -r node_modules build/layer/nodejs/node_modules",
     "build": "tsc --project ./tsconfig.json"
   },
   "devDependencies": {
