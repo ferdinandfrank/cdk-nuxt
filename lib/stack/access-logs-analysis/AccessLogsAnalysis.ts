@@ -128,24 +128,29 @@ export abstract class AccessLogsAnalysis extends Construct {
 
     private createGroupByDateLayer(): LayerVersion {
         const layerVersionName = `${this.resourceIdPrefix}-group-by-date-dependencies`;
+        const functionDirPath = path.join(__dirname, '../../functions/access-logs-analysis/group-by-date');
+
         return new LayerVersion(this, layerVersionName, {
             layerVersionName,
             compatibleArchitectures: [Architecture.ARM_64, Architecture.X86_64],
             compatibleRuntimes: [Runtime.NODEJS_18_X, Runtime.NODEJS_20_X],
-            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/layer'), {
+            code: Code.fromAsset(functionDirPath, {
                 assetHashType: AssetHashType.OUTPUT,
                 bundling: {
+                    command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
                     image: Runtime.NODEJS_20_X.bundlingImage,
                     local: {
                         tryBundle(outputDir: string): boolean {
                             try {
-                                execSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/group-by-date') + ' && yarn install');
+                                execSync('yarn install', {
+                                    cwd: functionDirPath
+                                });
                             } catch {
                                 return false;
                             }
 
-                            fs.cpSync(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/node_modules'), `${outputDir}/nodejs/node_modules`, {
-                                recursive: true
+                            fs.cpSync(`${functionDirPath}/node_modules`, `${outputDir}/nodejs/node_modules`, {
+                                recursive: true,
                             });
                             return true
                         },
@@ -158,24 +163,28 @@ export abstract class AccessLogsAnalysis extends Construct {
 
     private createPartitioningLayer(): LayerVersion {
         const layerVersionName = `${this.resourceIdPrefix}-partitioning-dependencies`;
+        const functionDirPath = path.join(__dirname, '../../functions/access-logs-analysis/partitioning');
+
         return new LayerVersion(this, layerVersionName, {
             layerVersionName,
             compatibleArchitectures: [Architecture.ARM_64, Architecture.X86_64],
             compatibleRuntimes: [Runtime.NODEJS_18_X, Runtime.NODEJS_20_X],
-            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/layer'), {
+            code: Code.fromAsset(functionDirPath, {
                 assetHashType: AssetHashType.OUTPUT,
                 bundling: {
+                    command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
                     image: Runtime.NODEJS_20_X.bundlingImage,
                     local: {
                         tryBundle(outputDir: string): boolean {
                             try {
-                                execSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/partitioning') + ' && yarn install');
+                                execSync('yarn install', {
+                                    cwd: functionDirPath
+                                });
                             } catch {
                                 return false;
                             }
-
-                            fs.cpSync(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/node_modules'), `${outputDir}/nodejs/node_modules`, {
-                                recursive: true
+                            fs.cpSync(`${functionDirPath}/node_modules`, `${outputDir}/nodejs/node_modules`, {
+                                recursive: true,
                             });
                             return true
                         },
@@ -192,24 +201,27 @@ export abstract class AccessLogsAnalysis extends Construct {
      */
     private createGroupByDateLambda(): Function {
         const functionName = `${this.resourceIdPrefix}-group-by-date`;
+        const functionDirPath = path.join(__dirname, '../../functions/access-logs-analysis/group-by-date');
 
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
             runtime: Runtime.NODEJS_20_X,
-            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/app'), {
+            code: Code.fromAsset(functionDirPath, {
                 assetHashType: AssetHashType.OUTPUT,
                 bundling: {
+                    command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
                     image: Runtime.NODEJS_20_X.bundlingImage,
                     local: {
                         tryBundle(outputDir: string): boolean {
                             try {
-                                execSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/group-by-date') + ' && yarn install && yarn build');
+                                execSync('yarn install && yarn build', {
+                                    cwd: functionDirPath
+                                });
                             } catch {
                                 return false;
                             }
-
-                            fs.cpSync(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/app'), outputDir, {
+                            fs.cpSync(`${functionDirPath}/build/app`, outputDir, {
                                 recursive: true
                             });
                             return true
@@ -252,25 +264,28 @@ export abstract class AccessLogsAnalysis extends Construct {
      */
     private createCreatePartitionLambda(): Function {
         const functionName = `${this.resourceIdPrefix}-create-part`;
+        const functionDirPath = path.join(__dirname, '../../functions/access-logs-analysis/partitioning');
 
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
             runtime: Runtime.NODEJS_20_X,
-            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), {
+            code: Code.fromAsset(functionDirPath, {
                 exclude: ['transform-partition*', '*.d.ts'],
                 assetHashType: AssetHashType.OUTPUT,
                 bundling: {
+                    command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
                     image: Runtime.NODEJS_20_X.bundlingImage,
                     local: {
                         tryBundle(outputDir: string): boolean {
                             try {
-                                execSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/partitioning') + ' && yarn install && yarn build');
+                                execSync('yarn install && yarn build', {
+                                    cwd: functionDirPath
+                                });
                             } catch {
                                 return false;
                             }
-
-                            fs.cpSync(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), outputDir, {
+                            fs.cpSync(`${functionDirPath}/build/app`, outputDir, {
                                 recursive: true
                             });
                             return true

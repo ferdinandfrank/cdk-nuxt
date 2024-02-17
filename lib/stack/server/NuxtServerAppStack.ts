@@ -269,6 +269,7 @@ export class NuxtServerAppStack extends Stack {
      */
     private createCleanupLambdaFunction(props: NuxtServerAppStackProps): Function {
         const functionName: string = `${this.resourceIdPrefix}-cleanup-function`;
+        const functionDirPath = path.join(__dirname, '../../functions/assets-cleanup');
 
         const result: Function = new Function(this, functionName, {
             functionName: functionName,
@@ -277,20 +278,22 @@ export class NuxtServerAppStack extends Stack {
             architecture: Architecture.ARM_64,
             layers: [new LayerVersion(this, `${functionName}-layer`, {
                 layerVersionName: `${functionName}-layer`,
-                code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/layer'), {
+                code: Code.fromAsset(functionDirPath, {
                     assetHashType: AssetHashType.OUTPUT,
                     bundling: {
+                        command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
                         image: Runtime.NODEJS_20_X.bundlingImage,
                         local: {
                             tryBundle(outputDir: string): boolean {
                                 try {
-                                    execSync('cd ' + path.join(__dirname, '../../functions/assets-cleanup') + ' && yarn install');
+                                    execSync('yarn install', {
+                                        cwd: functionDirPath
+                                    });
                                 } catch {
                                     return false;
                                 }
-
-                                fs.cpSync(path.join(__dirname, '../../functions/assets-cleanup/node_modules'), `${outputDir}/nodejs/node_modules`, {
-                                    recursive: true
+                                fs.cpSync(`${functionDirPath}/node_modules`, `${outputDir}/nodejs/node_modules`, {
+                                    recursive: true,
                                 });
                                 return true
                             },
@@ -301,19 +304,21 @@ export class NuxtServerAppStack extends Stack {
                 description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
             })],
             handler: 'index.handler',
-            code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/app'), {
+            code: Code.fromAsset(functionDirPath, {
                 assetHashType: AssetHashType.OUTPUT,
                 bundling: {
+                    command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
                     image: Runtime.NODEJS_20_X.bundlingImage,
                     local: {
                         tryBundle(outputDir: string): boolean {
                             try {
-                                execSync('cd ' + path.join(__dirname, '../../functions/assets-cleanup') + ' && yarn install && yarn build');
+                                execSync('yarn install && yarn build', {
+                                    cwd: functionDirPath
+                                });
                             } catch {
                                 return false;
                             }
-
-                            fs.cpSync(path.join(__dirname, '../../functions/assets-cleanup/build/app'), outputDir, {
+                            fs.cpSync(`${functionDirPath}/build/app`, outputDir, {
                                 recursive: true
                             });
                             return true
