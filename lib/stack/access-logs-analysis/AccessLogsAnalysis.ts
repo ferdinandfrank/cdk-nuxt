@@ -14,6 +14,7 @@ import {LambdaFunction} from 'aws-cdk-lib/aws-events-targets';
 import * as path from 'path';
 import {AccessLogsAnalysisProps} from "./AccessLogsAnalysisProps";
 import {ColumnTransformationRules} from "../../functions/access-logs-analysis/partitioning/types";
+import {execSync} from "node:child_process";
 import * as fs from "fs";
 
 /**
@@ -136,10 +137,19 @@ export abstract class AccessLogsAnalysis extends Construct {
             code: Code.fromAsset(functionDirPath, {
                 assetHashType: AssetHashType.OUTPUT,
                 bundling: {
+                    command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
                     image: Runtime.NODEJS_20_X.bundlingImage,
                     local: {
                         tryBundle(outputDir: string): boolean {
-                            fs.cpSync(`${functionDirPath}/build/layer`, `${outputDir}/nodejs/node_modules`, {
+                            try {
+                                execSync('yarn install', {
+                                    cwd: functionDirPath
+                                });
+                            } catch {
+                                return false;
+                            }
+
+                            fs.cpSync(`${functionDirPath}/node_modules`, `${outputDir}/nodejs/node_modules`, {
                                 recursive: true,
                             });
                             return true
@@ -162,10 +172,18 @@ export abstract class AccessLogsAnalysis extends Construct {
             code: Code.fromAsset(functionDirPath, {
                 assetHashType: AssetHashType.OUTPUT,
                 bundling: {
+                    command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
                     image: Runtime.NODEJS_20_X.bundlingImage,
                     local: {
                         tryBundle(outputDir: string): boolean {
-                            fs.cpSync(`${functionDirPath}/build/layer`, `${outputDir}/nodejs/node_modules`, {
+                            try {
+                                execSync('yarn install', {
+                                    cwd: functionDirPath
+                                });
+                            } catch {
+                                return false;
+                            }
+                            fs.cpSync(`${functionDirPath}/node_modules`, `${outputDir}/nodejs/node_modules`, {
                                 recursive: true,
                             });
                             return true

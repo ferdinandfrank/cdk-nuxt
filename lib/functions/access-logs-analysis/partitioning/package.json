@@ -5,7 +5,7 @@
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "install-layer": "yarn install --frozen-lockfile --production --modules-folder build/layer",
+    "install-layer": "yarn install --frozen-lockfile --production --modules-folder build/layer/nodejs/node_modules",
     "build": "tsc --project ./tsconfig.json"
   },
   "devDependencies": {
