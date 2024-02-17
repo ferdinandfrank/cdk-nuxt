@@ -1,4 +1,4 @@
-import {Duration, RemovalPolicy, Stack} from 'aws-cdk-lib';
+import {AssetHashType, Duration, RemovalPolicy, Stack} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {Certificate} from "aws-cdk-lib/aws-certificatemanager";
 import {
@@ -41,6 +41,7 @@ import {NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
 import {CloudFrontAccessLogsAnalysis} from "../access-logs-analysis/CloudFrontAccessLogsAnalysis";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
+import {execSync, spawnSync} from "node:child_process";
 
 /**
  * CDK stack to deploy a dynamic Nuxt app (target=server) on AWS with Lambda, ApiGateway, S3 and CloudFront.
@@ -274,14 +275,52 @@ export class NuxtServerAppStack extends Stack {
             description: `Auto-deletes the outdated static assets in the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
             runtime: Runtime.NODEJS_20_X,
             architecture: Architecture.ARM_64,
-            layers: [new LayerVersion(this, `${this.resourceIdPrefix}-layer`, {
-                layerVersionName: `${this.resourceIdPrefix}-layer`,
-                code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/layer')),
+            layers: [new LayerVersion(this, `${functionName}-layer`, {
+                layerVersionName: `${functionName}-layer`,
+                code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/layer'), {
+                    assetHashType: AssetHashType.OUTPUT,
+                    bundling: {
+                        image: Runtime.NODEJS_20_X.bundlingImage,
+                        local: {
+                            tryBundle(outputDir: string): boolean {
+                                try {
+                                    spawnSync('cd ' + path.join(__dirname, '../../functions/assets-cleanup') + ' && yarn install');
+                                } catch {
+                                    return false;
+                                }
+
+                                fs.cpSync(path.join(__dirname, '../../functions/assets-cleanup/node_modules'), `${outputDir}/nodejs/node_modules`, {
+                                    recursive: true
+                                });
+                                return true
+                            },
+                        }
+                    }
+                }),
                 compatibleRuntimes: [Runtime.NODEJS_20_X],
                 description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
             })],
             handler: 'index.handler',
-            code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/app')),
+            code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/app'), {
+                assetHashType: AssetHashType.OUTPUT,
+                bundling: {
+                    image: Runtime.NODEJS_20_X.bundlingImage,
+                    local: {
+                        tryBundle(outputDir: string): boolean {
+                            try {
+                                execSync('cd ' + path.join(__dirname, '../../functions/assets-cleanup') + ' && yarn install && yarn build');
+                            } catch {
+                                return false;
+                            }
+
+                            fs.cpSync(path.join(__dirname, '../../functions/assets-cleanup/build/app'), outputDir, {
+                                recursive: true
+                            });
+                            return true
+                        },
+                    }
+                }
+            }),
             timeout: Duration.minutes(5),
             memorySize: 128,
             logRetention: RetentionDays.TWO_WEEKS,

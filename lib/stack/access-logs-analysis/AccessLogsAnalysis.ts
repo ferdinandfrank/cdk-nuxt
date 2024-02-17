@@ -5,7 +5,7 @@ import {CloudFrontAccessLogsByDateTable} from './CloudFrontAccessLogsByDateTable
 import {AccessLogsParquetTable} from './AccessLogsParquetTable';
 import {Architecture, Code, Function, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {Rule, RuleTargetInput, Schedule} from 'aws-cdk-lib/aws-events';
-import {CfnTag, Duration, RemovalPolicy, Stack} from 'aws-cdk-lib';
+import {AssetHashType, CfnTag, Duration, RemovalPolicy, Stack} from 'aws-cdk-lib';
 import {Column, Database} from '@aws-cdk/aws-glue-alpha';
 import {S3EventSource} from 'aws-cdk-lib/aws-lambda-event-sources';
 import {RetentionDays} from 'aws-cdk-lib/aws-logs';
@@ -14,6 +14,8 @@ import {LambdaFunction} from 'aws-cdk-lib/aws-events-targets';
 import * as path from 'path';
 import {AccessLogsAnalysisProps} from "./AccessLogsAnalysisProps";
 import {ColumnTransformationRules} from "../../functions/access-logs-analysis/partitioning/types";
+import {execSync, spawnSync} from "node:child_process";
+import * as fs from "fs";
 
 /**
  * Provides the AWS resources to analyze access logs. This construct is derived from the official AWS sample
@@ -130,7 +132,26 @@ export abstract class AccessLogsAnalysis extends Construct {
             layerVersionName,
             compatibleArchitectures: [Architecture.ARM_64, Architecture.X86_64],
             compatibleRuntimes: [Runtime.NODEJS_18_X, Runtime.NODEJS_20_X],
-            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/layer')),
+            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/layer'), {
+                assetHashType: AssetHashType.OUTPUT,
+                bundling: {
+                    image: Runtime.NODEJS_20_X.bundlingImage,
+                    local: {
+                        tryBundle(outputDir: string): boolean {
+                            try {
+                                spawnSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/group-by-date') + ' && yarn install');
+                            } catch {
+                                return false;
+                            }
+
+                            fs.cpSync(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/node_modules'), `${outputDir}/nodejs/node_modules`, {
+                                recursive: true
+                            });
+                            return true
+                        },
+                    }
+                }
+            }),
             removalPolicy: RemovalPolicy.DESTROY,
         });
     }
@@ -141,7 +162,26 @@ export abstract class AccessLogsAnalysis extends Construct {
             layerVersionName,
             compatibleArchitectures: [Architecture.ARM_64, Architecture.X86_64],
             compatibleRuntimes: [Runtime.NODEJS_18_X, Runtime.NODEJS_20_X],
-            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/layer')),
+            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/layer'), {
+                assetHashType: AssetHashType.OUTPUT,
+                bundling: {
+                    image: Runtime.NODEJS_20_X.bundlingImage,
+                    local: {
+                        tryBundle(outputDir: string): boolean {
+                            try {
+                                spawnSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/partitioning') + ' && yarn install');
+                            } catch {
+                                return false;
+                            }
+
+                            fs.cpSync(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/node_modules'), `${outputDir}/nodejs/node_modules`, {
+                                recursive: true
+                            });
+                            return true
+                        },
+                    }
+                }
+            }),
             removalPolicy: RemovalPolicy.DESTROY,
         });
     }
@@ -157,7 +197,26 @@ export abstract class AccessLogsAnalysis extends Construct {
             functionName,
             architecture: Architecture.ARM_64,
             runtime: Runtime.NODEJS_20_X,
-            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/app')),
+            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/app'), {
+                assetHashType: AssetHashType.OUTPUT,
+                bundling: {
+                    image: Runtime.NODEJS_20_X.bundlingImage,
+                    local: {
+                        tryBundle(outputDir: string): boolean {
+                            try {
+                                execSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/group-by-date') + ' && yarn install && yarn build');
+                            } catch {
+                                return false;
+                            }
+
+                            fs.cpSync(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/app'), outputDir, {
+                                recursive: true
+                            });
+                            return true
+                        },
+                    }
+                }
+            }),
             memorySize: 512,
             timeout: Duration.seconds(20),
             handler: 'index.handler',
@@ -200,6 +259,24 @@ export abstract class AccessLogsAnalysis extends Construct {
             runtime: Runtime.NODEJS_20_X,
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), {
                 exclude: ['transform-partition*', '*.d.ts'],
+                assetHashType: AssetHashType.OUTPUT,
+                bundling: {
+                    image: Runtime.NODEJS_20_X.bundlingImage,
+                    local: {
+                        tryBundle(outputDir: string): boolean {
+                            try {
+                                execSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/partitioning') + ' && yarn install && yarn build');
+                            } catch {
+                                return false;
+                            }
+
+                            fs.cpSync(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), outputDir, {
+                                recursive: true
+                            });
+                            return true
+                        },
+                    }
+                }
             }),
             memorySize: 128,
             timeout: Duration.seconds(20),
@@ -248,6 +325,24 @@ export abstract class AccessLogsAnalysis extends Construct {
             runtime: Runtime.NODEJS_20_X,
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), {
                 exclude: ['create-partition*', '*.d.ts'],
+                assetHashType: AssetHashType.OUTPUT,
+                bundling: {
+                    image: Runtime.NODEJS_20_X.bundlingImage,
+                    local: {
+                        tryBundle(outputDir: string): boolean {
+                            try {
+                                execSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/partitioning') + ' && yarn install && yarn build');
+                            } catch {
+                                return false;
+                            }
+
+                            fs.cpSync(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), outputDir, {
+                                recursive: true
+                            });
+                            return true
+                        },
+                    }
+                }
             }),
             memorySize: 128,
             timeout: Duration.seconds(20),
