@@ -419,9 +419,9 @@ export class NuxtServerAppStack extends Stack {
             defaultTtl: Duration.seconds(0),
             minTtl: Duration.seconds(0),
             maxTtl: Duration.days(365),
-            queryStringBehavior: props.allowQueryParams ? CacheQueryStringBehavior.allowList(...props.allowQueryParams) : (props.denyQueryParams ? CacheQueryStringBehavior.denyList(...props.denyQueryParams) : CacheQueryStringBehavior.all()),
-            headerBehavior: props.allowHeaders ? CacheHeaderBehavior.allowList(...props.allowHeaders) : CacheHeaderBehavior.none(),
-            cookieBehavior: props.allowCookies ? CacheCookieBehavior.allowList(...props.allowCookies) : CacheCookieBehavior.none(),
+            queryStringBehavior: props.allowQueryParams?.length ? CacheQueryStringBehavior.allowList(...props.allowQueryParams) : (props.denyQueryParams?.length ? CacheQueryStringBehavior.denyList(...props.denyQueryParams) : CacheQueryStringBehavior.all()),
+            headerBehavior: props.allowHeaders?.length ? CacheHeaderBehavior.allowList(...props.allowHeaders) : CacheHeaderBehavior.none(),
+            cookieBehavior: props.allowCookies?.length ? CacheCookieBehavior.allowList(...props.allowCookies) : CacheCookieBehavior.none(),
             enableAcceptEncodingBrotli: true,
             enableAcceptEncodingGzip: true,
         });
