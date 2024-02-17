@@ -281,18 +281,10 @@ export class NuxtServerAppStack extends Stack {
                 code: Code.fromAsset(functionDirPath, {
                     assetHashType: AssetHashType.OUTPUT,
                     bundling: {
-                        command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
                         image: Runtime.NODEJS_20_X.bundlingImage,
                         local: {
                             tryBundle(outputDir: string): boolean {
-                                try {
-                                    execSync('yarn install', {
-                                        cwd: functionDirPath
-                                    });
-                                } catch {
-                                    return false;
-                                }
-                                fs.cpSync(`${functionDirPath}/node_modules`, `${outputDir}/nodejs/node_modules`, {
+                                fs.cpSync(`${functionDirPath}/build/layer`, `${outputDir}/nodejs/node_modules`, {
                                     recursive: true,
                                 });
                                 return true
