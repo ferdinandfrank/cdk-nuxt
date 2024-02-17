@@ -19,7 +19,7 @@ Easily deploy Nuxt 3 applications via CDK on AWS including the following feature
 
 ## Prerequisites
 
-- This package currently relies on using [yarn](https://yarnpkg.com/) instead of npm for deployment. Therefore, make sure to have yarn available on the deployment system.
+- This package currently relies on using [Yarn](https://yarnpkg.com/) instead of NPM for deployment. Therefore, make sure to have Yarn available on the deployment system.
 - You need an [AWS account](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/?nc1=h_ls) to create and deploy the required resources for the Nuxt app on AWS.
 
 ## Installation
