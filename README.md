@@ -259,7 +259,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile # or `yarn install --immutable` for Yarn >= 2
 
       - name: Build and deploy to AWS
         run: node_modules/.bin/cdk-nuxt-deploy-server
