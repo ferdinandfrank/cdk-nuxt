@@ -1,4 +1,4 @@
-import {AssetHashType, Duration, RemovalPolicy, Stack} from 'aws-cdk-lib';
+import {Duration, RemovalPolicy, Stack} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {Certificate} from "aws-cdk-lib/aws-certificatemanager";
 import {
@@ -17,7 +17,7 @@ import {
     SecurityPolicyProtocol,
     ViewerProtocolPolicy
 } from "aws-cdk-lib/aws-cloudfront";
-import {Architecture, Code, Function, LayerVersion, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
+import {Architecture, Code, Function, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {
     BlockPublicAccess,
     Bucket,
@@ -41,7 +41,6 @@ import {NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
 import {CloudFrontAccessLogsAnalysis} from "../access-logs-analysis/CloudFrontAccessLogsAnalysis";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
-import {execSync} from "node:child_process";
 
 /**
  * CDK stack to deploy a dynamic Nuxt app (target=server) on AWS with Lambda, ApiGateway, S3 and CloudFront.
@@ -263,9 +262,8 @@ export class NuxtServerAppStack extends Stack {
 
     /**
      * Creates the Lambda function that cleanups the outdated static assets of the Nuxt app.
-     *
-     * @param props
-     * @private
+     * Note that we use the bundled AWS SDK for Node to avoid the need for a custom layer
+     * which restricts the consumer to a specific yarn or npm version.
      */
     private createCleanupLambdaFunction(props: NuxtServerAppStackProps): Function {
         const functionName: string = `${this.resourceIdPrefix}-cleanup-function`;
@@ -276,33 +274,6 @@ export class NuxtServerAppStack extends Stack {
             description: `Auto-deletes the outdated static assets in the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
             runtime: Runtime.NODEJS_20_X,
             architecture: Architecture.ARM_64,
-            layers: [new LayerVersion(this, `${functionName}-layer`, {
-                layerVersionName: `${functionName}-layer`,
-                code: Code.fromAsset(functionDirPath, {
-                    assetHashType: AssetHashType.OUTPUT,
-                    bundling: {
-                        command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
-                        image: Runtime.NODEJS_20_X.bundlingImage,
-                        local: {
-                            tryBundle(outputDir: string): boolean {
-                                try {
-                                    execSync('yarn install', {
-                                        cwd: functionDirPath
-                                    });
-                                } catch {
-                                    return false;
-                                }
-                                fs.cpSync(`${functionDirPath}/node_modules`, `${outputDir}/nodejs/node_modules`, {
-                                    recursive: true,
-                                });
-                                return true
-                            },
-                        }
-                    }
-                }),
-                compatibleRuntimes: [Runtime.NODEJS_20_X],
-                description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
-            })],
             handler: 'index.handler',
             code: Code.fromAsset(`${functionDirPath}/build/app`, {
                 exclude: ['*.d.ts']
