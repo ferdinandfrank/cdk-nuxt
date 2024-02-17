@@ -14,7 +14,7 @@ import {LambdaFunction} from 'aws-cdk-lib/aws-events-targets';
 import * as path from 'path';
 import {AccessLogsAnalysisProps} from "./AccessLogsAnalysisProps";
 import {ColumnTransformationRules} from "../../functions/access-logs-analysis/partitioning/types";
-import {execSync, spawnSync} from "node:child_process";
+import {execSync} from "node:child_process";
 import * as fs from "fs";
 
 /**
@@ -139,7 +139,7 @@ export abstract class AccessLogsAnalysis extends Construct {
                     local: {
                         tryBundle(outputDir: string): boolean {
                             try {
-                                spawnSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/group-by-date') + ' && yarn install');
+                                execSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/group-by-date') + ' && yarn install');
                             } catch {
                                 return false;
                             }
@@ -169,7 +169,7 @@ export abstract class AccessLogsAnalysis extends Construct {
                     local: {
                         tryBundle(outputDir: string): boolean {
                             try {
-                                spawnSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/partitioning') + ' && yarn install');
+                                execSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/partitioning') + ' && yarn install');
                             } catch {
                                 return false;
                             }

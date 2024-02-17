@@ -41,7 +41,7 @@ import {NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
 import {CloudFrontAccessLogsAnalysis} from "../access-logs-analysis/CloudFrontAccessLogsAnalysis";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
-import {execSync, spawnSync} from "node:child_process";
+import {execSync} from "node:child_process";
 
 /**
  * CDK stack to deploy a dynamic Nuxt app (target=server) on AWS with Lambda, ApiGateway, S3 and CloudFront.
@@ -284,7 +284,7 @@ export class NuxtServerAppStack extends Stack {
                         local: {
                             tryBundle(outputDir: string): boolean {
                                 try {
-                                    spawnSync('cd ' + path.join(__dirname, '../../functions/assets-cleanup') + ' && yarn install');
+                                    execSync('cd ' + path.join(__dirname, '../../functions/assets-cleanup') + ' && yarn install');
                                 } catch {
                                     return false;
                                 }
