@@ -201,33 +201,13 @@ export abstract class AccessLogsAnalysis extends Construct {
      */
     private createGroupByDateLambda(): Function {
         const functionName = `${this.resourceIdPrefix}-group-by-date`;
-        const functionDirPath = path.join(__dirname, '../../functions/access-logs-analysis/group-by-date');
 
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
             runtime: Runtime.NODEJS_20_X,
-            code: Code.fromAsset(functionDirPath, {
-                assetHashType: AssetHashType.OUTPUT,
-                bundling: {
-                    command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
-                    image: Runtime.NODEJS_20_X.bundlingImage,
-                    local: {
-                        tryBundle(outputDir: string): boolean {
-                            try {
-                                execSync('yarn install && yarn build', {
-                                    cwd: functionDirPath
-                                });
-                            } catch {
-                                return false;
-                            }
-                            fs.cpSync(`${functionDirPath}/build/app`, outputDir, {
-                                recursive: true
-                            });
-                            return true
-                        },
-                    }
-                }
+            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/app'), {
+                exclude: ['*.d.ts']
             }),
             memorySize: 512,
             timeout: Duration.seconds(20),
@@ -264,34 +244,13 @@ export abstract class AccessLogsAnalysis extends Construct {
      */
     private createCreatePartitionLambda(): Function {
         const functionName = `${this.resourceIdPrefix}-create-part`;
-        const functionDirPath = path.join(__dirname, '../../functions/access-logs-analysis/partitioning');
 
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
             runtime: Runtime.NODEJS_20_X,
-            code: Code.fromAsset(functionDirPath, {
-                exclude: ['transform-partition*', '*.d.ts'],
-                assetHashType: AssetHashType.OUTPUT,
-                bundling: {
-                    command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
-                    image: Runtime.NODEJS_20_X.bundlingImage,
-                    local: {
-                        tryBundle(outputDir: string): boolean {
-                            try {
-                                execSync('yarn install && yarn build', {
-                                    cwd: functionDirPath
-                                });
-                            } catch {
-                                return false;
-                            }
-                            fs.cpSync(`${functionDirPath}/build/app`, outputDir, {
-                                recursive: true
-                            });
-                            return true
-                        },
-                    }
-                }
+            code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), {
+                exclude: ['*.d.ts']
             }),
             memorySize: 128,
             timeout: Duration.seconds(20),
@@ -339,25 +298,7 @@ export abstract class AccessLogsAnalysis extends Construct {
             architecture: Architecture.ARM_64,
             runtime: Runtime.NODEJS_20_X,
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), {
-                exclude: ['create-partition*', '*.d.ts'],
-                assetHashType: AssetHashType.OUTPUT,
-                bundling: {
-                    image: Runtime.NODEJS_20_X.bundlingImage,
-                    local: {
-                        tryBundle(outputDir: string): boolean {
-                            try {
-                                execSync('cd ' + path.join(__dirname, '../../functions/access-logs-analysis/partitioning') + ' && yarn install && yarn build');
-                            } catch {
-                                return false;
-                            }
-
-                            fs.cpSync(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), outputDir, {
-                                recursive: true
-                            });
-                            return true
-                        },
-                    }
-                }
+                exclude: ['create-partition*', '*.d.ts']
             }),
             memorySize: 128,
             timeout: Duration.seconds(20),

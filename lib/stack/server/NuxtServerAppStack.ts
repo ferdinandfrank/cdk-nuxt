@@ -304,27 +304,8 @@ export class NuxtServerAppStack extends Stack {
                 description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
             })],
             handler: 'index.handler',
-            code: Code.fromAsset(functionDirPath, {
-                assetHashType: AssetHashType.OUTPUT,
-                bundling: {
-                    command: ['sh', '-c', 'echo "Docker build not supported. Please install yarn."'],
-                    image: Runtime.NODEJS_20_X.bundlingImage,
-                    local: {
-                        tryBundle(outputDir: string): boolean {
-                            try {
-                                execSync('yarn install && yarn build', {
-                                    cwd: functionDirPath
-                                });
-                            } catch {
-                                return false;
-                            }
-                            fs.cpSync(`${functionDirPath}/build/app`, outputDir, {
-                                recursive: true
-                            });
-                            return true
-                        },
-                    }
-                }
+            code: Code.fromAsset(`${functionDirPath}/build/app`, {
+                exclude: ['*.d.ts']
             }),
             timeout: Duration.minutes(5),
             memorySize: 128,
