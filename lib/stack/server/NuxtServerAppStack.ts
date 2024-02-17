@@ -10,7 +10,6 @@ import {
     CachePolicy,
     CacheQueryStringBehavior,
     Distribution, HttpVersion,
-    ICachePolicy,
     IOriginAccessIdentity,
     OriginAccessIdentity,
     OriginProtocolPolicy,
@@ -32,8 +31,6 @@ import {HttpOrigin, S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {CloudFrontTarget} from "aws-cdk-lib/aws-route53-targets";
 import {HttpMethod} from "aws-cdk-lib/aws-stepfunctions-tasks";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
-import {HttpLambdaIntegration} from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
-import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "@aws-cdk/aws-apigatewayv2-alpha";
 import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "../NuxtAppStaticAssets";
 import * as fs from "fs";
 import {Rule, RuleTargetInput, Schedule} from "aws-cdk-lib/aws-events";
@@ -42,6 +39,8 @@ import * as path from "path";
 import {writeFileSync} from "fs";
 import {NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
 import {CloudFrontAccessLogsAnalysis} from "../access-logs-analysis/CloudFrontAccessLogsAnalysis";
+import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
 
 /**
  * CDK stack to deploy a dynamic Nuxt app (target=server) on AWS with Lambda, ApiGateway, S3 and CloudFront.
@@ -243,7 +242,7 @@ export class NuxtServerAppStack extends Stack {
         return new Function(this, funcName, {
             functionName: funcName,
             description: `Renders the ${this.resourceIdPrefix} Nuxt app.`,
-            runtime: Runtime.NODEJS_18_X,
+            runtime: Runtime.NODEJS_20_X,
             architecture: Architecture.ARM_64,
             handler: `${props.entrypoint ?? 'index'}.handler`,
             code: Code.fromAsset(`${props.rootDir ?? '.' }/.output/server`, {
@@ -273,12 +272,12 @@ export class NuxtServerAppStack extends Stack {
         const result: Function = new Function(this, functionName, {
             functionName: functionName,
             description: `Auto-deletes the outdated static assets in the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
-            runtime: Runtime.NODEJS_18_X,
+            runtime: Runtime.NODEJS_20_X,
             architecture: Architecture.ARM_64,
             layers: [new LayerVersion(this, `${this.resourceIdPrefix}-layer`, {
                 layerVersionName: `${this.resourceIdPrefix}-layer`,
                 code: Code.fromAsset(path.join(__dirname, '../../functions/assets-cleanup/build/layer')),
-                compatibleRuntimes: [Runtime.NODEJS_18_X],
+                compatibleRuntimes: [Runtime.NODEJS_20_X],
                 description: `Provides the node_modules required for the ${this.resourceIdPrefix} lambda function.`
             })],
             handler: 'index.handler',
@@ -420,9 +419,9 @@ export class NuxtServerAppStack extends Stack {
             defaultTtl: Duration.seconds(0),
             minTtl: Duration.seconds(0),
             maxTtl: Duration.days(365),
-            queryStringBehavior: props.allowQueryParams ? CacheQueryStringBehavior.allowList(...props.allowQueryParams) : (props.denyQueryParams ? CacheQueryStringBehavior.denyList(...props.denyQueryParams) : CacheQueryStringBehavior.all()),
-            headerBehavior: props.allowHeaders ? CacheHeaderBehavior.allowList(...props.allowHeaders) : CacheHeaderBehavior.none(),
-            cookieBehavior: props.allowCookies ? CacheCookieBehavior.allowList(...props.allowCookies) : CacheCookieBehavior.none(),
+            queryStringBehavior: props.allowQueryParams?.length ? CacheQueryStringBehavior.allowList(...props.allowQueryParams) : (props.denyQueryParams?.length ? CacheQueryStringBehavior.denyList(...props.denyQueryParams) : CacheQueryStringBehavior.all()),
+            headerBehavior: props.allowHeaders?.length ? CacheHeaderBehavior.allowList(...props.allowHeaders) : CacheHeaderBehavior.none(),
+            cookieBehavior: props.allowCookies?.length ? CacheCookieBehavior.allowList(...props.allowCookies) : CacheCookieBehavior.none(),
             enableAcceptEncodingBrotli: true,
             enableAcceptEncodingGzip: true,
         });

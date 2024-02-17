@@ -129,7 +129,7 @@ export abstract class AccessLogsAnalysis extends Construct {
         return new LayerVersion(this, layerVersionName, {
             layerVersionName,
             compatibleArchitectures: [Architecture.ARM_64, Architecture.X86_64],
-            compatibleRuntimes: [Runtime.NODEJS_14_X, Runtime.NODEJS_16_X],
+            compatibleRuntimes: [Runtime.NODEJS_18_X, Runtime.NODEJS_20_X],
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/layer')),
             removalPolicy: RemovalPolicy.DESTROY,
         });
@@ -140,7 +140,7 @@ export abstract class AccessLogsAnalysis extends Construct {
         return new LayerVersion(this, layerVersionName, {
             layerVersionName,
             compatibleArchitectures: [Architecture.ARM_64, Architecture.X86_64],
-            compatibleRuntimes: [Runtime.NODEJS_14_X, Runtime.NODEJS_16_X],
+            compatibleRuntimes: [Runtime.NODEJS_18_X, Runtime.NODEJS_20_X],
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/layer')),
             removalPolicy: RemovalPolicy.DESTROY,
         });
@@ -156,7 +156,7 @@ export abstract class AccessLogsAnalysis extends Construct {
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
-            runtime: Runtime.NODEJS_16_X,
+            runtime: Runtime.NODEJS_20_X,
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/app')),
             memorySize: 512,
             timeout: Duration.seconds(20),
@@ -197,7 +197,7 @@ export abstract class AccessLogsAnalysis extends Construct {
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
-            runtime: Runtime.NODEJS_16_X,
+            runtime: Runtime.NODEJS_20_X,
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), {
                 exclude: ['transform-partition*', '*.d.ts'],
             }),
@@ -245,7 +245,7 @@ export abstract class AccessLogsAnalysis extends Construct {
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
-            runtime: Runtime.NODEJS_16_X,
+            runtime: Runtime.NODEJS_20_X,
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), {
                 exclude: ['create-partition*', '*.d.ts'],
             }),
