@@ -184,6 +184,14 @@ Afterwards, the CDK stack will be deployed to AWS.
 node_modules/.bin/cdk-nuxt-deploy-server
 ```
 
+Alternatively, you can run the following commands separately to customize the deployment process:
+
+```bash
+yarn install
+yarn build
+yarn cdk deploy --require-approval never --all --app="yarn ts-node stack/index.ts"
+```
+
 ## Destroy the Stack
 
 If you want to destroy the stack and all its resources (including storage, e.g., access logs), run the following script:
@@ -248,11 +256,8 @@ jobs:
           node-version: '20'
           cache: 'yarn'
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile # or `yarn install --immutable` for Yarn >= 2
-
       - name: Build and deploy to AWS
-        run: node_modules/.bin/cdk-nuxt-deploy-server
+        run: node_modules/.bin/cdk-nuxt-deploy-server # Or run a customized deployment, see 'Build and Deploy' section
         env:
            # Create an IAM user on AWS for the deployment and create the appropriate secrets in the GitHub repository secrets
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
