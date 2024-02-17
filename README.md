@@ -177,8 +177,8 @@ See https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html for details.
 
 ### 2. Build and Deploy
 
-By running the following script, the packages of the Nuxt app will be installed and the Nuxt app will be built automatically.
-Afterwards, the CDK stack will be deployed to AWS.
+By running the following script, the Nuxt app will be built automatically via `yarn build` 
+and the CDK stack will be deployed to AWS.
 
 ```bash
 node_modules/.bin/cdk-nuxt-deploy-server
@@ -187,7 +187,6 @@ node_modules/.bin/cdk-nuxt-deploy-server
 Alternatively, you can run the following commands separately to customize the deployment process:
 
 ```bash
-yarn install
 yarn build
 yarn cdk deploy --require-approval never --all --app="yarn ts-node stack/index.ts"
 ```
@@ -255,6 +254,9 @@ jobs:
         with:
           node-version: '20'
           cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile # or `yarn install --immutable` for Yarn >= 2
 
       - name: Build and deploy to AWS
         run: node_modules/.bin/cdk-nuxt-deploy-server # Or run a customized deployment, see 'Build and Deploy' section
