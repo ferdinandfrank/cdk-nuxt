@@ -27,7 +27,7 @@ import {
 } from "aws-cdk-lib/aws-s3";
 import {AaaaRecord, ARecord, HostedZone, type IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
 import {BucketDeployment, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
-import {HttpOrigin, S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
+import {HttpOrigin, S3BucketOrigin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {CloudFrontTarget} from "aws-cdk-lib/aws-route53-targets";
 import {HttpMethod} from "aws-cdk-lib/aws-stepfunctions-tasks";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
@@ -450,7 +450,7 @@ export class NuxtServerAppStack extends Stack {
      */
     private createStaticAssetsRouteBehavior(): Record<string, BehaviorOptions> {
         const staticAssetsCacheConfig: BehaviorOptions = {
-            origin: new S3Origin(this.staticAssetsBucket, {
+            origin: S3BucketOrigin.withOriginAccessIdentity(this.staticAssetsBucket, {
                 connectionAttempts: 2,
                 connectionTimeout: Duration.seconds(3),
                 originAccessIdentity: this.cdnAccessIdentity,
@@ -482,7 +482,7 @@ export class NuxtServerAppStack extends Stack {
         }
 
         const sitemapCacheConfig: BehaviorOptions = {
-            origin: new S3Origin(this.sitemapBucket, {
+            origin: S3BucketOrigin.withOriginAccessIdentity(this.sitemapBucket, {
                 connectionAttempts: 2,
                 connectionTimeout: Duration.seconds(3),
                 originAccessIdentity: this.cdnAccessIdentity,
