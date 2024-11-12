@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-import {App} from "aws-cdk-lib";
-import {NuxtServerAppStack, NuxtServerAppStackProps} from "cdk-nuxt";
+import {NuxtServerAppStack, type NuxtServerAppStackProps} from "cdk-nuxt";
 
 const appStackProps: NuxtServerAppStackProps = {
     /**
