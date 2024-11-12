@@ -28,7 +28,7 @@ Install the package and its required dependencies:
 ```bash
 yarn add cdk-nuxt --dev # The package itself
 yarn add ts-node typescript --dev # To compile the CDK stacks via typescript
-yarn add aws-cdk@2.128.0 --dev # CDK cli with this exact version for the deployment
+yarn add aws-cdk@2.166.0 --dev # CDK cli with this exact version for the deployment
 ```
 
 ## Setup
