@@ -191,6 +191,14 @@ yarn build
 yarn cdk deploy --require-approval never --all --app="yarn ts-node stack/index.ts"
 ```
 
+For example, to run the commands with `pnpm`, you can run the following commands:
+
+```bash
+```bash
+pnpm build
+pnpm cdk deploy --require-approval never --all --app="pnpm ts-node stack/index.ts"
+```
+
 ## Destroy the Stack
 
 If you want to destroy the stack and all its resources (including storage, e.g., access logs), run the following script:
