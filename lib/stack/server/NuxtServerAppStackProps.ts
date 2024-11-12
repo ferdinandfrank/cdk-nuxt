@@ -1,4 +1,4 @@
-import {NuxtAppStackProps} from "../NuxtAppStackProps";
+import {type NuxtAppStackProps} from "../NuxtAppStackProps";
 
 /**
  * Defines the props required for the {@see NuxtServerAppStack}.

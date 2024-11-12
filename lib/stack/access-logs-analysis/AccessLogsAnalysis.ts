@@ -1,19 +1,19 @@
-import {Bucket, EventType, NotificationKeyFilter} from 'aws-cdk-lib/aws-s3';
+import {Bucket, EventType, type NotificationKeyFilter} from 'aws-cdk-lib/aws-s3';
 import {Construct} from 'constructs';
 import {CfnWorkGroup} from 'aws-cdk-lib/aws-athena';
 import {CloudFrontAccessLogsByDateTable} from './CloudFrontAccessLogsByDateTable';
 import {AccessLogsParquetTable} from './AccessLogsParquetTable';
 import {Architecture, Code, Function, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {Rule, RuleTargetInput, Schedule} from 'aws-cdk-lib/aws-events';
-import {CfnTag, Duration, Stack} from 'aws-cdk-lib';
-import {Column, Database} from '@aws-cdk/aws-glue-alpha';
+import {type CfnTag, Duration, Stack} from 'aws-cdk-lib';
+import {type Column, Database} from '@aws-cdk/aws-glue-alpha';
 import {S3EventSource} from 'aws-cdk-lib/aws-lambda-event-sources';
 import {RetentionDays} from 'aws-cdk-lib/aws-logs';
 import {Effect, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {LambdaFunction} from 'aws-cdk-lib/aws-events-targets';
 import * as path from 'path';
-import {AccessLogsAnalysisProps} from "./AccessLogsAnalysisProps";
-import {ColumnTransformationRules} from "../../functions/access-logs-analysis/partitioning/types";
+import {type AccessLogsAnalysisProps} from "./AccessLogsAnalysisProps";
+import {type ColumnTransformationRules} from "../../functions/access-logs-analysis/partitioning/types";
 
 /**
  * Provides the AWS resources to analyze access logs. This construct is derived from the official AWS sample

@@ -1,8 +1,8 @@
 import {Construct} from 'constructs';
-import {AccessLogsAnalysisProps} from "./AccessLogsAnalysisProps";
-import {ColumnTransformationRules} from "../../functions/access-logs-analysis/partitioning/types";
+import {type AccessLogsAnalysisProps} from "./AccessLogsAnalysisProps";
+import {type ColumnTransformationRules} from "../../functions/access-logs-analysis/partitioning/types";
 import {AccessLogsAnalysis} from "./AccessLogsAnalysis";
-import {NotificationKeyFilter} from "aws-cdk-lib/aws-s3";
+import {type NotificationKeyFilter} from "aws-cdk-lib/aws-s3";
 import {CloudFrontAccessLogsByDateTable} from "./CloudFrontAccessLogsByDateTable";
 import {AccessLogsParquetTable} from "./AccessLogsParquetTable";
 
