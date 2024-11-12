@@ -77,6 +77,12 @@ const appStackProps: NuxtServerAppStackProps = {
     enableTracing: false,
 
     /**
+     * Whether to enable (HTTPS only) API access to the Nuxt app via the `/api` path which support all HTTP methods.
+     * See https://nuxt.com/docs/guide/directory-structure/server#recipes for details.
+     */
+    enableApi: true,
+
+    /**
      * Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
      */
     enableSitemap: false,
