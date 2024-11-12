@@ -9,7 +9,7 @@ import {
 } from "@aws-cdk/aws-glue-alpha";
 import {Construct} from "constructs";
 import {CfnTable} from "aws-cdk-lib/aws-glue";
-import {AccessLogsTableProps} from "./AccessLogsTableProps";
+import {type AccessLogsTableProps} from "./AccessLogsTableProps";
 
 /**
  * Represents the temporary table, containing the access logs of the S3 sub folder hierarchy.

@@ -3,14 +3,14 @@ import {Construct} from 'constructs';
 import {Certificate} from "aws-cdk-lib/aws-certificatemanager";
 import {
     AllowedMethods,
-    BehaviorOptions,
+    type BehaviorOptions,
     CacheCookieBehavior,
     CachedMethods,
     CacheHeaderBehavior,
     CachePolicy,
     CacheQueryStringBehavior,
     Distribution, HttpVersion,
-    IOriginAccessIdentity,
+    type IOriginAccessIdentity,
     OriginAccessIdentity,
     OriginProtocolPolicy,
     PriceClass,
@@ -25,19 +25,19 @@ import {
     BucketEncryption,
     ObjectOwnership
 } from "aws-cdk-lib/aws-s3";
-import {AaaaRecord, ARecord, HostedZone, IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
+import {AaaaRecord, ARecord, HostedZone, type IHostedZone, RecordTarget} from "aws-cdk-lib/aws-route53";
 import {BucketDeployment, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
-import {HttpOrigin, S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
+import {HttpOrigin, S3BucketOrigin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {CloudFrontTarget} from "aws-cdk-lib/aws-route53-targets";
 import {HttpMethod} from "aws-cdk-lib/aws-stepfunctions-tasks";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
-import {getNuxtAppStaticAssetConfigs, StaticAssetConfig} from "../NuxtAppStaticAssets";
+import {getNuxtAppStaticAssetConfigs, type StaticAssetConfig} from "../NuxtAppStaticAssets";
 import * as fs from "fs";
 import {Rule, RuleTargetInput, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import * as path from "path";
 import {writeFileSync} from "fs";
-import {NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
+import {type NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
 import {CloudFrontAccessLogsAnalysis} from "../access-logs-analysis/CloudFrontAccessLogsAnalysis";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
@@ -450,7 +450,7 @@ export class NuxtServerAppStack extends Stack {
      */
     private createStaticAssetsRouteBehavior(): Record<string, BehaviorOptions> {
         const staticAssetsCacheConfig: BehaviorOptions = {
-            origin: new S3Origin(this.staticAssetsBucket, {
+            origin: S3BucketOrigin.withOriginAccessIdentity(this.staticAssetsBucket, {
                 connectionAttempts: 2,
                 connectionTimeout: Duration.seconds(3),
                 originAccessIdentity: this.cdnAccessIdentity,
@@ -482,7 +482,7 @@ export class NuxtServerAppStack extends Stack {
         }
 
         const sitemapCacheConfig: BehaviorOptions = {
-            origin: new S3Origin(this.sitemapBucket, {
+            origin: S3BucketOrigin.withOriginAccessIdentity(this.sitemapBucket, {
                 connectionAttempts: 2,
                 connectionTimeout: Duration.seconds(3),
                 originAccessIdentity: this.cdnAccessIdentity,

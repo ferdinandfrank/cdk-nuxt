@@ -28,7 +28,7 @@ Install the package and its required dependencies:
 ```bash
 yarn add cdk-nuxt --dev # The package itself
 yarn add ts-node typescript --dev # To compile the CDK stacks via typescript
-yarn add aws-cdk@2.128.0 --dev # CDK cli with this exact version for the deployment
+yarn add aws-cdk@2.166.0 --dev # CDK cli with this exact version for the deployment
 ```
 
 ## Setup
@@ -189,6 +189,14 @@ Alternatively, you can run the following commands separately to customize the de
 ```bash
 yarn build
 yarn cdk deploy --require-approval never --all --app="yarn ts-node stack/index.ts"
+```
+
+For example, to run the commands with `pnpm`, you can run the following commands:
+
+```bash
+```bash
+pnpm build
+pnpm cdk deploy --require-approval never --all --app="pnpm ts-node stack/index.ts"
 ```
 
 ## Destroy the Stack

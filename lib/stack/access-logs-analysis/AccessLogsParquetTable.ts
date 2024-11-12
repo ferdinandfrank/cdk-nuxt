@@ -1,7 +1,7 @@
 import {AccessLogsTableConfig} from './AccessLogsTableConfig';
 import {DataFormat, Table} from '@aws-cdk/aws-glue-alpha';
 import {Construct} from 'constructs';
-import {AccessLogsTableProps} from "./AccessLogsTableProps";
+import {type AccessLogsTableProps} from "./AccessLogsTableProps";
 
 /**
  * Contains the transformed access logs in Apache Parquet format (which is cheaper to query).

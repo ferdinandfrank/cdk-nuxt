@@ -1,7 +1,7 @@
 /**
  * Provides the column descriptions for both of the access log tables.
  */
-import {Column, Schema} from '@aws-cdk/aws-glue-alpha';
+import {type Column, Schema} from '@aws-cdk/aws-glue-alpha';
 
 export class AccessLogsTableConfig {
   public static getPartitionKeys(): Column[] {
