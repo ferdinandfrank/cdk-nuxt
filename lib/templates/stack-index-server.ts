@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {NuxtServerAppStack, type NuxtServerAppStackProps} from "cdk-nuxt";
+import {NuxtServerAppStack, type NuxtServerAppStackProps, App} from "cdk-nuxt";
 
 const appStackProps: NuxtServerAppStackProps = {
     /**
