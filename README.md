@@ -189,14 +189,23 @@ Alternatively, you can run the following commands separately to customize the de
 ```bash
 yarn build
 yarn cdk deploy --require-approval never --all --app="yarn ts-node stack/index.ts"
-```
 
-For example, to run the commands with `pnpm`, you can run the following commands:
-
-```bash
-```bash
+# or with pnpm
 pnpm build
 pnpm cdk deploy --require-approval never --all --app="pnpm ts-node stack/index.ts"
+```
+
+#### Deploy with a custom TypeScript configuration
+Depending on your Nuxt app's TypeScript configuration and the setup of your stack, you might need a different TypeScript configuration for the CDK stack.
+You can do so by creating a `tsconfig.cdk.json` file in the root directory of your project and adjust the deployment command accordingly:
+
+```bash
+yarn build
+yarn cdk deploy --require-approval never --all --app="yarn ts-node --project=tsconfig.cdk.json stack/index.ts"
+
+# or with pnpm
+pnpm build
+pnpm cdk deploy --require-approval never --all --app="pnpm ts-node --project=tsconfig.cdk.json stack/index.ts"
 ```
 
 ## Destroy the Stack
