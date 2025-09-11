@@ -123,6 +123,12 @@ export class NuxtServerAppStack extends Stack {
     private appCachePolicy: CachePolicy;
 
     /**
+     * The behavior for the CloudFront distribution to route incoming web requests
+     * to the Nuxt Lambda function (via API gateway).
+     */
+    private nuxtServerRouteBehavior: BehaviorOptions;
+
+    /**
      * The CloudFront distribution to route incoming requests to the Nuxt Lambda function (via the API gateway)
      * or the S3 assets folder (with caching).
      *
@@ -154,6 +160,7 @@ export class NuxtServerAppStack extends Stack {
         this.apiGateway = this.createApiGateway(props);
         this.httpOrigin = this.createNuxtAppHttpOrigin();
         this.appCachePolicy = this.createNuxtAppCachePolicy(props)
+        this.nuxtServerRouteBehavior = this.createNuxtServerRouteBehavior()
         this.cdn = this.createCloudFrontDistribution(props);
         this.configureDeployments();
         this.createDnsRecords(props);
@@ -352,7 +359,7 @@ export class NuxtServerAppStack extends Stack {
             minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2018,
             certificate: Certificate.fromCertificateArn(this, `${this.resourceIdPrefix}-global-certificate`, props.globalTlsCertificateArn),
             httpVersion: HttpVersion.HTTP2_AND_3,
-            defaultBehavior: this.createNuxtAppRouteBehavior(),
+            defaultBehavior: this.nuxtServerRouteBehavior,
             additionalBehaviors: this.setupCloudFrontRouting(props),
             priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
             logBucket: this.accessLogsBucket,
@@ -378,7 +385,7 @@ export class NuxtServerAppStack extends Stack {
      * to the Nuxt render Lambda function (via API gateway).
      * Additionally, this automatically redirects HTTP requests to HTTPS.
      */
-    private createNuxtAppRouteBehavior(): BehaviorOptions {
+    private createNuxtServerRouteBehavior(): BehaviorOptions {
         return {
             origin: this.httpOrigin,
             allowedMethods: AllowedMethods.ALLOW_GET_HEAD,
@@ -390,7 +397,11 @@ export class NuxtServerAppStack extends Stack {
     }
 
     private setupCloudFrontRouting(props: NuxtServerAppStackProps): Record<string, BehaviorOptions> {
-        let routingBehaviours: Record<string, BehaviorOptions> = {};
+        let routingBehaviours: Record<string, BehaviorOptions> = {
+
+            // Nuxt I18n files are served via a server route
+            '/_i18n/*': this.nuxtServerRouteBehavior,
+        };
 
         // Specific ones first
         if (props.enableApi) {
