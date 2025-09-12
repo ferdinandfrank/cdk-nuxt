@@ -66,5 +66,5 @@ jobs:
           title: "chore(release): v${{ steps.changelog.outputs.version }}"
           body: "Automated release PR for v${{ steps.changelog.outputs.version }}. Please review and merge."
           base: master
-          branch: release/v${{ steps.changelog.outputs.version }}
+          branch: develop
           labels: release

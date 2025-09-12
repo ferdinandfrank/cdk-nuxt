@@ -57,21 +57,11 @@ jobs:
             exit 1
           fi
 
-      - name: Pack tarball (prepack runs automatically)
+      - name: Pack tarball
         run: |
           pnpm pack --pack-destination .
           TARBALL=$(ls -1t *.tgz | head -n1)
           echo "TARBALL=$TARBALL" >> $GITHUB_ENV
-
-      - name: Create & push tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "actions@github.com"
-          TAG="v${{ steps.read_version.outputs.version }}"
-          git tag -a "${TAG}" -m "Release ${TAG}"
-          git push origin "${TAG}"
 
       - name: Publish to npm
         env:
