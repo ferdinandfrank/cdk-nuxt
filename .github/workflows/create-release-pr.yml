@@ -65,6 +65,6 @@ jobs:
           commit-message: "chore(release): v${{ steps.changelog.outputs.version }}"
           title: "chore(release): v${{ steps.changelog.outputs.version }}"
           body: "Automated release PR for v${{ steps.changelog.outputs.version }}. Please review and merge."
-          base: master
+          base: develop
           branch: release/v${{ steps.changelog.outputs.version }}
           labels: release
