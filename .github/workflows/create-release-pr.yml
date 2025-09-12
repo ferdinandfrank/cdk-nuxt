@@ -49,17 +49,12 @@ jobs:
           set -euo pipefail
           git fetch --tags --force --prune
           PKG=$(node -p "require('./package.json').name")
-          CUR=$(node -p "require('./package.json').version")
-          echo "current version: $CUR"
-          if git rev-parse "v${CUR}" >/dev/null 2>&1; then
-            pnpm version patch --no-git-tag-version
-          fi
           TARGET=$(node -p "require('./package.json').version")
           while pnpm view ${PKG}@${TARGET} version --registry=https://registry.npmjs.org/ >/dev/null 2>&1; do
-            pnpm version patch --no-git-tag-version
-            TARGET=$(node -p "require('./package.json').version")
+            TARGET=$(pnpm version patch --no-git-tag-version | tail -n1 | cut -d ' ' -f2)
           done
-          echo "version=${TARGET}" >> $GITHUB_OUTPUT
+          pnpm version $TARGET --no-git-tag-version
+          echo "version=$TARGET" >> $GITHUB_OUTPUT
 
       - name: Generate changelog and commit changes
         run: |
