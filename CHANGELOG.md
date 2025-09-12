@@ -1,6 +1,32 @@
 # Changelog
 
 
+## v2.10.8
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.10.7...v2.10.8)
+
+### 🩹 Fixes
+
+- Attempt to fix release process ([dc60493](https://github.com/ferdinandfrank/cdk-nuxt/commit/dc60493))
+- Attempt to fix release process ([2f3ecfd](https://github.com/ferdinandfrank/cdk-nuxt/commit/2f3ecfd))
+- Attempt to fix release process ([f62c91d](https://github.com/ferdinandfrank/cdk-nuxt/commit/f62c91d))
+- Attempt to fix release process ([376a20b](https://github.com/ferdinandfrank/cdk-nuxt/commit/376a20b))
+
+### 📖 Documentation
+
+- Update build badge link in README ([cd5ddcb](https://github.com/ferdinandfrank/cdk-nuxt/commit/cd5ddcb))
+
+### 🤖 CI
+
+- Simplify release" ([b6f4962](https://github.com/ferdinandfrank/cdk-nuxt/commit/b6f4962))
+- Simplify release"" ([8cda087](https://github.com/ferdinandfrank/cdk-nuxt/commit/8cda087))
+- Attempt to simplify release process ([b881624](https://github.com/ferdinandfrank/cdk-nuxt/commit/b881624))
+- Attempt to fix release process ([32f4a67](https://github.com/ferdinandfrank/cdk-nuxt/commit/32f4a67))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.10.6
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.10.5...v2.10.6)
