@@ -1,9 +1,9 @@
 # Changelog
 
 
-## v2.7.0
+## v2.9.0
 
-[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.4.0...v2.7.0)
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.4.0...v2.9.0)
 
 ### 🚀 Enhancements
 
@@ -29,6 +29,12 @@
 - Bump version to 2.5.1 in package.json ([ad42fdc](https://github.com/ferdinandfrank/cdk-nuxt/commit/ad42fdc))
 - Reorder pnpm setup step in workflows ([9d62c63](https://github.com/ferdinandfrank/cdk-nuxt/commit/9d62c63))
 - Set correct package version ([635a52c](https://github.com/ferdinandfrank/cdk-nuxt/commit/635a52c))
+- Update step name in release PR workflow ([e9942c2](https://github.com/ferdinandfrank/cdk-nuxt/commit/e9942c2))
+- Prevent release version jumps ([c3d010d](https://github.com/ferdinandfrank/cdk-nuxt/commit/c3d010d))
+- Remove redundant command and backmerge master into develop ([6c0c9b4](https://github.com/ferdinandfrank/cdk-nuxt/commit/6c0c9b4))
+- Adjust workflows and prepack scripts for streamlined package builds ([d659ebc](https://github.com/ferdinandfrank/cdk-nuxt/commit/d659ebc))
+- Simplify release workflow by removing redundant version check step ([24dc2c4](https://github.com/ferdinandfrank/cdk-nuxt/commit/24dc2c4))
+- Adjust version to npm registry ([3b311ca](https://github.com/ferdinandfrank/cdk-nuxt/commit/3b311ca))
 
 ### 💅 Refactors
 
