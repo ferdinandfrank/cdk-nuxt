@@ -21,8 +21,9 @@
 	},
 	"scripts": {
 		"build": "tsc",
+		"prepack": "pnpm -C lib/functions/assets-cleanup run build && pnpm -C lib/functions/access-logs-analysis/group-by-date run build && pnpm -C lib/functions/access-logs-analysis/partitioning run build && pnpm run build",
 		"release:check": "pnpm run build",
-		"release": "pnpm run release:check && pnpm changelogen --release --push"
+		"release": "pnpm run release:check && pnpm changelogen --release"
 	},
 	"devDependencies": {
 		"@types/node": "^20.10",
