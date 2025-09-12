@@ -12,10 +12,10 @@ import {
     Distribution, HttpVersion,
     type IOriginAccessIdentity,
     OriginAccessIdentity,
-    OriginProtocolPolicy,
+    OriginProtocolPolicy, OriginRequestPolicy,
     PriceClass,
     SecurityPolicyProtocol,
-    ViewerProtocolPolicy
+    ViewerProtocolPolicy,OriginRequestCookieBehavior, OriginRequestHeaderBehavior, OriginRequestQueryStringBehavior
 } from "aws-cdk-lib/aws-cloudfront";
 import {Architecture, Code, Function, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {
@@ -29,18 +29,16 @@ import {AaaaRecord, ARecord, HostedZone, type IHostedZone, RecordTarget} from "a
 import {BucketDeployment, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
 import {HttpOrigin, S3BucketOrigin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {CloudFrontTarget} from "aws-cdk-lib/aws-route53-targets";
-import {HttpMethod} from "aws-cdk-lib/aws-stepfunctions-tasks";
-import {RetentionDays} from "aws-cdk-lib/aws-logs";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import {getNuxtAppStaticAssetConfigs, type StaticAssetConfig} from "../NuxtAppStaticAssets";
-import * as fs from "fs";
 import {Rule, RuleTargetInput, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import * as path from "path";
-import {writeFileSync} from "fs";
+import {writeFileSync, mkdirSync, existsSync} from "fs";
 import {type NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
 import {CloudFrontAccessLogsAnalysis} from "../access-logs-analysis/CloudFrontAccessLogsAnalysis";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
-import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
+import {DomainName, EndpointType, HttpApi, HttpMethod, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
 
 /**
  * CDK stack to deploy a dynamic Nuxt app (target=server) on AWS with Lambda, ApiGateway, S3 and CloudFront.
@@ -118,9 +116,22 @@ export class NuxtServerAppStack extends Stack {
     private httpOrigin: HttpOrigin;
 
     /**
-     * The cache policy for the Nuxt app route behaviors of the CloudFront distribution.
+     * The cache policy that specifies which HTTP headers, cookies, and query strings
+     * CloudFront forwards to the Nuxt app and uses to generate a cache key.
      */
     private appCachePolicy: CachePolicy;
+
+    /**
+     * The origin request policy that specifies which HTTP headers, cookies, and query strings
+     * CloudFront forwards to the Nuxt app without affecting the cache key.
+     */
+    private appRequestPolicy: OriginRequestPolicy;
+
+    /**
+     * The behavior for the CloudFront distribution to route incoming web requests
+     * to the Nuxt Lambda function (via API gateway).
+     */
+    private nuxtServerRouteBehavior: BehaviorOptions;
 
     /**
      * The CloudFront distribution to route incoming requests to the Nuxt Lambda function (via the API gateway)
@@ -154,6 +165,8 @@ export class NuxtServerAppStack extends Stack {
         this.apiGateway = this.createApiGateway(props);
         this.httpOrigin = this.createNuxtAppHttpOrigin();
         this.appCachePolicy = this.createNuxtAppCachePolicy(props)
+        this.appRequestPolicy = this.createNuxtAppRequestPolicy(props)
+        this.nuxtServerRouteBehavior = this.createNuxtServerRouteBehavior()
         this.cdn = this.createCloudFrontDistribution(props);
         this.configureDeployments();
         this.createDnsRecords(props);
@@ -169,10 +182,11 @@ export class NuxtServerAppStack extends Stack {
      * and returns the current revision.
      */
     private createDeploymentRevision(props: NuxtServerAppStackProps): string {
-        const revisionFilePath = `${props.rootDir ?? '.'}/.output/public/app-revision`;
         const appRevision = new Date().toISOString();
 
-        writeFileSync(revisionFilePath, appRevision, {encoding: 'utf-8'});
+        const dir = path.join(props.rootDir ?? '.', '.output', 'public');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(path.join(dir, 'app-revision'), appRevision, { encoding: 'utf-8' });
 
         return appRevision;
     }
@@ -239,6 +253,12 @@ export class NuxtServerAppStack extends Stack {
     private createAppLambdaFunction(props: NuxtServerAppStackProps): Function {
         const funcName = `${this.resourceIdPrefix}-app-function`;
 
+        const appLogGroup = new LogGroup(this, `${funcName}-logs`, {
+            logGroupName: `/aws/lambda/${funcName}`,
+            retention: RetentionDays.ONE_MONTH,
+        });
+        appLogGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
         return new Function(this, funcName, {
             functionName: funcName,
             description: `Renders the ${this.resourceIdPrefix} Nuxt app.`,
@@ -250,9 +270,9 @@ export class NuxtServerAppStack extends Stack {
             }),
             timeout: Duration.seconds(10),
             memorySize: props.memorySize ?? 1792,
-            logRetention: RetentionDays.ONE_MONTH,
             allowPublicSubnet: false,
             tracing: props.enableTracing ? Tracing.ACTIVE : Tracing.DISABLED,
+            logGroup: appLogGroup,
             environment: {
                 NODE_OPTIONS: '--enable-source-maps',
                 ...JSON.parse(props.entrypointEnv ?? '{}'),
@@ -269,6 +289,12 @@ export class NuxtServerAppStack extends Stack {
         const functionName: string = `${this.resourceIdPrefix}-cleanup-function`;
         const functionDirPath = path.join(__dirname, '../../functions/assets-cleanup');
 
+        const cleanupLogGroup = new LogGroup(this, `${functionName}-logs`, {
+            logGroupName: `/aws/lambda/${functionName}`,
+            retention: RetentionDays.TWO_WEEKS,
+        });
+        cleanupLogGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
         const result: Function = new Function(this, functionName, {
             functionName: functionName,
             description: `Auto-deletes the outdated static assets in the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
@@ -280,7 +306,6 @@ export class NuxtServerAppStack extends Stack {
             }),
             timeout: Duration.minutes(5),
             memorySize: 128,
-            logRetention: RetentionDays.TWO_WEEKS,
             environment: {
                 STATIC_ASSETS_BUCKET: this.staticAssetsBucket.bucketName,
                 OUTDATED_ASSETS_RETENTION_DAYS: `${props.outdatedAssetsRetentionDays ?? 30}`,
@@ -288,6 +313,7 @@ export class NuxtServerAppStack extends Stack {
                 AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
                 NODE_OPTIONS: '--enable-source-maps',
             },
+            logGroup: cleanupLogGroup,
         });
 
         // grant function access to S3 bucket
@@ -330,7 +356,15 @@ export class NuxtServerAppStack extends Stack {
         apiGateway.addRoutes({
             integration: lambdaIntegration,
             path: '/{proxy+}',
-            methods: [HttpMethod.GET, HttpMethod.HEAD],
+            methods: [
+                HttpMethod.GET,
+                HttpMethod.HEAD,
+                HttpMethod.OPTIONS,
+                HttpMethod.POST,
+                HttpMethod.PUT,
+                HttpMethod.PATCH,
+                HttpMethod.DELETE,
+            ],
         });
 
         return apiGateway;
@@ -352,12 +386,12 @@ export class NuxtServerAppStack extends Stack {
             minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2018,
             certificate: Certificate.fromCertificateArn(this, `${this.resourceIdPrefix}-global-certificate`, props.globalTlsCertificateArn),
             httpVersion: HttpVersion.HTTP2_AND_3,
-            defaultBehavior: this.createNuxtAppRouteBehavior(),
+            defaultBehavior: this.nuxtServerRouteBehavior,
             additionalBehaviors: this.setupCloudFrontRouting(props),
             priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
             logBucket: this.accessLogsBucket,
             logFilePrefix: props.enableAccessLogsAnalysis ? CloudFrontAccessLogsAnalysis.getLogFilePrefix() : undefined,
-            logIncludesCookies: true,
+            logIncludesCookies: props.enableAccessLogsAnalysis,
         });
     }
 
@@ -378,19 +412,23 @@ export class NuxtServerAppStack extends Stack {
      * to the Nuxt render Lambda function (via API gateway).
      * Additionally, this automatically redirects HTTP requests to HTTPS.
      */
-    private createNuxtAppRouteBehavior(): BehaviorOptions {
+    private createNuxtServerRouteBehavior(): BehaviorOptions {
         return {
             origin: this.httpOrigin,
             allowedMethods: AllowedMethods.ALLOW_GET_HEAD,
             compress: true,
             viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            originRequestPolicy: undefined,
+            originRequestPolicy: this.appRequestPolicy,
             cachePolicy: this.appCachePolicy
         };
     }
 
     private setupCloudFrontRouting(props: NuxtServerAppStackProps): Record<string, BehaviorOptions> {
-        let routingBehaviours: Record<string, BehaviorOptions> = {};
+        let routingBehaviours: Record<string, BehaviorOptions> = {
+
+            // Nuxt I18n files are served via a server route
+            '/_i18n/*': this.nuxtServerRouteBehavior,
+        };
 
         // Specific ones first
         if (props.enableApi) {
@@ -415,11 +453,24 @@ export class NuxtServerAppStack extends Stack {
             defaultTtl: Duration.seconds(0),
             minTtl: Duration.seconds(0),
             maxTtl: Duration.days(365),
-            queryStringBehavior: props.allowQueryParams?.length ? CacheQueryStringBehavior.allowList(...props.allowQueryParams) : (props.denyQueryParams?.length ? CacheQueryStringBehavior.denyList(...props.denyQueryParams) : CacheQueryStringBehavior.all()),
-            headerBehavior: props.allowHeaders?.length ? CacheHeaderBehavior.allowList(...props.allowHeaders) : CacheHeaderBehavior.none(),
-            cookieBehavior: props.allowCookies?.length ? CacheCookieBehavior.allowList(...props.allowCookies) : CacheCookieBehavior.none(),
+            queryStringBehavior: props.cacheKeyQueryParams?.length ? CacheQueryStringBehavior.allowList(...props.cacheKeyQueryParams) : (props.denyCacheKeyQueryParams?.length ? CacheQueryStringBehavior.denyList(...props.denyCacheKeyQueryParams) : (props.allowQueryParams?.length ? CacheQueryStringBehavior.allowList(...props.allowQueryParams) : (props.denyQueryParams?.length ? CacheQueryStringBehavior.denyList(...props.denyQueryParams) : CacheQueryStringBehavior.all()))),
+            headerBehavior: props.cacheKeyHeaders?.length ? CacheHeaderBehavior.allowList(...props.cacheKeyHeaders) : (props.allowHeaders?.length ? CacheHeaderBehavior.allowList(...props.allowHeaders) : CacheHeaderBehavior.none()),
+            cookieBehavior: props.cacheKeyCookies?.length ? CacheCookieBehavior.allowList(...props.cacheKeyCookies) : (props.allowCookies?.length ? CacheCookieBehavior.allowList(...props.allowCookies) : CacheCookieBehavior.none()),
             enableAcceptEncodingBrotli: true,
             enableAcceptEncodingGzip: true,
+        });
+    }
+
+    /**
+     * Creates an origin request policy for the Nuxt app route behavior of the CloudFront distribution.
+     */
+    private createNuxtAppRequestPolicy(props: NuxtServerAppStackProps): OriginRequestPolicy {
+        return new OriginRequestPolicy(this, `${this.resourceIdPrefix}-request-policy`, {
+            originRequestPolicyName: `${this.resourceIdPrefix}-cdn-request-policy`,
+            comment: `Defines which request data to pass to the ${this.resourceIdPrefix} origin without affecting the cache key.`,
+            queryStringBehavior: props.forwardQueryParams?.length ? OriginRequestQueryStringBehavior.allowList(...props.forwardQueryParams) : OriginRequestQueryStringBehavior.all(),
+            headerBehavior: props.forwardHeaders?.length ? OriginRequestHeaderBehavior.allowList(...props.forwardHeaders) : OriginRequestHeaderBehavior.none(),
+            cookieBehavior: props.forwardCookies?.length ? OriginRequestCookieBehavior.allowList(...props.forwardCookies) : OriginRequestCookieBehavior.none(),
         });
     }
 
@@ -433,6 +484,7 @@ export class NuxtServerAppStack extends Stack {
             allowedMethods: AllowedMethods.ALLOW_ALL,
             cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
             cachePolicy: this.appCachePolicy,
+            originRequestPolicy: this.appRequestPolicy,
             viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY
         };
 
@@ -511,7 +563,7 @@ export class NuxtServerAppStack extends Stack {
      */
     private configureDeployments(): BucketDeployment[] {
         // Returns a deployment for every configured static asset type to respect the different cache settings
-        return this.staticAssetConfigs.filter(asset => fs.existsSync(asset.source)).map((asset, assetIndex) => {
+        return this.staticAssetConfigs.filter(asset => existsSync(asset.source)).map((asset, assetIndex) => {
             return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
                 sources: [Source.asset(asset.source, {
                     exclude: asset.exclude,
@@ -616,7 +668,7 @@ export class NuxtServerAppStack extends Stack {
 
 
     /**
-     * Creates a scheduled rule that runs every tuesday at 03:30 AM GMT to trigger
+     * Creates a scheduled rule that runs every Tuesday at 03:30 AM GMT to trigger
      * our cleanup Lambda function.
      *
      * @private
@@ -626,7 +678,7 @@ export class NuxtServerAppStack extends Stack {
             ruleName: `${this.resourceIdPrefix}-scheduler`,
             description: `Triggers a cleanup of the outdated static assets at the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
             enabled: true,
-            schedule: Schedule.cron({weekDay: '3', hour: '3', minute: '30'}),
+            schedule: Schedule.cron({weekDay: '2', hour: '3', minute: '30'}),
             targets: [new LambdaFunction(this.cleanupLambdaFunction)],
         });
     }

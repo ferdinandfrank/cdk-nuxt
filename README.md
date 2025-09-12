@@ -1,4 +1,4 @@
-# AWS CDK Nuxt 3 Deployment Stack
+# AWS CDK Nuxt Deployment Stack (Nuxt 3 & Nuxt 4)
 
 <p>
     <a href="https://github.com/ferdinandfrank/cdk-nuxt/actions/workflows/publish.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/ferdinandfrank/cdk-nuxt/publish.yml?logo=github" /></a>
@@ -7,7 +7,7 @@
     <a href="https://www.npmjs.com/package/cdk-nuxt"><img alt="License" src="https://img.shields.io/npm/l/cdk-nuxt.svg" /></a>
 </p>
 
-Easily deploy Nuxt 3 applications via CDK on AWS including the following features:
+Easily deploy Nuxt applications (Nuxt 3 and Nuxt 4) via CDK on AWS, including the following features:
 
 - Fast responses via [AWS Lambda](https://aws.amazon.com/lambda/)
 - Publicly available by a custom domain (or subdomain) via [Route53](https://aws.amazon.com/route53/) and [API Gateway](https://aws.amazon.com/api-gateway/)
@@ -17,19 +17,60 @@ Easily deploy Nuxt 3 applications via CDK on AWS including the following feature
 - Automatic cleanup of outdated static assets and build files
 - Access logs analysis via [Athena](https://aws.amazon.com/athena/) for the Nuxt app's CloudFront distribution
 
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Compatibility](#compatibility)
+- [Installation](#installation)
+- [Setup](#setup)
+- [Configuration](#configuration)
+- [Deployment](#deployment)
+- [Destroy the Stack](#destroy-the-stack)
+- [Reference: Created AWS Resources](#reference-created-aws-resources)
+- [Guidelines](#guidelines)
+
 ## Prerequisites
 
 - You need an [AWS account](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/?nc1=h_ls) to create and deploy the required resources for the Nuxt app on AWS.
-- This readme currently relies on using [Yarn](https://yarnpkg.com/) as a package manager. Feel free to use another package manager, but you have to adapt the commands accordingly.
+- You can use your preferred package manager: pnpm, npm, or Yarn. The examples below show commands for each where relevant.
+
+## Compatibility
+
+This package is compatible with the following Nuxt versions:
+- Nuxt 3 (latest stable)
+- Nuxt 4 (RC and stable)
+
+Notes:
+- Make sure to set Nitro's preset to `aws-lambda` as shown below.
+- If you encounter any version-specific issues, please open an issue on GitHub.
 
 ## Installation
 
-Install the package and its required dependencies:
+Install the package and its required dependencies (choose your package manager):
+
+Using pnpm:
 ```bash
-yarn add cdk-nuxt --dev # The package itself
-yarn add ts-node typescript --dev # To compile the CDK stacks via typescript
-yarn add aws-cdk@2.166.0 --dev # CDK cli with this exact version for the deployment
+pnpm add -D cdk-nuxt # The package itself
+pnpm add -D ts-node typescript # To compile the CDK stacks via TypeScript
+pnpm add -D aws-cdk@^2.214.0 # Optional: CDK CLI for the deployment (recommended range)
 ```
+
+Using npm:
+```bash
+npm install --save-dev cdk-nuxt # The package itself
+npm install --save-dev ts-node typescript # To compile the CDK stacks via TypeScript
+npm install --save-dev aws-cdk@^2.214.0 # Optional: CDK CLI for the deployment (recommended range)
+```
+
+Using Yarn:
+```bash
+yarn add -D cdk-nuxt # The package itself
+yarn add -D ts-node typescript # To compile the CDK stacks via TypeScript
+yarn add -D aws-cdk@^2.214.0 # Optional: CDK CLI for the deployment (recommended range)
+```
+
+Note: Installing the AWS CDK CLI (aws-cdk) as a devDependency is optional. You can also invoke the CLI via npx (e.g., `npx cdk ...`). Ensure you are using CDK v2.
+This package targets aws-cdk-lib 2.214.x; for best compatibility, keep your project's aws-cdk-lib within the 2.214.x range as well.
 
 ## Setup
 
@@ -125,48 +166,64 @@ Whether to enable access logs analysis for the Nuxt app's CloudFront distributio
 An array of cookies to include for reporting in the access logs analysis.
 Only has an effect when `enableAccessLogsAnalysis` is set to `true`.
 
-### outdatedAssetsRetentionDays?: boolean
+### outdatedAssetsRetentionDays?: number
 The number of days to retain static assets of outdated deployments in the S3 bucket.
 Useful to allow users to still access old assets after a new deployment when they are still browsing on an old version.
 Defaults to 30 days.
 
-### allowHeaders?: string[]
-An array of headers to pass to the Nuxt app on SSR requests.
-The more headers are passed, the weaker the cache performance will be, as the cache key
-is based on the headers.
-No headers are passed by default.
+### forwardHeaders?: string[]
+An array of HTTP headers to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
+This should only be used for headers that do not affect the response.
 
-### allowCookies?: string[]
-An array of cookies to pass to the Nuxt app on SSR requests.
-The more cookies are passed, the weaker the cache performance will be, as the cache key
-is based on the cookies.
-No cookies are passed by default.
+No headers are forwarded by default.
 
-### allowQueryParams?: string[]
-An array of query param keys to pass to the Nuxt app on SSR requests.
-The more query params are passed, the weaker the cache performance will be, as the cache key
-is based on the query params.
-Note that this config can not be combined with {@see denyQueryParams}.
-If both are specified, the {@see denyQueryParams} will be ignored.
-All query params are passed by default.
+### cacheKeyHeaders?: string[]
+An array of HTTP headers to forward to the Nuxt app and to include in the cache key for objects that are cached at CloudFront edge locations.
+This should be used for headers that might affect the response, e.g., 'Authorization'.
 
-### denyQueryParams?: string[]
-An array of query param keys to deny passing to the Nuxt app on SSR requests.
-It might be useful to prevent specific external query params, e.g., fbclid, utm_campaign, ...,
-to improve cache performance, as the cache key is based on the specified query params.
-Note that this config can not be combined with {@see allowQueryParams}.
-If both are specified, the {@see denyQueryParams} will be ignored.
-All query params are passed by default.
+No headers are forwarded or included in the cache key by default.
+
+### forwardCookies?: string[]
+An array of cookies to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
+This should only be used for cookies that do not affect the response.
+
+No cookies are forwarded by default.
+
+### cacheKeyCookies?: string[]
+An array of cookies to forward to the Nuxt app and to include in the cache key for objects that are cached at CloudFront edge locations.
+This should be used for cookies that might affect the response, e.g., authentication cookies.
+
+No cookies are forwarded or included in the cache key by default.
+
+### forwardQueryParams?: string[]
+An array of query params to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
+This should only be used for query params that do not affect the response and are required on SSR requests.
+
+All query params are forwarded by default.
+
+### cacheKeyQueryParams?: string[]
+An array of query params to forward to the Nuxt app and to include in the cache key for objects that are cached at CloudFront edge locations.
+This should be used for query params that affect the response and are required on SSR requests, e.g., filters.
+
+All query params are forwarded and included in the cache key by default.
+
+### denyCacheKeyQueryParams?: string[]
+An array of query params to prevent forwarding to the Nuxt app and to not include in the cache key for objects that are cached at CloudFront edge locations.
+When set, all query params that are not specified in this array will be forwarded to the Nuxt app and included in the cache key.
+This should be used for query params that do not affect the response and are not required on SSR requests, e.g., 'fbclid' or 'utm_campaign'.
+
+If both `cacheKeyQueryParams` and `denyCacheKeyQueryParams` are specified, the `denyCacheKeyQueryParams` will be ignored.
+All query params are forwarded and included in the cache key by default.
 
 
 ## Deployment
 
-After the installation and the setup you are already good to go to build the Nuxt app and to deploy it to AWS with this package
+After the installation and the setup, you are already good to go to build the Nuxt app and to deploy it to AWS with this package
 by following the steps below:
 
 ### 1. Bootstrap CDK
 Deploying stacks with the AWS CDK requires dedicated Amazon S3 buckets and other containers to be available to AWS CloudFormation during deployment. 
-Creating these is called bootstrapping and is **only required once** per account and region. 
+Creating this is called bootstrapping and is **only required once** per account and region. 
 To bootstrap, run the following command:
 
 ```bash
@@ -177,35 +234,53 @@ See https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html for details.
 
 ### 2. Build and Deploy
 
-By running the following script, the Nuxt app will be built automatically via `yarn build` 
+By running the following script, the Nuxt app will be built (using your package manager's `build` script)
 and the CDK stack will be deployed to AWS.
 
 ```bash
 node_modules/.bin/cdk-nuxt-deploy-server
 ```
 
-Alternatively, you can run the following commands separately to customize the deployment process:
+Alternatively, you can run the following commands separately to customize the deployment process. Choose your package manager:
 
+Using pnpm:
 ```bash
-yarn build
-yarn cdk deploy --require-approval never --all --app="yarn ts-node stack/index.ts"
-
-# or with pnpm
 pnpm build
 pnpm cdk deploy --require-approval never --all --app="pnpm ts-node stack/index.ts"
 ```
 
+Using npm:
+```bash
+npm run build
+npx cdk deploy --require-approval never --all --app="npx ts-node stack/index.ts"
+```
+
+Using Yarn:
+```bash
+yarn build
+yarn cdk deploy --require-approval never --all --app="yarn ts-node stack/index.ts"
+```
+
 #### Deploy with a custom TypeScript configuration
 Depending on your Nuxt app's TypeScript configuration and the setup of your stack, you might need a different TypeScript configuration for the CDK stack.
-You can do so by creating a `tsconfig.cdk.json` file in the root directory of your project and adjust the deployment command accordingly:
+You can do so by creating a `tsconfig.cdk.json` file in the root directory of your project and adjust the deployment command accordingly (choose your package manager):
 
+Using pnpm:
+```bash
+pnpm build
+pnpm cdk deploy --require-approval never --all --app="pnpm ts-node --project=tsconfig.cdk.json stack/index.ts"
+```
+
+Using npm:
+```bash
+npm run build
+npx cdk deploy --require-approval never --all --app="npx ts-node --project=tsconfig.cdk.json stack/index.ts"
+```
+
+Using Yarn:
 ```bash
 yarn build
 yarn cdk deploy --require-approval never --all --app="yarn ts-node --project=tsconfig.cdk.json stack/index.ts"
-
-# or with pnpm
-pnpm build
-pnpm cdk deploy --require-approval never --all --app="pnpm ts-node --project=tsconfig.cdk.json stack/index.ts"
 ```
 
 ## Destroy the Stack
@@ -222,8 +297,8 @@ In the following, you can find an overview of the AWS resources that will be cre
 
 ### NuxtServerAppStack
 
-This stack is responsible for deploying dynamic Nuxt 3 apps to AWS.
-The following AWS resources will be created by this stack:
+This stack is responsible for deploying dynamic Nuxt apps to AWS.
+This stack will create the following AWS resources:
 
 - [Lambda](https://aws.amazon.com/lambda/):
     - A Lambda function to render the Nuxt app including a separated Lambda layer to provide the `node_modules` of the Nuxt app required for server-side rendering.
@@ -270,10 +345,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
+          cache: 'pnpm' # or 'yarn' or 'npm'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile # or `yarn install --immutable` for Yarn >= 2
+        run: |
+          pnpm install --frozen-lockfile
+          # or: npm ci
+          # or: yarn install --frozen-lockfile # or `yarn install --immutable` for Yarn >= 2
 
       - name: Build and deploy to AWS
         run: node_modules/.bin/cdk-nuxt-deploy-server # Or run a customized deployment, see 'Build and Deploy' section

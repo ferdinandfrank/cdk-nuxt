@@ -1,21 +1,22 @@
 {
-  "name": "cdk-nuxt-access-log-analysis-create-partitions",
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "UNLICENSED",
-  "private": true,
-  "scripts": {
-    "install-layer": "yarn install --frozen-lockfile --production --modules-folder build/layer/nodejs/node_modules",
-    "build": "tsc --project ./tsconfig.json"
-  },
-  "devDependencies": {
-    "@aws-sdk/client-athena": "^3.687.0",
-    "@types/aws-lambda": "^8.10.145",
-    "@types/node": "^20.10",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
-  },
-  "peerDependencies": {
-    "@aws-sdk/client-athena": "^3"
-  }
+	"name": "cdk-nuxt-access-log-analysis-create-partitions",
+	"version": "1.0.0",
+	"main": "index.js",
+	"license": "UNLICENSED",
+	"private": true,
+	"scripts": {
+		"install-layer": "pnpm install --frozen-lockfile --prod --modules-dir build/layer/nodejs/node_modules",
+		"build": "tsc --project ./tsconfig.json"
+	},
+	"devDependencies": {
+		"@aws-sdk/client-athena": "^3.687.0",
+		"@types/aws-lambda": "^8.10.145",
+		"@types/node": "^20.10",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.6.3"
+	},
+	"peerDependencies": {
+		"@aws-sdk/client-athena": "^3"
+	},
+	"packageManager": "pnpm@10.15.1"
 }

@@ -2,43 +2,72 @@ name: Publish
 
 on:
   push:
-    tags:
-      - '**' # Listen to push of every tag format, including hierarchical tags like v1.0/beta
+    branches:
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-22.04
+    if: ${{ github.actor != 'github-actions[bot]' && github.event.pusher.name != 'github-actions[bot]' }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Use Node.js
+      # Setting the Git user is required for the changelog generation and tagging
+      - name: Set Git user
+        uses: qoomon/actions--setup-git@v1
+        with:
+          user: committer
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Configure Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Create release
-        uses: ncipollo/release-action@v1
-        with:
-          generateReleaseNotes: true
+          registry-url: 'https://npm.pkg.github.com'
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: |
-          cd lib/functions/assets-cleanup && yarn install --frozen-lockfile && yarn install-layer && cd ../../..
-          cd lib/functions/access-logs-analysis/group-by-date && yarn install --frozen-lockfile && yarn install-layer && cd ../../../..
-          cd lib/functions/access-logs-analysis/partitioning && yarn install --frozen-lockfile && yarn install-layer && cd ../../../..
-          yarn install --frozen-lockfile
+          cd lib/functions/assets-cleanup && pnpm install --frozen-lockfile && pnpm install-layer && cd ../../..
+          cd lib/functions/access-logs-analysis/group-by-date && pnpm install --frozen-lockfile && pnpm install-layer && cd ../../../..
+          cd lib/functions/access-logs-analysis/partitioning && pnpm install --frozen-lockfile && pnpm install-layer && cd ../../../..
+          pnpm install --frozen-lockfile
 
       - name: Build project
         run: |
-          cd lib/functions/assets-cleanup && yarn build && cd ../../..
-          cd lib/functions/access-logs-analysis/group-by-date && yarn build && cd ../../../..
-          cd lib/functions/access-logs-analysis/partitioning && yarn build && cd ../../../..
-          yarn build
+          cd lib/functions/assets-cleanup && pnpm run build && cd ../../..
+          cd lib/functions/access-logs-analysis/group-by-date && pnpm run build && cd ../../../..
+          cd lib/functions/access-logs-analysis/partitioning && pnpm run build && cd ../../../..
+          pnpm run build
+
+      - name: Create changelog and release
+        run: pnpm changelogen --release --push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish
-        run: yarn publish
+        run: |
+          pnpm config set npmRegistryServer "https://npm.pkg.github.com"
+          pnpm npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      -   name: Verify package publication
+          run: |
+            PACKAGE_NAME="cdk-nuxt"
+            PACKAGE_VERSION=$(pnpm view $PACKAGE_NAME version --registry=https://npm.pkg.github.com/)
+            PACKAGE_TARBALL=$(pnpm view $PACKAGE_NAME dist.tarball --registry=https://npm.pkg.github.com/)
+            
+            if [ -z "$PACKAGE_VERSION" ] || [ -z "$PACKAGE_TARBALL" ]; then
+              echo "Error: Package publication failed. Version or tarball missing."
+              exit 1
+            fi
+            
+            echo "Package $PACKAGE_NAME@$PACKAGE_VERSION successfully published."
+          env:
+            NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
