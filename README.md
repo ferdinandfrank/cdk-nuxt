@@ -30,22 +30,25 @@ Using pnpm:
 ```bash
 pnpm add -D cdk-nuxt # The package itself
 pnpm add -D ts-node typescript # To compile the CDK stacks via TypeScript
-pnpm add -D aws-cdk@2.166.0 # CDK CLI for the deployment (example version)
+pnpm add -D aws-cdk@^2.214.0 # Optional: CDK CLI for the deployment (recommended range)
 ```
 
 Using npm:
 ```bash
 npm install --save-dev cdk-nuxt # The package itself
 npm install --save-dev ts-node typescript # To compile the CDK stacks via TypeScript
-npm install --save-dev aws-cdk@2.166.0 # CDK CLI for the deployment (example version)
+npm install --save-dev aws-cdk@^2.214.0 # Optional: CDK CLI for the deployment (recommended range)
 ```
 
 Using Yarn:
 ```bash
 yarn add -D cdk-nuxt # The package itself
 yarn add -D ts-node typescript # To compile the CDK stacks via TypeScript
-yarn add -D aws-cdk@2.166.0 # CDK CLI for the deployment (example version)
+yarn add -D aws-cdk@^2.214.0 # Optional: CDK CLI for the deployment (recommended range)
 ```
+
+Note: Installing the AWS CDK CLI (aws-cdk) as a devDependency is optional. You can also invoke the CLI via npx (e.g., `npx cdk ...`). Ensure you are using CDK v2.
+This package targets aws-cdk-lib 2.214.x; for best compatibility, keep your project's aws-cdk-lib within the 2.214.x range as well.
 
 ## Setup
 
