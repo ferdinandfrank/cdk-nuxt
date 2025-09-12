@@ -1,6 +1,25 @@
 # Changelog
 
 
+## v2.10.1
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.9.0...v2.10.1)
+
+### 🩹 Fixes
+
+- Change base branch for automated release PRs from master to develop" ([5488603](https://github.com/ferdinandfrank/cdk-nuxt/commit/5488603))
+- Adjust version to npm registry ([15ea6e7](https://github.com/ferdinandfrank/cdk-nuxt/commit/15ea6e7))
+- Update workflow badge link in README ([8d1a6fc](https://github.com/ferdinandfrank/cdk-nuxt/commit/8d1a6fc))
+
+### 🏡 Chore
+
+- **release:** V2.7.0 ([34e8629](https://github.com/ferdinandfrank/cdk-nuxt/commit/34e8629))
+- **release:** V2.9.0 ([bbc92a4](https://github.com/ferdinandfrank/cdk-nuxt/commit/bbc92a4))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.9.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.4.0...v2.9.0)
