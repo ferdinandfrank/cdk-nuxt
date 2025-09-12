@@ -345,7 +345,15 @@ export class NuxtServerAppStack extends Stack {
         apiGateway.addRoutes({
             integration: lambdaIntegration,
             path: '/{proxy+}',
-            methods: [HttpMethod.GET, HttpMethod.HEAD],
+            methods: [
+                HttpMethod.GET,
+                HttpMethod.HEAD,
+                HttpMethod.OPTIONS,
+                HttpMethod.POST,
+                HttpMethod.PUT,
+                HttpMethod.PATCH,
+                HttpMethod.DELETE,
+            ],
         });
 
         return apiGateway;
