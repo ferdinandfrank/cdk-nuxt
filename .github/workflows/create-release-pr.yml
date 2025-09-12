@@ -1,14 +1,23 @@
-name: Publish
+name: Create Release PR
 
 on:
   workflow_dispatch: {}
   push:
     branches:
-      - master
+      - develop
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: create-release-pr-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  publish:
+  create_release_pr:
     runs-on: ubuntu-22.04
+    if: ${{ github.actor != 'github-actions[bot]' }}
 
     steps:
       - name: Checkout
@@ -49,39 +58,13 @@ jobs:
             echo "No changelog/package changes to commit."
           fi
 
-      - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          pnpm npm publish --access public
-
-      - name: Verify package publication
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          PKG=$(node -p "require('./package.json').name")
-          VER=$(node -p "require('./package.json').version")
-          PUBLISHED=$(pnpm view ${PKG}@${VER} version --registry=https://registry.npmjs.org/ || true)
-          if [ "$PUBLISHED" != "$VER" ]; then
-            echo "Publish failed or version mismatch (expected $VER, got $PUBLISHED)" >&2
-            exit 1
-          fi
-          echo "Package ${PKG}@${VER} successfully published."
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Create Release PR
+        uses: peter-evans/create-pull-request@v6
         with:
-          tag_name: v${{ steps.changelog.outputs.version }}
-          name: v${{ steps.changelog.outputs.version }}
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Backmerge master into develop
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git fetch origin develop
-          git checkout develop
-          git merge --no-ff origin/master -m "chore: sync release v${{ steps.changelog.outputs.version }} back to develop"
-          git push origin develop
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(release): v${{ steps.changelog.outputs.version }}"
+          title: "chore(release): v${{ steps.changelog.outputs.version }}"
+          body: "Automated release PR for v${{ steps.changelog.outputs.version }}. Please review and merge."
+          base: master
+          branch: release/v${{ steps.changelog.outputs.version }}
+          labels: release
