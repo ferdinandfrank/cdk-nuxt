@@ -29,7 +29,6 @@ import {AaaaRecord, ARecord, HostedZone, type IHostedZone, RecordTarget} from "a
 import {BucketDeployment, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
 import {HttpOrigin, S3BucketOrigin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {CloudFrontTarget} from "aws-cdk-lib/aws-route53-targets";
-import {HttpMethod} from "aws-cdk-lib/aws-stepfunctions-tasks";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import {getNuxtAppStaticAssetConfigs, type StaticAssetConfig} from "../NuxtAppStaticAssets";
 import * as fs from "fs";
@@ -40,7 +39,7 @@ import {writeFileSync} from "fs";
 import {type NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
 import {CloudFrontAccessLogsAnalysis} from "../access-logs-analysis/CloudFrontAccessLogsAnalysis";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
-import {DomainName, EndpointType, HttpApi, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
+import {DomainName, EndpointType, HttpApi, HttpMethod, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
 
 /**
  * CDK stack to deploy a dynamic Nuxt app (target=server) on AWS with Lambda, ApiGateway, S3 and CloudFront.
