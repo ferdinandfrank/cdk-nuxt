@@ -251,7 +251,7 @@ export class NuxtServerAppStack extends Stack {
      * @private
      */
     private createAppLambdaFunction(props: NuxtServerAppStackProps): Function {
-        const funcName = `${this.resourceIdPrefix}-app-function`;
+        const funcName = `${this.resourceIdPrefix}-nuxt`;
 
         const appLogGroup = new LogGroup(this, `${funcName}-logs`, {
             logGroupName: `/aws/lambda/${funcName}`,
@@ -286,7 +286,7 @@ export class NuxtServerAppStack extends Stack {
      * which restricts the consumer to a specific yarn or npm version.
      */
     private createCleanupLambdaFunction(props: NuxtServerAppStackProps): Function {
-        const functionName: string = `${this.resourceIdPrefix}-cleanup-function`;
+        const functionName: string = `${this.resourceIdPrefix}-cleanup`;
         const functionDirPath = path.join(__dirname, '../../functions/assets-cleanup');
 
         const cleanupLogGroup = new LogGroup(this, `${functionName}-logs`, {

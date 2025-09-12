@@ -127,7 +127,7 @@ export abstract class AccessLogsAnalysis extends Construct {
      * which restricts the consumer to a specific yarn or npm version.
      */
     private createGroupByDateLambda(): Function {
-        const functionName = `${this.resourceIdPrefix}-group-by-date`;
+        const functionName = `${this.resourceIdPrefix}-grouper`;
 
         const groupByDateLogGroup = new LogGroup(this, `${functionName}-logs`, {
             logGroupName: `/aws/lambda/${functionName}`,
@@ -177,7 +177,7 @@ export abstract class AccessLogsAnalysis extends Construct {
      * which restricts the consumer to a specific yarn or npm version.
      */
     private createCreatePartitionLambda(): Function {
-        const functionName = `${this.resourceIdPrefix}-create-part`;
+        const functionName = `${this.resourceIdPrefix}-partitioner`;
 
         const createPartLogGroup = new LogGroup(this, `${functionName}-logs`, {
             logGroupName: `/aws/lambda/${functionName}`,
@@ -232,7 +232,7 @@ export abstract class AccessLogsAnalysis extends Construct {
      * which restricts the consumer to a specific yarn or npm version.
      */
     private createTransformPartitionLambda(): Function {
-        const functionName = `${this.resourceIdPrefix}-transform-part`;
+        const functionName = `${this.resourceIdPrefix}-transformer`;
 
         const transformPartLogGroup = new LogGroup(this, `${functionName}-logs`, {
             logGroupName: `/aws/lambda/${functionName}`,
