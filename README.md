@@ -1,4 +1,4 @@
-# AWS CDK Nuxt 3 Deployment Stack
+# AWS CDK Nuxt Deployment Stack (Nuxt 3 & Nuxt 4)
 
 <p>
     <a href="https://github.com/ferdinandfrank/cdk-nuxt/actions/workflows/publish.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/ferdinandfrank/cdk-nuxt/publish.yml?logo=github" /></a>
@@ -7,7 +7,7 @@
     <a href="https://www.npmjs.com/package/cdk-nuxt"><img alt="License" src="https://img.shields.io/npm/l/cdk-nuxt.svg" /></a>
 </p>
 
-Easily deploy Nuxt 3 applications via CDK on AWS including the following features:
+Easily deploy Nuxt applications (Nuxt 3 and Nuxt 4) via CDK on AWS, including the following features:
 
 - Fast responses via [AWS Lambda](https://aws.amazon.com/lambda/)
 - Publicly available by a custom domain (or subdomain) via [Route53](https://aws.amazon.com/route53/) and [API Gateway](https://aws.amazon.com/api-gateway/)
@@ -17,10 +17,32 @@ Easily deploy Nuxt 3 applications via CDK on AWS including the following feature
 - Automatic cleanup of outdated static assets and build files
 - Access logs analysis via [Athena](https://aws.amazon.com/athena/) for the Nuxt app's CloudFront distribution
 
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Compatibility](#compatibility)
+- [Installation](#installation)
+- [Setup](#setup)
+- [Configuration](#configuration)
+- [Deployment](#deployment)
+- [Destroy the Stack](#destroy-the-stack)
+- [Reference: Created AWS Resources](#reference-created-aws-resources)
+- [Guidelines](#guidelines)
+
 ## Prerequisites
 
 - You need an [AWS account](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/?nc1=h_ls) to create and deploy the required resources for the Nuxt app on AWS.
 - You can use your preferred package manager: pnpm, npm, or Yarn. The examples below show commands for each where relevant.
+
+## Compatibility
+
+This package is compatible with the following Nuxt versions:
+- Nuxt 3 (latest stable)
+- Nuxt 4 (RC and stable)
+
+Notes:
+- Make sure to set Nitro's preset to `aws-lambda` as shown below.
+- If you encounter any version-specific issues, please open an issue on GitHub.
 
 ## Installation
 
@@ -196,12 +218,12 @@ All query params are forwarded and included in the cache key by default.
 
 ## Deployment
 
-After the installation and the setup you are already good to go to build the Nuxt app and to deploy it to AWS with this package
+After the installation and the setup, you are already good to go to build the Nuxt app and to deploy it to AWS with this package
 by following the steps below:
 
 ### 1. Bootstrap CDK
 Deploying stacks with the AWS CDK requires dedicated Amazon S3 buckets and other containers to be available to AWS CloudFormation during deployment. 
-Creating these is called bootstrapping and is **only required once** per account and region. 
+Creating this is called bootstrapping and is **only required once** per account and region. 
 To bootstrap, run the following command:
 
 ```bash
@@ -275,8 +297,8 @@ In the following, you can find an overview of the AWS resources that will be cre
 
 ### NuxtServerAppStack
 
-This stack is responsible for deploying dynamic Nuxt 3 apps to AWS.
-The following AWS resources will be created by this stack:
+This stack is responsible for deploying dynamic Nuxt apps to AWS.
+This stack will create the following AWS resources:
 
 - [Lambda](https://aws.amazon.com/lambda/):
     - A Lambda function to render the Nuxt app including a separated Lambda layer to provide the `node_modules` of the Nuxt app required for server-side rendering.
