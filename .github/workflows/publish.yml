@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          registry-url: 'https://npm.pkg.github.com'
+          registry-url: 'https://registry.npmjs.org'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -52,7 +52,7 @@ jobs:
 
       - name: Publish
         run: |
-          pnpm config set npmRegistryServer "https://npm.pkg.github.com"
+          pnpm config set npmRegistryServer "https://registry.npmjs.org"
           pnpm npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -60,8 +60,8 @@ jobs:
       -   name: Verify package publication
           run: |
             PACKAGE_NAME="cdk-nuxt"
-            PACKAGE_VERSION=$(pnpm view $PACKAGE_NAME version --registry=https://npm.pkg.github.com/)
-            PACKAGE_TARBALL=$(pnpm view $PACKAGE_NAME dist.tarball --registry=https://npm.pkg.github.com/)
+            PACKAGE_VERSION=$(pnpm view $PACKAGE_NAME version --registry=https://registry.npmjs.org/)
+            PACKAGE_TARBALL=$(pnpm view $PACKAGE_NAME dist.tarball --registry=https://registry.npmjs.org/)
             
             if [ -z "$PACKAGE_VERSION" ] || [ -z "$PACKAGE_TARBALL" ]; then
               echo "Error: Package publication failed. Version or tarball missing."
