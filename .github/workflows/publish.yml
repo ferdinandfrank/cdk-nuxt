@@ -45,6 +45,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Read version
+        id: read_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Pack tarball
         run: |
           pnpm pack --pack-destination .
@@ -74,8 +80,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.changelog.outputs.version }}
-          name: v${{ steps.changelog.outputs.version }}
+          tag_name: v${{ steps.read_version.outputs.version }}
+          name: v${{ steps.read_version.outputs.version }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,5 +92,5 @@ jobs:
         run: |
           git fetch origin develop
           git checkout develop
-          git merge --no-ff origin/master -m "chore: sync release v${{ steps.changelog.outputs.version }} back to develop"
+          git merge --no-ff origin/master -m "chore: sync release v${{ steps.read_version.outputs.version }} back to develop"
           git push origin develop
