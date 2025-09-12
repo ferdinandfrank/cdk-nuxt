@@ -36,9 +36,9 @@ jobs:
 
       - name: Generate changelog and bump version
         id: changelog
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
           pnpm changelogen --release
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
