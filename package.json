@@ -22,10 +22,11 @@
 	"scripts": {
 		"build": "tsc",
 		"release:check": "pnpm run build",
-		"release": "pnpm run release:check && pnpm version && git push --follow-tags"
+		"release": "pnpm run release:check && pnpm changelogen --release --push"
 	},
 	"devDependencies": {
 		"@types/node": "^20.10",
+		"changelogen": "^0.6.2",
 		"fs": "^0.0.1-security",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.6.3"

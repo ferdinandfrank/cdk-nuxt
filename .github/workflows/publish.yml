@@ -41,6 +41,11 @@ jobs:
           cd lib/functions/access-logs-analysis/partitioning && pnpm build && cd ../../../..
           pnpm build
 
+      - name: Create changelog and release
+        run: pnpm changelogen --release --push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish
         run: |
           pnpm config set npmRegistryServer "https://npm.pkg.github.com"
