@@ -1,6 +1,27 @@
 # Changelog
 
 
+## v2.10.6
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.10.5...v2.10.6)
+
+### 🩹 Fixes
+
+- Attempt to fix release process ([dc60493](https://github.com/ferdinandfrank/cdk-nuxt/commit/dc60493))
+- Attempt to fix release process ([2f3ecfd](https://github.com/ferdinandfrank/cdk-nuxt/commit/2f3ecfd))
+
+### 📖 Documentation
+
+- Update build badge link in README ([cd5ddcb](https://github.com/ferdinandfrank/cdk-nuxt/commit/cd5ddcb))
+
+### 🤖 CI
+
+- Simplify release" ([b6f4962](https://github.com/ferdinandfrank/cdk-nuxt/commit/b6f4962))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.10.3
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.10.2...v2.10.3)
