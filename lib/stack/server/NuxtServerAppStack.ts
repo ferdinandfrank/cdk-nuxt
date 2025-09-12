@@ -562,6 +562,12 @@ export class NuxtServerAppStack extends Stack {
      * but gets cleaned up after a specified period of time via the cleanup Lambda function.
      */
     private configureDeployments(): BucketDeployment[] {
+        const logGroup = new LogGroup(this, `${this.resourceIdPrefix}-assets-deployment-logs`, {
+            logGroupName: `/aws/lambda/${this.resourceIdPrefix}-assets-deployment`,
+            retention: RetentionDays.ONE_DAY,
+            removalPolicy: RemovalPolicy.DESTROY,
+        });
+
         // Returns a deployment for every configured static asset type to respect the different cache settings
         return this.staticAssetConfigs.filter(asset => existsSync(asset.source)).map((asset, assetIndex) => {
             return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
@@ -578,7 +584,7 @@ export class NuxtServerAppStack extends Stack {
                 contentType: asset.contentType,
                 distribution: asset.invalidateOnChange ? this.cdn : undefined,
                 distributionPaths: asset.invalidateOnChange ? [`/${asset.pattern}`] : undefined,
-                logRetention: RetentionDays.ONE_DAY,
+                logGroup: logGroup,
 
                 metadata: {
                     // Store build revision on every asset to allow cleanup of outdated assets
