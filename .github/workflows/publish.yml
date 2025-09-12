@@ -55,7 +55,7 @@ jobs:
           pnpm config set npmRegistryServer "https://npm.pkg.github.com"
           pnpm npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       -   name: Verify package publication
           run: |
@@ -70,4 +70,4 @@ jobs:
             
             echo "Package $PACKAGE_NAME@$PACKAGE_VERSION successfully published."
           env:
-            NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
