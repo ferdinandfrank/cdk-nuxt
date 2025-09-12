@@ -20,15 +20,31 @@ Easily deploy Nuxt 3 applications via CDK on AWS including the following feature
 ## Prerequisites
 
 - You need an [AWS account](https://aws.amazon.com/premiumsupport/knowledge-center/create-and-activate-aws-account/?nc1=h_ls) to create and deploy the required resources for the Nuxt app on AWS.
-- This readme currently relies on using [Yarn](https://yarnpkg.com/) as a package manager. Feel free to use another package manager, but you have to adapt the commands accordingly.
+- You can use your preferred package manager: pnpm, npm, or Yarn. The examples below show commands for each where relevant.
 
 ## Installation
 
-Install the package and its required dependencies:
+Install the package and its required dependencies (choose your package manager):
+
+Using pnpm:
 ```bash
-yarn add cdk-nuxt --dev # The package itself
-yarn add ts-node typescript --dev # To compile the CDK stacks via typescript
-yarn add aws-cdk@2.166.0 --dev # CDK cli with this exact version for the deployment
+pnpm add -D cdk-nuxt # The package itself
+pnpm add -D ts-node typescript # To compile the CDK stacks via TypeScript
+pnpm add -D aws-cdk@2.166.0 # CDK CLI for the deployment (example version)
+```
+
+Using npm:
+```bash
+npm install --save-dev cdk-nuxt # The package itself
+npm install --save-dev ts-node typescript # To compile the CDK stacks via TypeScript
+npm install --save-dev aws-cdk@2.166.0 # CDK CLI for the deployment (example version)
+```
+
+Using Yarn:
+```bash
+yarn add -D cdk-nuxt # The package itself
+yarn add -D ts-node typescript # To compile the CDK stacks via TypeScript
+yarn add -D aws-cdk@2.166.0 # CDK CLI for the deployment (example version)
 ```
 
 ## Setup
@@ -193,35 +209,53 @@ See https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html for details.
 
 ### 2. Build and Deploy
 
-By running the following script, the Nuxt app will be built automatically via `yarn build` 
+By running the following script, the Nuxt app will be built (using your package manager's `build` script)
 and the CDK stack will be deployed to AWS.
 
 ```bash
 node_modules/.bin/cdk-nuxt-deploy-server
 ```
 
-Alternatively, you can run the following commands separately to customize the deployment process:
+Alternatively, you can run the following commands separately to customize the deployment process. Choose your package manager:
 
+Using pnpm:
 ```bash
-yarn build
-yarn cdk deploy --require-approval never --all --app="yarn ts-node stack/index.ts"
-
-# or with pnpm
 pnpm build
 pnpm cdk deploy --require-approval never --all --app="pnpm ts-node stack/index.ts"
 ```
 
+Using npm:
+```bash
+npm run build
+npx cdk deploy --require-approval never --all --app="npx ts-node stack/index.ts"
+```
+
+Using Yarn:
+```bash
+yarn build
+yarn cdk deploy --require-approval never --all --app="yarn ts-node stack/index.ts"
+```
+
 #### Deploy with a custom TypeScript configuration
 Depending on your Nuxt app's TypeScript configuration and the setup of your stack, you might need a different TypeScript configuration for the CDK stack.
-You can do so by creating a `tsconfig.cdk.json` file in the root directory of your project and adjust the deployment command accordingly:
+You can do so by creating a `tsconfig.cdk.json` file in the root directory of your project and adjust the deployment command accordingly (choose your package manager):
 
+Using pnpm:
+```bash
+pnpm build
+pnpm cdk deploy --require-approval never --all --app="pnpm ts-node --project=tsconfig.cdk.json stack/index.ts"
+```
+
+Using npm:
+```bash
+npm run build
+npx cdk deploy --require-approval never --all --app="npx ts-node --project=tsconfig.cdk.json stack/index.ts"
+```
+
+Using Yarn:
 ```bash
 yarn build
 yarn cdk deploy --require-approval never --all --app="yarn ts-node --project=tsconfig.cdk.json stack/index.ts"
-
-# or with pnpm
-pnpm build
-pnpm cdk deploy --require-approval never --all --app="pnpm ts-node --project=tsconfig.cdk.json stack/index.ts"
 ```
 
 ## Destroy the Stack
@@ -286,10 +320,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
+          cache: 'pnpm' # or 'yarn' or 'npm'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile # or `yarn install --immutable` for Yarn >= 2
+        run: |
+          pnpm install --frozen-lockfile
+          # or: npm ci
+          # or: yarn install --frozen-lockfile # or `yarn install --immutable` for Yarn >= 2
 
       - name: Build and deploy to AWS
         run: node_modules/.bin/cdk-nuxt-deploy-server # Or run a customized deployment, see 'Build and Deploy' section
