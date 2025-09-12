@@ -61,7 +61,7 @@ jobs:
           done
           echo "version=${TARGET}" >> $GITHUB_OUTPUT
 
-      - name: Generate changelog and commit changes (local)
+      - name: Generate changelog and commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "actions@github.com"
