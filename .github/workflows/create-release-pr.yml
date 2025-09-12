@@ -1,7 +1,7 @@
 name: Create Release PR
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch: { }
   push:
     branches:
       - develop
@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          fetch-tags: true
+          ref: develop
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -66,5 +66,5 @@ jobs:
           title: "chore(release): v${{ steps.changelog.outputs.version }}"
           body: "Automated release PR for v${{ steps.changelog.outputs.version }}. Please review and merge."
           base: master
-          branch: develop
+          branch: release/v${{ steps.changelog.outputs.version }}
           labels: release
