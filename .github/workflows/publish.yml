@@ -1,7 +1,7 @@
 name: Publish
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch: { }
   push:
     branches:
       - master
@@ -34,26 +34,23 @@ jobs:
           cd lib/functions/access-logs-analysis/partitioning && pnpm install --frozen-lockfile && cd ../../../..
           pnpm install --frozen-lockfile
 
-      - name: Generate changelog and bump version
-        id: changelog
+      - name: Create changelog and release
+        run: pnpm changelogen --release --push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pack tarball
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "actions@github.com"
-          pnpm changelogen --release
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          if [ -n "$(git status --porcelain)" ]; then
-            git add -A
-            git commit -m "chore(release): v$VERSION"
-          else
-            echo "No changelog/package changes to commit."
-          fi
+          pnpm pack --pack-destination .
+          TARBALL=$(ls -1t *.tgz | head -n1)
+          echo "TARBALL=$TARBALL" >> $GITHUB_ENV
 
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          pnpm npm publish --access public
+          TARBALL=$(ls -1t *.tgz | head -n1)
+          pnpm npm publish "$TARBALL" --access public
 
       - name: Verify package publication
         env:
