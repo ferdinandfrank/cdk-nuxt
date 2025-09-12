@@ -668,7 +668,7 @@ export class NuxtServerAppStack extends Stack {
 
 
     /**
-     * Creates a scheduled rule that runs every tuesday at 03:30 AM GMT to trigger
+     * Creates a scheduled rule that runs every Tuesday at 03:30 AM GMT to trigger
      * our cleanup Lambda function.
      *
      * @private
@@ -678,7 +678,7 @@ export class NuxtServerAppStack extends Stack {
             ruleName: `${this.resourceIdPrefix}-scheduler`,
             description: `Triggers a cleanup of the outdated static assets at the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
             enabled: true,
-            schedule: Schedule.cron({weekDay: '3', hour: '3', minute: '30'}),
+            schedule: Schedule.cron({weekDay: '2', hour: '3', minute: '30'}),
             targets: [new LambdaFunction(this.cleanupLambdaFunction)],
         });
     }
