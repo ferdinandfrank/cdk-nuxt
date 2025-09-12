@@ -31,11 +31,10 @@ import {HttpOrigin, S3BucketOrigin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {CloudFrontTarget} from "aws-cdk-lib/aws-route53-targets";
 import {RetentionDays} from "aws-cdk-lib/aws-logs";
 import {getNuxtAppStaticAssetConfigs, type StaticAssetConfig} from "../NuxtAppStaticAssets";
-import * as fs from "fs";
 import {Rule, RuleTargetInput, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import * as path from "path";
-import {writeFileSync, mkdirSync} from "fs";
+import {writeFileSync, mkdirSync, existsSync} from "fs";
 import {type NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
 import {CloudFrontAccessLogsAnalysis} from "../access-logs-analysis/CloudFrontAccessLogsAnalysis";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
@@ -552,7 +551,7 @@ export class NuxtServerAppStack extends Stack {
      */
     private configureDeployments(): BucketDeployment[] {
         // Returns a deployment for every configured static asset type to respect the different cache settings
-        return this.staticAssetConfigs.filter(asset => fs.existsSync(asset.source)).map((asset, assetIndex) => {
+        return this.staticAssetConfigs.filter(asset => existsSync(asset.source)).map((asset, assetIndex) => {
             return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
                 sources: [Source.asset(asset.source, {
                     exclude: asset.exclude,
