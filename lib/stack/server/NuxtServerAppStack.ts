@@ -29,7 +29,7 @@ import {AaaaRecord, ARecord, HostedZone, type IHostedZone, RecordTarget} from "a
 import {BucketDeployment, Source, StorageClass} from "aws-cdk-lib/aws-s3-deployment";
 import {HttpOrigin, S3BucketOrigin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {CloudFrontTarget} from "aws-cdk-lib/aws-route53-targets";
-import {RetentionDays} from "aws-cdk-lib/aws-logs";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import {getNuxtAppStaticAssetConfigs, type StaticAssetConfig} from "../NuxtAppStaticAssets";
 import {Rule, RuleTargetInput, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
@@ -253,6 +253,12 @@ export class NuxtServerAppStack extends Stack {
     private createAppLambdaFunction(props: NuxtServerAppStackProps): Function {
         const funcName = `${this.resourceIdPrefix}-app-function`;
 
+        const appLogGroup = new LogGroup(this, `${funcName}-logs`, {
+            logGroupName: `/aws/lambda/${funcName}`,
+            retention: RetentionDays.ONE_MONTH,
+        });
+        appLogGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
         return new Function(this, funcName, {
             functionName: funcName,
             description: `Renders the ${this.resourceIdPrefix} Nuxt app.`,
@@ -264,9 +270,9 @@ export class NuxtServerAppStack extends Stack {
             }),
             timeout: Duration.seconds(10),
             memorySize: props.memorySize ?? 1792,
-            logRetention: RetentionDays.ONE_MONTH,
             allowPublicSubnet: false,
             tracing: props.enableTracing ? Tracing.ACTIVE : Tracing.DISABLED,
+            logGroup: appLogGroup,
             environment: {
                 NODE_OPTIONS: '--enable-source-maps',
                 ...JSON.parse(props.entrypointEnv ?? '{}'),
@@ -283,6 +289,12 @@ export class NuxtServerAppStack extends Stack {
         const functionName: string = `${this.resourceIdPrefix}-cleanup-function`;
         const functionDirPath = path.join(__dirname, '../../functions/assets-cleanup');
 
+        const cleanupLogGroup = new LogGroup(this, `${functionName}-logs`, {
+            logGroupName: `/aws/lambda/${functionName}`,
+            retention: RetentionDays.TWO_WEEKS,
+        });
+        cleanupLogGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
         const result: Function = new Function(this, functionName, {
             functionName: functionName,
             description: `Auto-deletes the outdated static assets in the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
@@ -294,7 +306,6 @@ export class NuxtServerAppStack extends Stack {
             }),
             timeout: Duration.minutes(5),
             memorySize: 128,
-            logRetention: RetentionDays.TWO_WEEKS,
             environment: {
                 STATIC_ASSETS_BUCKET: this.staticAssetsBucket.bucketName,
                 OUTDATED_ASSETS_RETENTION_DAYS: `${props.outdatedAssetsRetentionDays ?? 30}`,
@@ -302,6 +313,7 @@ export class NuxtServerAppStack extends Stack {
                 AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
                 NODE_OPTIONS: '--enable-source-maps',
             },
+            logGroup: cleanupLogGroup,
         });
 
         // grant function access to S3 bucket

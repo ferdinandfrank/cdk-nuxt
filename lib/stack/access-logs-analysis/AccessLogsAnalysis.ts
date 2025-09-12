@@ -5,10 +5,10 @@ import {CloudFrontAccessLogsByDateTable} from './CloudFrontAccessLogsByDateTable
 import {AccessLogsParquetTable} from './AccessLogsParquetTable';
 import {Architecture, Code, Function, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {Rule, RuleTargetInput, Schedule} from 'aws-cdk-lib/aws-events';
-import {type CfnTag, Duration, Stack} from 'aws-cdk-lib';
+import {type CfnTag, Duration, Stack, RemovalPolicy} from 'aws-cdk-lib';
 import {type Column, Database} from '@aws-cdk/aws-glue-alpha';
 import {S3EventSource} from 'aws-cdk-lib/aws-lambda-event-sources';
-import {RetentionDays} from 'aws-cdk-lib/aws-logs';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import {Effect, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {LambdaFunction} from 'aws-cdk-lib/aws-events-targets';
 import * as path from 'path';
@@ -129,6 +129,12 @@ export abstract class AccessLogsAnalysis extends Construct {
     private createGroupByDateLambda(): Function {
         const functionName = `${this.resourceIdPrefix}-group-by-date`;
 
+        const groupByDateLogGroup = new LogGroup(this, `${functionName}-logs`, {
+            logGroupName: `/aws/lambda/${functionName}`,
+            retention: RetentionDays.TWO_WEEKS,
+        });
+        groupByDateLogGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
@@ -145,13 +151,13 @@ export abstract class AccessLogsAnalysis extends Construct {
                     filters: [this.getUnprocessedObjectsFilter()],
                 }),
             ],
-            logRetention: RetentionDays.TWO_WEEKS,
             environment: {
                 AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
                 NODE_OPTIONS: '--enable-source-maps',
                 TARGET_FOLDER: AccessLogsAnalysis.ACCESS_LOGS_FOLDER_GROUPED_BY_DATE,
                 RAW_ACCESS_LOG_FILE_PATTERN: this.getRawAccessLogFilePattern().source,
             },
+            logGroup: groupByDateLogGroup,
         });
 
         this.bucket.grantReadWrite(lambda);
@@ -173,6 +179,12 @@ export abstract class AccessLogsAnalysis extends Construct {
     private createCreatePartitionLambda(): Function {
         const functionName = `${this.resourceIdPrefix}-create-part`;
 
+        const createPartLogGroup = new LogGroup(this, `${functionName}-logs`, {
+            logGroupName: `/aws/lambda/${functionName}`,
+            retention: RetentionDays.TWO_WEEKS,
+        });
+        createPartLogGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
@@ -183,7 +195,6 @@ export abstract class AccessLogsAnalysis extends Construct {
             memorySize: 128,
             timeout: Duration.seconds(20),
             handler: 'create-partition.handler',
-            logRetention: RetentionDays.TWO_WEEKS,
             environment: {
                 AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
                 NODE_OPTIONS: '--enable-source-maps',
@@ -191,6 +202,7 @@ export abstract class AccessLogsAnalysis extends Construct {
                 DATABASE: this.database.databaseName,
                 TABLE: this.accessLogsByDateTable.tableName,
             },
+            logGroup: createPartLogGroup,
         });
 
         // grant access to S3 bucket and to execute Athena queries which create new partitions
@@ -222,6 +234,12 @@ export abstract class AccessLogsAnalysis extends Construct {
     private createTransformPartitionLambda(): Function {
         const functionName = `${this.resourceIdPrefix}-transform-part`;
 
+        const transformPartLogGroup = new LogGroup(this, `${functionName}-logs`, {
+            logGroupName: `/aws/lambda/${functionName}`,
+            retention: RetentionDays.TWO_WEEKS,
+        });
+        transformPartLogGroup.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
@@ -232,7 +250,6 @@ export abstract class AccessLogsAnalysis extends Construct {
             memorySize: 128,
             timeout: Duration.seconds(20),
             handler: 'transform-partition.handler',
-            logRetention: RetentionDays.TWO_WEEKS,
             environment: {
                 AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
                 NODE_OPTIONS: '--enable-source-maps',
@@ -241,6 +258,7 @@ export abstract class AccessLogsAnalysis extends Construct {
                 SOURCE_TABLE: this.accessLogsByDateTable.tableName,
                 TARGET_TABLE: this.accessLogsParquetTable.tableName,
             },
+            logGroup: transformPartLogGroup,
         });
 
         // grant access to S3 bucket and to execute Athena queries which create new partitions
