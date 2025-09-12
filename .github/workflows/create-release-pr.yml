@@ -51,16 +51,6 @@ jobs:
           pnpm changelogen --release
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          if [ -n "$(git status --porcelain)" ]; then
-            git add -A
-            git commit -m "chore(release): v$VERSION"
-          else
-            echo "No changelog/package changes to commit."
-          fi
-
-      - name: Create release branch from develop HEAD
-        run: |
-          git switch -c release/v${{ steps.changelog.outputs.version }}
 
       - name: Create Release PR
         uses: peter-evans/create-pull-request@v6
