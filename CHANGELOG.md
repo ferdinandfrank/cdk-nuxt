@@ -35,6 +35,7 @@
 - Adjust workflows and prepack scripts for streamlined package builds ([d659ebc](https://github.com/ferdinandfrank/cdk-nuxt/commit/d659ebc))
 - Simplify release workflow by removing redundant version check step ([24dc2c4](https://github.com/ferdinandfrank/cdk-nuxt/commit/24dc2c4))
 - Adjust version to npm registry ([3b311ca](https://github.com/ferdinandfrank/cdk-nuxt/commit/3b311ca))
+- Change base branch for automated release PRs from master to develop ([fdf9107](https://github.com/ferdinandfrank/cdk-nuxt/commit/fdf9107))
 
 ### 💅 Refactors
 
