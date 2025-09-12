@@ -1,44 +1,46 @@
 {
-  "name": "cdk-nuxt",
-  "version": "2.4.0",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ferdinandfrank/cdk-nuxt.git"
-  },
-  "files": [
-    "lib",
-    "index.d.ts"
-  ],
-  "main": "index.js",
-  "types": "index.d.ts",
-  "bin": {
-    "cdk-nuxt-init-server": "lib/cli/init-server.js",
-    "cdk-nuxt-init-static": "lib/cli/init-static.js",
-    "cdk-nuxt-deploy-server": "lib/cli/deploy-server.js",
-    "cdk-nuxt-destroy-server": "lib/cli/destroy-server.js",
-    "cdk-nuxt-deploy-static": "lib/cli/deploy-static.js"
-  },
-  "scripts": {
-    "build": "tsc",
-    "release": "yarn run build && yarn version && git push --follow-tags"
-  },
-  "devDependencies": {
-    "@types/node": "^20.10",
-    "fs": "^0.0.1-security",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
-  },
-  "dependencies": {
-    "@aws-cdk/aws-glue-alpha": "2.214.0-alpha.0",
-    "aws-cdk": "2.1029.1",
-    "aws-cdk-lib": "2.214.0",
-    "constructs": "^10.4.2",
-    "shelljs": "^0.10.0"
-  },
-  "peerDependencies": {
-    "aws-cdk": "2.1029.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
-  }
+	"name": "cdk-nuxt",
+	"version": "2.4.0",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ferdinandfrank/cdk-nuxt.git"
+	},
+	"files": [
+		"lib",
+		"index.d.ts"
+	],
+	"main": "index.js",
+	"types": "index.d.ts",
+	"bin": {
+		"cdk-nuxt-init-server": "lib/cli/init-server.js",
+		"cdk-nuxt-init-static": "lib/cli/init-static.js",
+		"cdk-nuxt-deploy-server": "lib/cli/deploy-server.js",
+		"cdk-nuxt-destroy-server": "lib/cli/destroy-server.js",
+		"cdk-nuxt-deploy-static": "lib/cli/deploy-static.js"
+	},
+	"scripts": {
+		"build": "tsc",
+		"release:check": "pnpm run build",
+		"release": "pnpm run release:check && pnpm version && git push --follow-tags"
+	},
+	"devDependencies": {
+		"@types/node": "^20.10",
+		"fs": "^0.0.1-security",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.6.3"
+	},
+	"dependencies": {
+		"@aws-cdk/aws-glue-alpha": "2.214.0-alpha.0",
+		"aws-cdk": "2.1029.1",
+		"aws-cdk-lib": "2.214.0",
+		"constructs": "^10.4.2",
+		"shelljs": "^0.10.0"
+	},
+	"peerDependencies": {
+		"aws-cdk": "2.1029.1",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.6.3"
+	},
+	"packageManager": "pnpm@10.15.1"
 }

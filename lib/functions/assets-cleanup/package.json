@@ -1,20 +1,21 @@
 {
-  "name": "cdk-nuxt-assets-cleanup",
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "UNLICENSED",
-  "private": true,
-  "scripts": {
-    "install-layer": "yarn install --frozen-lockfile --production --modules-folder build/layer/nodejs/node_modules",
-    "build": "tsc --project ./tsconfig.json"
-  },
-  "devDependencies": {
-    "@types/node": "^20.10",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.6.3",
-    "@aws-sdk/client-s3": "^3.689.0"
-  },
-  "peerDependencies": {
-    "@aws-sdk/client-s3": "^3"
-  }
+	"name": "cdk-nuxt-assets-cleanup",
+	"version": "1.0.0",
+	"main": "index.js",
+	"license": "UNLICENSED",
+	"private": true,
+	"scripts": {
+		"install-layer": "pnpm install --frozen-lockfile --prod --modules-dir build/layer/nodejs/node_modules",
+		"build": "tsc --project ./tsconfig.json"
+	},
+	"devDependencies": {
+		"@types/node": "^20.10",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.6.3",
+		"@aws-sdk/client-s3": "^3.689.0"
+	},
+	"peerDependencies": {
+		"@aws-sdk/client-s3": "^3"
+	},
+	"packageManager": "pnpm@10.15.1"
 }
