@@ -43,28 +43,17 @@ jobs:
           cd lib/functions/access-logs-analysis/partitioning && pnpm install --frozen-lockfile && cd ../../../..
           pnpm install --frozen-lockfile
 
-      - name: Ensure next free version
-        id: ensure_version
-        run: |
-          set -euo pipefail
-          git fetch --tags --force --prune
-          PKG=$(node -p "require('./package.json').name")
-          TARGET=$(node -p "require('./package.json').version")
-          while pnpm view ${PKG}@${TARGET} version --registry=https://registry.npmjs.org/ >/dev/null 2>&1; do
-            TARGET=$(pnpm version patch --no-git-tag-version | tail -n1 | cut -d ' ' -f2)
-          done
-          pnpm version $TARGET --no-git-tag-version
-          echo "version=$TARGET" >> $GITHUB_OUTPUT
-
-      - name: Generate changelog and commit changes
+      - name: Generate changelog and bump version
+        id: changelog
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "actions@github.com"
           pnpm changelogen --release
-          # commit any changes created by changelogen (package.json, CHANGELOG.md, ...)
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
-            git commit -m "chore(release): v$(node -p \"require('./package.json').version\")" || true
+            git commit -m "chore(release): v$VERSION"
           else
             echo "No changelog/package changes to commit."
           fi
@@ -73,9 +62,9 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore(release): v${{ steps.ensure_version.outputs.version }}"
-          title: "chore(release): v${{ steps.ensure_version.outputs.version }}"
-          body: "Automated release PR for v${{ steps.ensure_version.outputs.version }}. Please review and merge."
+          commit-message: "chore(release): v${{ steps.changelog.outputs.version }}"
+          title: "chore(release): v${{ steps.changelog.outputs.version }}"
+          body: "Automated release PR for v${{ steps.changelog.outputs.version }}. Please review and merge."
           base: master
-          branch: release/v${{ steps.ensure_version.outputs.version }}
+          branch: release/v${{ steps.changelog.outputs.version }}
           labels: release
