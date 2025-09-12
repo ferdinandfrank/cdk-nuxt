@@ -12,10 +12,10 @@ import {
     Distribution, HttpVersion,
     type IOriginAccessIdentity,
     OriginAccessIdentity,
-    OriginProtocolPolicy,
+    OriginProtocolPolicy, OriginRequestPolicy,
     PriceClass,
     SecurityPolicyProtocol,
-    ViewerProtocolPolicy
+    ViewerProtocolPolicy,OriginRequestCookieBehavior, OriginRequestHeaderBehavior, OriginRequestQueryStringBehavior
 } from "aws-cdk-lib/aws-cloudfront";
 import {Architecture, Code, Function, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {
@@ -118,9 +118,16 @@ export class NuxtServerAppStack extends Stack {
     private httpOrigin: HttpOrigin;
 
     /**
-     * The cache policy for the Nuxt app route behaviors of the CloudFront distribution.
+     * The cache policy that specifies which HTTP headers, cookies, and query strings
+     * CloudFront forwards to the Nuxt app and uses to generate a cache key.
      */
     private appCachePolicy: CachePolicy;
+
+    /**
+     * The origin request policy that specifies which HTTP headers, cookies, and query strings
+     * CloudFront forwards to the Nuxt app without affecting the cache key.
+     */
+    private appRequestPolicy: OriginRequestPolicy;
 
     /**
      * The behavior for the CloudFront distribution to route incoming web requests
@@ -160,6 +167,7 @@ export class NuxtServerAppStack extends Stack {
         this.apiGateway = this.createApiGateway(props);
         this.httpOrigin = this.createNuxtAppHttpOrigin();
         this.appCachePolicy = this.createNuxtAppCachePolicy(props)
+        this.appRequestPolicy = this.createNuxtAppRequestPolicy(props)
         this.nuxtServerRouteBehavior = this.createNuxtServerRouteBehavior()
         this.cdn = this.createCloudFrontDistribution(props);
         this.configureDeployments();
@@ -391,7 +399,7 @@ export class NuxtServerAppStack extends Stack {
             allowedMethods: AllowedMethods.ALLOW_GET_HEAD,
             compress: true,
             viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-            originRequestPolicy: undefined,
+            originRequestPolicy: this.appRequestPolicy,
             cachePolicy: this.appCachePolicy
         };
     }
@@ -426,11 +434,24 @@ export class NuxtServerAppStack extends Stack {
             defaultTtl: Duration.seconds(0),
             minTtl: Duration.seconds(0),
             maxTtl: Duration.days(365),
-            queryStringBehavior: props.allowQueryParams?.length ? CacheQueryStringBehavior.allowList(...props.allowQueryParams) : (props.denyQueryParams?.length ? CacheQueryStringBehavior.denyList(...props.denyQueryParams) : CacheQueryStringBehavior.all()),
-            headerBehavior: props.allowHeaders?.length ? CacheHeaderBehavior.allowList(...props.allowHeaders) : CacheHeaderBehavior.none(),
-            cookieBehavior: props.allowCookies?.length ? CacheCookieBehavior.allowList(...props.allowCookies) : CacheCookieBehavior.none(),
+            queryStringBehavior: props.cacheKeyQueryParams?.length ? CacheQueryStringBehavior.allowList(...props.cacheKeyQueryParams) : (props.denyCacheKeyQueryParams?.length ? CacheQueryStringBehavior.denyList(...props.denyCacheKeyQueryParams) : (props.allowQueryParams?.length ? CacheQueryStringBehavior.allowList(...props.allowQueryParams) : (props.denyQueryParams?.length ? CacheQueryStringBehavior.denyList(...props.denyQueryParams) : CacheQueryStringBehavior.all()))),
+            headerBehavior: props.cacheKeyHeaders?.length ? CacheHeaderBehavior.allowList(...props.cacheKeyHeaders) : (props.allowHeaders?.length ? CacheHeaderBehavior.allowList(...props.allowHeaders) : CacheHeaderBehavior.none()),
+            cookieBehavior: props.cacheKeyCookies?.length ? CacheCookieBehavior.allowList(...props.cacheKeyCookies) : (props.allowCookies?.length ? CacheCookieBehavior.allowList(...props.allowCookies) : CacheCookieBehavior.none()),
             enableAcceptEncodingBrotli: true,
             enableAcceptEncodingGzip: true,
+        });
+    }
+
+    /**
+     * Creates an origin request policy for the Nuxt app route behavior of the CloudFront distribution.
+     */
+    private createNuxtAppRequestPolicy(props: NuxtServerAppStackProps): OriginRequestPolicy {
+        return new OriginRequestPolicy(this, `${this.resourceIdPrefix}-request-policy`, {
+            originRequestPolicyName: `${this.resourceIdPrefix}-cdn-request-policy`,
+            comment: `Defines which request data to pass to the ${this.resourceIdPrefix} origin without affecting the cache key.`,
+            queryStringBehavior: props.forwardQueryParams?.length ? OriginRequestQueryStringBehavior.allowList(...props.forwardQueryParams) : OriginRequestQueryStringBehavior.all(),
+            headerBehavior: props.forwardHeaders?.length ? OriginRequestHeaderBehavior.allowList(...props.forwardHeaders) : OriginRequestHeaderBehavior.none(),
+            cookieBehavior: props.forwardCookies?.length ? OriginRequestCookieBehavior.allowList(...props.forwardCookies) : OriginRequestCookieBehavior.none(),
         });
     }
 
@@ -444,6 +465,7 @@ export class NuxtServerAppStack extends Stack {
             allowedMethods: AllowedMethods.ALLOW_ALL,
             cachedMethods: CachedMethods.CACHE_GET_HEAD_OPTIONS,
             cachePolicy: this.appCachePolicy,
+            originRequestPolicy: this.appRequestPolicy,
             viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY
         };
 

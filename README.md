@@ -130,33 +130,49 @@ The number of days to retain static assets of outdated deployments in the S3 buc
 Useful to allow users to still access old assets after a new deployment when they are still browsing on an old version.
 Defaults to 30 days.
 
-### allowHeaders?: string[]
-An array of headers to pass to the Nuxt app on SSR requests.
-The more headers are passed, the weaker the cache performance will be, as the cache key
-is based on the headers.
-No headers are passed by default.
+### forwardHeaders?: string[]
+An array of HTTP headers to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
+This should only be used for headers that do not affect the response.
 
-### allowCookies?: string[]
-An array of cookies to pass to the Nuxt app on SSR requests.
-The more cookies are passed, the weaker the cache performance will be, as the cache key
-is based on the cookies.
-No cookies are passed by default.
+No headers are forwarded by default.
 
-### allowQueryParams?: string[]
-An array of query param keys to pass to the Nuxt app on SSR requests.
-The more query params are passed, the weaker the cache performance will be, as the cache key
-is based on the query params.
-Note that this config can not be combined with {@see denyQueryParams}.
-If both are specified, the {@see denyQueryParams} will be ignored.
-All query params are passed by default.
+### cacheKeyHeaders?: string[]
+An array of HTTP headers to forward to the Nuxt app and to include in the cache key for objects that are cached at CloudFront edge locations.
+This should be used for headers that might affect the response, e.g., 'Authorization'.
 
-### denyQueryParams?: string[]
-An array of query param keys to deny passing to the Nuxt app on SSR requests.
-It might be useful to prevent specific external query params, e.g., fbclid, utm_campaign, ...,
-to improve cache performance, as the cache key is based on the specified query params.
-Note that this config can not be combined with {@see allowQueryParams}.
-If both are specified, the {@see denyQueryParams} will be ignored.
-All query params are passed by default.
+No headers are forwarded or included in the cache key by default.
+
+### forwardCookies?: string[]
+An array of cookies to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
+This should only be used for cookies that do not affect the response.
+
+No cookies are forwarded by default.
+
+### cacheKeyCookies?: string[]
+An array of cookies to forward to the Nuxt app and to include in the cache key for objects that are cached at CloudFront edge locations.
+This should be used for cookies that might affect the response, e.g., authentication cookies.
+
+No cookies are forwarded or included in the cache key by default.
+
+### forwardQueryParams?: string[]
+An array of query params to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
+This should only be used for query params that do not affect the response and are required on SSR requests.
+
+All query params are forwarded by default.
+
+### cacheKeyQueryParams?: string[]
+An array of query params to forward to the Nuxt app and to include in the cache key for objects that are cached at CloudFront edge locations.
+This should be used for query params that affect the response and are required on SSR requests, e.g., filters.
+
+All query params are forwarded and included in the cache key by default.
+
+### denyCacheKeyQueryParams?: string[]
+An array of query params to prevent forwarding to the Nuxt app and to not include in the cache key for objects that are cached at CloudFront edge locations.
+When set, all query params that are not specified in this array will be forwarded to the Nuxt app and included in the cache key.
+This should be used for query params that do not affect the response and are not required on SSR requests, e.g., 'fbclid' or 'utm_campaign'.
+
+If both `cacheKeyQueryParams` and `denyCacheKeyQueryParams` are specified, the `denyCacheKeyQueryParams` will be ignored.
+All query params are forwarded and included in the cache key by default.
 
 
 ## Deployment
