@@ -166,7 +166,7 @@ Whether to enable access logs analysis for the Nuxt app's CloudFront distributio
 An array of cookies to include for reporting in the access logs analysis.
 Only has an effect when `enableAccessLogsAnalysis` is set to `true`.
 
-### outdatedAssetsRetentionDays?: boolean
+### outdatedAssetsRetentionDays?: number
 The number of days to retain static assets of outdated deployments in the S3 bucket.
 Useful to allow users to still access old assets after a new deployment when they are still browsing on an old version.
 Defaults to 30 days.
