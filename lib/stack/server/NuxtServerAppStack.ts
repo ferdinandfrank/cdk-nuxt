@@ -379,7 +379,7 @@ export class NuxtServerAppStack extends Stack {
             priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
             logBucket: this.accessLogsBucket,
             logFilePrefix: props.enableAccessLogsAnalysis ? CloudFrontAccessLogsAnalysis.getLogFilePrefix() : undefined,
-            logIncludesCookies: true,
+            logIncludesCookies: props.enableAccessLogsAnalysis,
         });
     }
 
