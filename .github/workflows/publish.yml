@@ -36,6 +36,8 @@ jobs:
 
       - name: Generate changelog and bump version
         id: changelog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pnpm changelogen --release
           VERSION=$(node -p "require('./package.json').version")
