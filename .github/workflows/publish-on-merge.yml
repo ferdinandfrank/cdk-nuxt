@@ -7,7 +7,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  id-token: write
 
 concurrency:
   group: publish-on-merge-${{ github.event.pull_request.number }}
@@ -79,7 +78,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           TARBALL=$(ls -1t *.tgz | head -n1)
-          pnpm npm publish "$TARBALL" --provenance --access public
+          pnpm npm publish "$TARBALL" --access public
 
       - name: Verify package publication
         env:
