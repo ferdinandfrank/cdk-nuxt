@@ -32,7 +32,7 @@ jobs:
 
       - name: Build project
         run: |
-          cd lib/functions/assets-cleanup && pnpm build && cd ../../..
-          cd lib/functions/access-logs-analysis/group-by-date && pnpm build && cd ../../../..
-          cd lib/functions/access-logs-analysis/partitioning && pnpm build && cd ../../../..
-          pnpm build
+          cd lib/functions/assets-cleanup && pnpm run build && cd ../../..
+          cd lib/functions/access-logs-analysis/group-by-date && pnpm run build && cd ../../../..
+          cd lib/functions/access-logs-analysis/partitioning && pnpm run build && cd ../../../..
+          pnpm run build

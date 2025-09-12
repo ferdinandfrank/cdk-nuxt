@@ -2,15 +2,24 @@ name: Publish
 
 on:
   push:
-    tags:
-      - '**' # Listen to push of every tag format, including hierarchical tags like v1.0/beta
+    branches:
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-22.04
+    if: ${{ github.actor != 'github-actions[bot]' && github.event.pusher.name != 'github-actions[bot]' }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Setting the Git user is required for the changelog generation and tagging
+      - name: Set Git user
+        uses: qoomon/actions--setup-git@v1
+        with:
+          user: committer
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -22,11 +31,6 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           cache: 'pnpm'
 
-      - name: Create release
-        uses: ncipollo/release-action@v1
-        with:
-          generateReleaseNotes: true
-
       - name: Install dependencies
         run: |
           cd lib/functions/assets-cleanup && pnpm install --frozen-lockfile && pnpm install-layer && cd ../../..
@@ -36,10 +40,10 @@ jobs:
 
       - name: Build project
         run: |
-          cd lib/functions/assets-cleanup && pnpm build && cd ../../..
-          cd lib/functions/access-logs-analysis/group-by-date && pnpm build && cd ../../../..
-          cd lib/functions/access-logs-analysis/partitioning && pnpm build && cd ../../../..
-          pnpm build
+          cd lib/functions/assets-cleanup && pnpm run build && cd ../../..
+          cd lib/functions/access-logs-analysis/group-by-date && pnpm run build && cd ../../../..
+          cd lib/functions/access-logs-analysis/partitioning && pnpm run build && cd ../../../..
+          pnpm run build
 
       - name: Create changelog and release
         run: pnpm changelogen --release --push
@@ -52,3 +56,18 @@ jobs:
           pnpm npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      -   name: Verify package publication
+          run: |
+            PACKAGE_NAME="cdk-nuxt"
+            PACKAGE_VERSION=$(pnpm view $PACKAGE_NAME version --registry=https://npm.pkg.github.com/)
+            PACKAGE_TARBALL=$(pnpm view $PACKAGE_NAME dist.tarball --registry=https://npm.pkg.github.com/)
+            
+            if [ -z "$PACKAGE_VERSION" ] || [ -z "$PACKAGE_TARBALL" ]; then
+              echo "Error: Package publication failed. Version or tarball missing."
+              exit 1
+            fi
+            
+            echo "Package $PACKAGE_NAME@$PACKAGE_VERSION successfully published."
+          env:
+            NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
