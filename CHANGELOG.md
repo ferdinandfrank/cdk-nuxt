@@ -1,6 +1,20 @@
 # Changelog
 
 
+## v2.10.2
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.10.1...v2.10.2)
+
+### 🩹 Fixes
+
+- Adjust version to npm registry ([15ea6e7](https://github.com/ferdinandfrank/cdk-nuxt/commit/15ea6e7))
+- Update workflow badge link in README ([8d1a6fc](https://github.com/ferdinandfrank/cdk-nuxt/commit/8d1a6fc))
+- Add id-token permission to publish-on-merge workflow ([e6e83f0](https://github.com/ferdinandfrank/cdk-nuxt/commit/e6e83f0))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.10.1
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.9.0...v2.10.1)
