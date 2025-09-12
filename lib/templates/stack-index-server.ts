@@ -104,40 +104,76 @@ const appStackProps: NuxtServerAppStackProps = {
     outdatedAssetsRetentionDays: 30,
 
     /**
-     * An array of headers to pass to the Nuxt app on SSR requests.
-     * The more headers are passed, the weaker the cache performance will be, as the cache key
-     * is based on the headers.
-     * No headers are passed by default.
+     * An array of HTTP headers to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
+     * This should only be used for headers that do not affect the response.
+     *
+     * No headers are forwarded by default.
+     *
+     * {@link https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html}
      */
-    allowHeaders: [],
+    forwardHeaders: [],
 
     /**
-     * An array of cookies to pass to the Nuxt app on SSR requests.
-     * The more cookies are passed, the weaker the cache performance will be, as the cache key
-     * is based on the cookies.
-     * No cookies are passed by default.
+     * An array of HTTP headers to forward to the Nuxt app and to include in the cache key for objects that are cached at CloudFront edge locations.
+     * This should be used for headers that might affect the response, e.g., 'Authorization'.
+     *
+     * No headers are forwarded or included in the cache key by default.
+     *
+     * {@link https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html}
      */
-    allowCookies: [],
+    cacheKeyHeaders: [],
 
     /**
-     * An array of query param keys to pass to the Nuxt app on SSR requests.
-     * The more query params are passed, the weaker the cache performance will be, as the cache key
-     * is based on the query params.
-     * Note that this config can not be combined with {@see denyQueryParams}.
-     * If both are specified, the {@see denyQueryParams} will be ignored.
-     * All query params are passed by default.
+     * An array of cookies to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
+     * This should only be used for cookies that do not affect the response.
+     *
+     * No cookies are forwarded by default.
+     *
+     * {@link https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html}
      */
-    allowQueryParams: [],
+    forwardCookies: [],
 
     /**
-     * An array of query param keys to deny passing to the Nuxt app on SSR requests.
-     * It might be useful to prevent specific external query params, e.g., fbclid, utm_campaign, ...,
-     * to improve cache performance, as the cache key is based on the specified query params.
-     * Note that this config can not be combined with {@see allowQueryParams}.
-     * If both are specified, the {@see denyQueryParams} will be ignored.
-     * All query params are passed by default.
+     * An array of cookies to forward to the Nuxt app and to include in the cache key for objects that are cached at CloudFront edge locations.
+     * This should be used for cookies that might affect the response, e.g., authentication cookies.
+     *
+     * No cookies are forwarded or included in the cache key by default.
+     *
+     * {@link https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html}
      */
-    denyQueryParams: [],
+    cacheKeyCookies: [],
+
+    /**
+     * An array of query params to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
+     * This should only be used for query params that do not affect the response and are required on SSR requests.
+     *
+     * All query params are forwarded by default.
+     *
+     * {@link https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html}
+     */
+    forwardQueryParams: [],
+
+    /**
+     * An array of query params to forward to the Nuxt app and to include in the cache key for objects that are cached at CloudFront edge locations.
+     * This should be used for query params that affect the response and are required on SSR requests, e.g., filters.
+     *
+     * All query params are forwarded and included in the cache key by default.
+     *
+     * {@link https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html}
+     */
+    cacheKeyQueryParams: [],
+
+    /**
+     * An array of query params to prevent forwarding to the Nuxt app and to not include in the cache key for objects that are cached at CloudFront edge locations.
+     * When set, all query params that are not specified in this array will be forwarded to the Nuxt app and included in the cache key.
+     * This should be used for query params that do not affect the response and are not required on SSR requests, e.g., 'fbclid' or 'utm_campaign'.
+     *
+     * If both {@see cacheKeyQueryParams} and {@see denyCacheKeyQueryParams} are specified, the {@see denyCacheKeyQueryParams} will be ignored.
+     * All query params are forwarded and included in the cache key by default.
+     *
+     * {@link https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html}
+     */
+    denyCacheKeyQueryParams: [],
 
     /**
      * Stack tags that will be applied to all the taggable resources and the stack itself.
