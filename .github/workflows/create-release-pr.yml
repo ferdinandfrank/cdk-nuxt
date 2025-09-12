@@ -38,9 +38,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd lib/functions/assets-cleanup && pnpm install --frozen-lockfile && pnpm install-layer && cd ../../..
-          cd lib/functions/access-logs-analysis/group-by-date && pnpm install --frozen-lockfile && pnpm install-layer && cd ../../../..
-          cd lib/functions/access-logs-analysis/partitioning && pnpm install --frozen-lockfile && pnpm install-layer && cd ../../../..
+          cd lib/functions/assets-cleanup && pnpm install --frozen-lockfile && cd ../../..
+          cd lib/functions/access-logs-analysis/group-by-date && pnpm install --frozen-lockfile && cd ../../../..
+          cd lib/functions/access-logs-analysis/partitioning && pnpm install --frozen-lockfile && cd ../../../..
           pnpm install --frozen-lockfile
 
       - name: Ensure next free version

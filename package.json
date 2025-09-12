@@ -7,8 +7,11 @@
 		"url": "https://github.com/ferdinandfrank/cdk-nuxt.git"
 	},
 	"files": [
+		"index.d.ts",
 		"lib",
-		"index.d.ts"
+		"lib/functions/assets-cleanup/build/**",
+		"lib/functions/access-logs-analysis/group-by-date/build/**",
+		"lib/functions/access-logs-analysis/partitioning/build/**"
 	],
 	"main": "index.js",
 	"types": "index.d.ts",
@@ -21,7 +24,9 @@
 	},
 	"scripts": {
 		"build": "tsc",
-		"prepack": "pnpm -C lib/functions/assets-cleanup run build && pnpm -C lib/functions/access-logs-analysis/group-by-date run build && pnpm -C lib/functions/access-logs-analysis/partitioning run build && pnpm run build",
+		"prepack:assets-cleanup": "pnpm -C lib/functions/assets-cleanup run build && pnpm -C lib/functions/assets-cleanup run install-layer",
+		"prepack:access-logs-analysis": "pnpm -C lib/functions/access-logs-analysis/group-by-date run build && pnpm -C lib/functions/access-logs-analysis/group-by-date run install-layer && pnpm -C lib/functions/access-logs-analysis/partitioning run build && pnpm -C lib/functions/access-logs-analysis/partitioning run install-layer",
+		"prepack": "pnpm run prepack:assets-cleanup && pnpm run prepack:access-logs-analysis && pnpm run build",
 		"release:check": "pnpm run build",
 		"release": "pnpm run release:check && pnpm changelogen --release"
 	},
