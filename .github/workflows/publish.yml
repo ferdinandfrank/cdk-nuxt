@@ -1,27 +1,19 @@
-name: Publish on Release Merge
+name: Publish
 
 on:
-  pull_request:
-    types: [closed]
-
-permissions:
-  contents: write
-  pull-requests: write
-
-concurrency:
-  group: publish-on-merge-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  workflow_dispatch: {}
+  push:
+    branches:
+      - master
 
 jobs:
   publish:
-    if: ${{ github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/v') }}
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout merge commit
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
           fetch-depth: 0
           fetch-tags: true
 
@@ -42,22 +34,22 @@ jobs:
           cd lib/functions/access-logs-analysis/partitioning && pnpm install --frozen-lockfile && cd ../../../..
           pnpm install --frozen-lockfile
 
-      - name: Read version
-        id: read_version
+      - name: Generate changelog and bump version
+        id: changelog
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          pnpm changelogen --release
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Ensure version not on npm
-        run: |
-          PKG=$(node -p "require('./package.json').name")
-          VER=${{ steps.read_version.outputs.version }}
-          if pnpm view ${PKG}@${VER} version --registry=https://registry.npmjs.org/ >/dev/null 2>&1; then
-            echo "${PKG}@${VER} already exists on npm" >&2
-            exit 1
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "chore(release): v$VERSION"
+          else
+            echo "No changelog/package changes to commit."
           fi
 
-      - name: Pack tarball (prepack runs automatically)
+      - name: Pack tarball
         run: |
           pnpm pack --pack-destination .
           TARBALL=$(ls -1t *.tgz | head -n1)
@@ -69,7 +61,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "actions@github.com"
-          TAG="v${{ steps.read_version.outputs.version }}"
+          TAG="v${{ steps.changelog.outputs.version }}"
           git tag -a "${TAG}" -m "Release ${TAG}"
           git push origin "${TAG}"
 
@@ -96,8 +88,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.read_version.outputs.version }}
-          name: v${{ steps.read_version.outputs.version }}
+          tag_name: v${{ steps.changelog.outputs.version }}
+          name: v${{ steps.changelog.outputs.version }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -108,5 +100,5 @@ jobs:
         run: |
           git fetch origin develop
           git checkout develop
-          git merge --no-ff origin/master -m "chore: sync release v${{ steps.read_version.outputs.version }} back to develop"
+          git merge --no-ff origin/master -m "chore: sync release v${{ steps.changelog.outputs.version }} back to develop"
           git push origin develop
