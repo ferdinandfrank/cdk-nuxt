@@ -50,7 +50,6 @@ jobs:
 
       - name: Ensure version not on npm
         run: |
-          set -euo pipefail
           PKG=$(node -p "require('./package.json').name")
           VER=${{ steps.read_version.outputs.version }}
           if pnpm view ${PKG}@${VER} version --registry=https://registry.npmjs.org/ >/dev/null 2>&1; then
@@ -102,3 +101,12 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Backmerge master into develop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin develop
+          git checkout develop
+          git merge --no-ff origin/master -m "chore: sync release v${{ steps.read_version.outputs.version }} back to develop"
+          git push origin develop
