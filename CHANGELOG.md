@@ -9,6 +9,8 @@
 
 - Attempt to fix release process ([dc60493](https://github.com/ferdinandfrank/cdk-nuxt/commit/dc60493))
 - Attempt to fix release process ([2f3ecfd](https://github.com/ferdinandfrank/cdk-nuxt/commit/2f3ecfd))
+- Attempt to fix release process ([f62c91d](https://github.com/ferdinandfrank/cdk-nuxt/commit/f62c91d))
+- Attempt to fix release process ([376a20b](https://github.com/ferdinandfrank/cdk-nuxt/commit/376a20b))
 
 ### 📖 Documentation
 
