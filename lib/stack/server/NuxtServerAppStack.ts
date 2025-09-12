@@ -35,7 +35,7 @@ import * as fs from "fs";
 import {Rule, RuleTargetInput, Schedule} from "aws-cdk-lib/aws-events";
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import * as path from "path";
-import {writeFileSync} from "fs";
+import {writeFileSync, mkdirSync} from "fs";
 import {type NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
 import {CloudFrontAccessLogsAnalysis} from "../access-logs-analysis/CloudFrontAccessLogsAnalysis";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
@@ -183,10 +183,11 @@ export class NuxtServerAppStack extends Stack {
      * and returns the current revision.
      */
     private createDeploymentRevision(props: NuxtServerAppStackProps): string {
-        const revisionFilePath = `${props.rootDir ?? '.'}/.output/public/app-revision`;
         const appRevision = new Date().toISOString();
 
-        writeFileSync(revisionFilePath, appRevision, {encoding: 'utf-8'});
+        const dir = path.join(props.rootDir ?? '.', '.output', 'public');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(path.join(dir, 'app-revision'), appRevision, { encoding: 'utf-8' });
 
         return appRevision;
     }
