@@ -58,6 +58,10 @@ jobs:
             echo "No changelog/package changes to commit."
           fi
 
+      - name: Create release branch from develop HEAD
+        run: |
+          git switch -c release/v${{ steps.changelog.outputs.version }}
+
       - name: Create Release PR
         uses: peter-evans/create-pull-request@v6
         with:
