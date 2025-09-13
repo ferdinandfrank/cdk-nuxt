@@ -66,7 +66,7 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
      * An array of HTTP headers to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
      * This should only be used for headers that do not affect the response.
      *
-     * No headers are forwarded by default.
+     * Only the Cloudfront default headers are forwarded by default.
      *
      * {@link https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-origin-requests.html}
      */
@@ -76,7 +76,8 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
      * An array of HTTP headers to forward to the Nuxt app and to include in the cache key for objects that are cached at CloudFront edge locations.
      * This should be used for headers that might affect the response, e.g., 'Authorization'.
      *
-     * No headers are forwarded or included in the cache key by default.
+     * Only the Cloudfront default headers are forwarded,
+     * but no headers are included in the cache key by default.
      *
      * {@link https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html}
      */

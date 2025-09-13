@@ -125,7 +125,7 @@ export class NuxtServerAppStack extends Stack {
      * The origin request policy that specifies which HTTP headers, cookies, and query strings
      * CloudFront forwards to the Nuxt app without affecting the cache key.
      */
-    private appRequestPolicy: OriginRequestPolicy;
+    private appRequestPolicy: OriginRequestPolicy | undefined;
 
     /**
      * The behavior for the CloudFront distribution to route incoming web requests
@@ -463,8 +463,16 @@ export class NuxtServerAppStack extends Stack {
 
     /**
      * Creates an origin request policy for the Nuxt app route behavior of the CloudFront distribution.
+     * No policy is created if no explicit config is provided.
      */
-    private createNuxtAppRequestPolicy(props: NuxtServerAppStackProps): OriginRequestPolicy {
+    private createNuxtAppRequestPolicy(props: NuxtServerAppStackProps): OriginRequestPolicy|undefined {
+
+        // If no explicit config is provided, we want to use the default from Cloudfront
+        const hasAnyConfig = props.forwardQueryParams?.length || props.forwardHeaders?.length || props.forwardCookies?.length;
+        if (!hasAnyConfig) {
+            return undefined;
+        }
+
         return new OriginRequestPolicy(this, `${this.resourceIdPrefix}-request-policy`, {
             originRequestPolicyName: `${this.resourceIdPrefix}-cdn-request-policy`,
             comment: `Defines which request data to pass to the ${this.resourceIdPrefix} origin without affecting the cache key.`,
