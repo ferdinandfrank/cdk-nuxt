@@ -1,6 +1,30 @@
 # Changelog
 
 
+## v2.11.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.10.8...v2.11.0)
+
+### 🚀 Enhancements
+
+- Optimize names of Lambda handler ([87b0441](https://github.com/ferdinandfrank/cdk-nuxt/commit/87b0441))
+
+### 💅 Refactors
+
+- Migrate logRetention to logGroup for BucketDeployment ([afe20c8](https://github.com/ferdinandfrank/cdk-nuxt/commit/afe20c8))
+
+### 🏡 Chore
+
+- Sync release v back to develop ([0850da8](https://github.com/ferdinandfrank/cdk-nuxt/commit/0850da8))
+
+### 🤖 CI
+
+- Read version from package.json for GitHub release ([493a894](https://github.com/ferdinandfrank/cdk-nuxt/commit/493a894))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.10.8
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.10.7...v2.10.8)
