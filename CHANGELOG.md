@@ -1,6 +1,19 @@
 # Changelog
 
 
+## v2.12.2
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.12.1...v2.12.2)
+
+### 🏡 Chore
+
+- Sync release v2.12.1 back to develop ([8a80b47](https://github.com/ferdinandfrank/cdk-nuxt/commit/8a80b47))
+- Remove unused CLI commands from package.json ([1c7561e](https://github.com/ferdinandfrank/cdk-nuxt/commit/1c7561e))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.12.1
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.12.0...v2.12.1)
