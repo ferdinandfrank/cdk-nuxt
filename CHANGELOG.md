@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v2.12.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.11.0...v2.12.0)
+
+### 🚀 Enhancements
+
+- Prevent the creation of a custom origin request policy if no explicit config is provided ([c5dc0cb](https://github.com/ferdinandfrank/cdk-nuxt/commit/c5dc0cb))
+
+### 🏡 Chore
+
+- Sync release v2.11.0 back to develop ([e4b6ba0](https://github.com/ferdinandfrank/cdk-nuxt/commit/e4b6ba0))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.11.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.10.8...v2.11.0)
