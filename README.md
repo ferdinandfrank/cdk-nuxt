@@ -46,61 +46,34 @@ Notes:
 
 ## Installation
 
-This library ships compiled JS and small CLI helpers. To use it in your CDK app, install the following in your project.
-
-Required peer dependencies (must be installed in your project):
-- aws-cdk-lib ^2.214.0
-- constructs ^10.4.2
-
-Optional peer dependency (only if you use Access Logs Analysis features):
-- @aws-cdk/aws-glue-alpha 2.214.0-alpha.0
-
-The package itself:
-- cdk-nuxt (usually as a devDependency in your infrastructure repo)
-
-Dev-time tools for TypeScript CDK apps (not required at runtime of this package):
-- typescript and ts-node
-- AWS CDK CLI (aws-cdk) is optional; you can also use `npx cdk`.
-
-Choose your package manager:
+This library ships compiled JS and small CLI helpers. To use it in your CDK app, install the following in your project by choosing your package manager:
 
 Using pnpm:
 ```bash
-pnpm add -D cdk-nuxt aws-cdk-lib@^2.214.0 constructs@^10.4.2
-# Optional (only if you enable Access Logs Analysis):
-pnpm add -D @aws-cdk/aws-glue-alpha@2.214.0-alpha.0
+pnpm add -D cdk-nuxt aws-cdk@^2.214.0 aws-cdk-lib@^2.214.0 constructs@^10.4.2
 # If your CDK app is written in TypeScript:
 pnpm add -D typescript ts-node
-# Optional convenience:
-pnpm add -D aws-cdk@^2.214.0
+# Optional (only if you enable Access Logs Analysis):
+pnpm add -D @aws-cdk/aws-glue-alpha@2.214.0-alpha.0
 ```
 
 Using npm:
 ```bash
-npm install --save-dev cdk-nuxt aws-cdk-lib@^2.214.0 constructs@^10.4.2
-# Optional (only if you enable Access Logs Analysis):
-npm install --save-dev @aws-cdk/aws-glue-alpha@2.214.0-alpha.0
+npm install --save-dev cdk-nuxt aws-cdk@^2.214.0 aws-cdk-lib@^2.214.0 constructs@^10.4.2
 # If your CDK app is written in TypeScript:
 npm install --save-dev typescript ts-node
-# Optional convenience:
-npm install --save-dev aws-cdk@^2.214.0
+# Optional (only if you enable Access Logs Analysis):
+npm install --save-dev @aws-cdk/aws-glue-alpha@2.214.0-alpha.0
 ```
 
 Using Yarn:
 ```bash
-yarn add -D cdk-nuxt aws-cdk-lib@^2.214.0 constructs@^10.4.2
-# Optional (only if you enable Access Logs Analysis):
-yarn add -D @aws-cdk/aws-glue-alpha@2.214.0-alpha.0
+yarn add -D cdk-nuxt aws-cdk@^2.214.0 aws-cdk-lib@^2.214.0 constructs@^10.4.2
 # If your CDK app is written in TypeScript:
 yarn add -D typescript ts-node
-# Optional convenience:
-yarn add -D aws-cdk@^2.214.0
+# Optional (only if you enable Access Logs Analysis):
+yarn add -D @aws-cdk/aws-glue-alpha@2.214.0-alpha.0
 ```
-
-Notes:
-- aws-cdk-lib and constructs are declared as peerDependencies to avoid duplicate installations and version skew with your application's CDK setup.
-- If you don’t use Access Logs Analysis, you don’t need @aws-cdk/aws-glue-alpha.
-- This package targets aws-cdk-lib 2.214.x; keep your project's aws-cdk-lib within the 2.214.x range for the best compatibility.
 
 ## Setup
 
