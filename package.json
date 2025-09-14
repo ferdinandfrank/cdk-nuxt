@@ -34,19 +34,23 @@
 		"@types/node": "^20.10",
 		"changelogen": "^0.6.2",
 		"ts-node": "^10.9.2",
-		"typescript": "^5.6.3"
+		"typescript": "^5.6.3",
+		"aws-cdk-lib": "^2.214.0",
+		"constructs": "^10.4.2",
+		"@aws-cdk/aws-glue-alpha": "2.214.0-alpha.0"
 	},
 	"dependencies": {
-		"@aws-cdk/aws-glue-alpha": "2.214.0-alpha.0",
-		"aws-cdk-lib": "2.214.0",
-		"constructs": "^10.4.2",
 		"shelljs": "^0.10.0"
 	},
 	"peerDependencies": {
 		"aws-cdk-lib": "^2.214.0",
 		"constructs": "^10.4.2",
-		"ts-node": "^10.9.2",
-		"typescript": "^5.6.3"
+		"@aws-cdk/aws-glue-alpha": "2.214.0-alpha.0"
+	},
+	"peerDependenciesMeta": {
+		"@aws-cdk/aws-glue-alpha": {
+			"optional": true
+		}
 	},
 	"packageManager": "pnpm@10.15.1"
 }
