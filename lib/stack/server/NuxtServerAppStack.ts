@@ -36,7 +36,6 @@ import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import * as path from "path";
 import {writeFileSync, mkdirSync, existsSync} from "fs";
 import {type NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
-import {CloudFrontAccessLogsAnalysis} from "../access-logs-analysis/CloudFrontAccessLogsAnalysis";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {DomainName, EndpointType, HttpApi, HttpMethod, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
 
@@ -390,7 +389,7 @@ export class NuxtServerAppStack extends Stack {
             additionalBehaviors: this.setupCloudFrontRouting(props),
             priceClass: PriceClass.PRICE_CLASS_100, // Use only North America and Europe
             logBucket: this.accessLogsBucket,
-            logFilePrefix: props.enableAccessLogsAnalysis ? CloudFrontAccessLogsAnalysis.getLogFilePrefix() : undefined,
+            logFilePrefix: props.enableAccessLogsAnalysis ? 'unprocessed' : undefined,
             logIncludesCookies: props.enableAccessLogsAnalysis,
         });
     }
@@ -716,11 +715,14 @@ export class NuxtServerAppStack extends Stack {
         return bucket;
     }
 
-    private createAccessLogsAnalysis(props: NuxtServerAppStackProps): CloudFrontAccessLogsAnalysis {
+    private createAccessLogsAnalysis(props: NuxtServerAppStackProps): void {
         if (!this.accessLogsBucket) {
             throw new Error('Access bucket not set');
         }
-        return new CloudFrontAccessLogsAnalysis(this, `${this.resourceIdPrefix}-access-logs-analysis`, {
+
+        const { CloudFrontAccessLogsAnalysis } = require('../access-logs-analysis/CloudFrontAccessLogsAnalysis');
+
+        new CloudFrontAccessLogsAnalysis(this, `${this.resourceIdPrefix}-access-logs-analysis`, {
             bucket: this.accessLogsBucket,
             resourcePrefix: `${this.resourceIdPrefix}-access-logs`,
             accessLogCookies: props.accessLogCookies,
