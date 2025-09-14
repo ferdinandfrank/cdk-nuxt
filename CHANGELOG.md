@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v2.12.1
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.12.0...v2.12.1)
+
+### 📖 Documentation
+
+- Update installation instructions and clarify dependencies in README ([13c3610](https://github.com/ferdinandfrank/cdk-nuxt/commit/13c3610))
+
+### 🏡 Chore
+
+- Sync release v2.12.0 back to develop ([d6ca777](https://github.com/ferdinandfrank/cdk-nuxt/commit/d6ca777))
+- Move CDK dependencies to devDependencies in pnpm-lock.yaml ([00f04e6](https://github.com/ferdinandfrank/cdk-nuxt/commit/00f04e6))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.12.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.11.0...v2.12.0)
