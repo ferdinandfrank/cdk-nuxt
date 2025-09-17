@@ -5,8 +5,14 @@ export interface StaticAssetConfig {
 
     /**
      * The local directory to upload the files from.
+     * Might be undefined when no files should be uploaded, but a config for cache invalidation is still required.
      */
-    source: string,
+    source?: string,
+
+    /**
+     * The remote path at which to make the uploaded files from source accessible.
+     */
+    target: string,
 
     /**
      * The file pattern that matches files to upload (recursively) from the source prop directory.
@@ -19,11 +25,6 @@ export interface StaticAssetConfig {
      * An array of file patterns to exclude from the upload.
      */
     exclude?: string[],
-
-    /**
-     * The remote path at which to make the uploaded files from source accessible.
-     */
-    target: string,
 
     /**
      * The content type to set for the files in the source folder when uploading them to the target.
@@ -75,6 +76,19 @@ export const getNuxtAppStaticAssetConfigs = (rootDir: string = '.'): StaticAsset
             target: customAssetsTargetPath,
 
             // Build assets are hashed whereby they are immutable and can be cached for a long time
+            cacheControl: [
+                CacheControl.setPublic(),
+                CacheControl.maxAge(Duration.days(365)),
+                CacheControl.fromString('immutable'),
+            ],
+        },
+
+        // Localization files
+        {
+            pattern: '_i18n/*',
+            target: customAssetsTargetPath,
+
+            // Localization files are hashed whereby they are immutable and can be cached for a long time
             cacheControl: [
                 CacheControl.setPublic(),
                 CacheControl.maxAge(Duration.days(365)),
