@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v2.14.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.13.0...v2.14.0)
+
+### 🚀 Enhancements
+
+- Add cache config for localization files (_i18n) from @nuxtjs/i18n module" ([164285b](https://github.com/ferdinandfrank/cdk-nuxt/commit/164285b))
+
+### 🏡 Chore
+
+- Sync release v2.13.0 back to develop ([abf48db](https://github.com/ferdinandfrank/cdk-nuxt/commit/abf48db))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.13.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.12.3...v2.13.0)
