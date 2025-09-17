@@ -1,6 +1,26 @@
 # Changelog
 
 
+## v2.12.3
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.12.2...v2.12.3)
+
+### 🩹 Fixes
+
+- Prevent requiring @aws-cdk/aws-glue-alpha package when access logs analysis is disabled ([18f70a2](https://github.com/ferdinandfrank/cdk-nuxt/commit/18f70a2))
+
+### 📖 Documentation
+
+- Simplify installation steps in readme ([855a4fc](https://github.com/ferdinandfrank/cdk-nuxt/commit/855a4fc))
+
+### 🏡 Chore
+
+- Sync release v2.12.2 back to develop ([d01c004](https://github.com/ferdinandfrank/cdk-nuxt/commit/d01c004))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.12.2
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.12.1...v2.12.2)
