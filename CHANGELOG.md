@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v2.16.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.15.0...v2.16.0)
+
+### 🚀 Enhancements
+
+- Add serverRoutes prop for dynamic server endpoints with file-like URLs ([2106d2e](https://github.com/ferdinandfrank/cdk-nuxt/commit/2106d2e))
+
+### ❤️ Contributors
+
+- Daniel Petrovaliev ([@dpetrovaliev](https://github.com/dpetrovaliev))
+
 ## v2.15.0
 
 
