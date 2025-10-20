@@ -6,6 +6,7 @@
 
 ### 🚀 Enhancements
 
+- Add `serverRoutes` prop to route file-like paths to SSR origin instead of S3
 - Add support to route Nuxt I18n translation routes via Lambda ([19721eb](https://github.com/ferdinandfrank/cdk-nuxt/commit/19721eb))
 - Add origin request policy for Nuxt app and enhance cache key configuration ([162ea7d](https://github.com/ferdinandfrank/cdk-nuxt/commit/162ea7d))
 - Integrate changelogen for automated release notes ([c995286](https://github.com/ferdinandfrank/cdk-nuxt/commit/c995286))
