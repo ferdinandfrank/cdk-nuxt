@@ -178,4 +178,19 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
      * @deprecated Use {@see denyCacheKeyQueryParams} instead.
      */
     readonly denyQueryParams?: string[];
+
+    /**
+     * An array of path patterns for server endpoints that should be routed to the SSR origin (API Gateway → Lambda)
+     * instead of the default S3 "file" behavior.
+     * 
+     * This is useful for server routes that generate dynamic content but use file-like URLs.
+     * For example, `@nuxtjs/sitemap` creates a `/sitemap.xml` endpoint that dynamically generates XML content,
+     * and `@nuxt/image` uses file-like URLs to serve dynamically processed images.
+     * 
+     * Note: This is different from `enableSitemap` which serves pre-generated static sitemap files from S3.
+     * Use `serverRoutes` when you need the Lambda to handle requests and generate content on-the-fly.
+     * 
+     * Examples: `['/sitemap.xml', '/robots.txt', '/__sitemap__/*', '/_ipx/*']`
+     */
+    readonly serverRoutes?: string[];
 }
