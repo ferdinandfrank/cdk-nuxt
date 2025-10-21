@@ -162,6 +162,19 @@ See https://nuxt.com/docs/guide/directory-structure/server#recipes for details.
 ### enableSitemap?: boolean
 Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
 
+### serverRoutes?: string[]
+An array of path patterns for server endpoints that should be routed to the SSR origin (API Gateway → Lambda) instead of the default S3 "file" behavior.
+
+This is useful for server routes that generate dynamic content but use file-like URLs. For example:
+- `@nuxtjs/sitemap` creates a `/sitemap.xml` endpoint that dynamically generates XML content
+- `@nuxt/image` uses file-like URLs (e.g., `/_ipx/*`) to serve dynamically processed images
+
+These patterns will be registered as CloudFront behaviors before the generic file-matching behavior, ensuring they take precedence.
+
+Examples: `['/sitemap.xml', '/robots.txt', '/__sitemap__/*', '/_ipx/*']`
+
+**Note:** This is different from `enableSitemap` which serves pre-generated static sitemap files from S3. Use `serverRoutes` when you need the Lambda to handle requests and generate content on-the-fly.
+
 ### enableAccessLogsAnalysis?: boolean
 Whether to enable access logs analysis for the Nuxt app's CloudFront distribution via Athena.
 

@@ -437,6 +437,11 @@ export class NuxtServerAppStack extends Stack {
             routingBehaviours = {...routingBehaviours, ...this.createSitemapRouteBehavior()};
         }
 
+        // Add custom server routes before static assets to ensure they take precedence
+        if (props.serverRoutes && props.serverRoutes.length > 0) {
+            routingBehaviours = {...routingBehaviours, ...this.createServerRouteBehavior(props.serverRoutes)};
+        }
+
         routingBehaviours = {...routingBehaviours, ...this.createStaticAssetsRouteBehavior()};
 
         return routingBehaviours;
@@ -497,6 +502,21 @@ export class NuxtServerAppStack extends Stack {
 
         const rules: Record<string, BehaviorOptions> = {};
         rules['/api/*'] = apiBehavior;
+
+        return rules;
+    }
+
+    /**
+     * Creates behaviors for the CloudFront distribution to route specified path patterns to the SSR origin.
+     * This allows server endpoints that use file-like URLs (e.g., /sitemap.xml from @nuxtjs/sitemap) 
+     * to be handled by the Lambda function for dynamic content generation.
+     */
+    private createServerRouteBehavior(serverRoutes: string[]): Record<string, BehaviorOptions> {
+        const rules: Record<string, BehaviorOptions> = {};
+        
+        serverRoutes.forEach(route => {
+            rules[route] = this.nuxtServerRouteBehavior;
+        });
 
         return rules;
     }
