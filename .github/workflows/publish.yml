@@ -6,6 +6,10 @@ on:
     branches:
       - master
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-22.04
@@ -18,10 +22,10 @@ jobs:
           fetch-tags: true
 
       # Setting the Git user is required for the changelog generation and tagging
-      -   name: Set Git user
-          uses: qoomon/actions--setup-git@v1
-          with:
-            user: committer
+      - name: Set Git user
+        uses: qoomon/actions--setup-git@v1
+        with:
+          user: committer
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
