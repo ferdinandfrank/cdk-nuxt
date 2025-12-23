@@ -1,6 +1,28 @@
 # Changelog
 
 
+## v2.18.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.17.0...v2.18.0)
+
+### 🚀 Enhancements
+
+- Add AWS WAF integration for CloudFront distributions with customizable rules and configurations ([95f876b](https://github.com/ferdinandfrank/cdk-nuxt/commit/95f876b))
+
+### 📖 Documentation
+
+- Optimize readme and documentation ([a758612](https://github.com/ferdinandfrank/cdk-nuxt/commit/a758612))
+
+### 🏡 Chore
+
+- Sync release v2.14.0 back to develop ([5165ae1](https://github.com/ferdinandfrank/cdk-nuxt/commit/5165ae1))
+- Sync release v2.17.0 back to develop ([2fd5295](https://github.com/ferdinandfrank/cdk-nuxt/commit/2fd5295))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+- GitHub ([@betterqualityassuranceuser](https://github.com/betterqualityassuranceuser))
+
 ## v2.17.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.14.0...v2.17.0)
