@@ -1,4 +1,5 @@
 import {type NuxtAppStackProps} from "../NuxtAppStackProps";
+import {type WafConfig} from "../waf/WafConfig";
 
 /**
  * Defines the props required for the {@see NuxtServerAppStack}.
@@ -193,4 +194,11 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
      * Examples: `['/sitemap.xml', '/robots.txt', '/__sitemap__/*', '/_ipx/*']`
      */
     readonly serverRoutes?: string[];
+
+    /**
+     * AWS WAF configuration to protect the CloudFront distribution.
+     * When enabled, provides protection against common web exploits, bots, and DDoS attacks.
+     * See {@see WafConfig} for available configuration options.
+     */
+    readonly wafConfig?: WafConfig;
 }

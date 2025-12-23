@@ -38,6 +38,7 @@ import {writeFileSync, mkdirSync, existsSync} from "fs";
 import {type NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {DomainName, EndpointType, HttpApi, HttpMethod, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
+import {CloudFrontWebAcl} from "../waf/CloudFrontWebAcl";
 
 /**
  * CDK stack to deploy a dynamic Nuxt app (target=server) on AWS with Lambda, ApiGateway, S3 and CloudFront.
@@ -140,6 +141,13 @@ export class NuxtServerAppStack extends Stack {
      */
     private readonly cdn: Distribution;
 
+    /**
+     * The AWS WAF Web ACL to protect the CloudFront distribution (optional).
+     *
+     * @private
+     */
+    private webAcl: CloudFrontWebAcl | undefined;
+
     constructor(scope: Construct, id: string, props: NuxtServerAppStackProps) {
         super(scope, id, props);
 
@@ -166,6 +174,15 @@ export class NuxtServerAppStack extends Stack {
         this.appCachePolicy = this.createNuxtAppCachePolicy(props)
         this.appRequestPolicy = this.createNuxtAppRequestPolicy(props)
         this.nuxtServerRouteBehavior = this.createNuxtServerRouteBehavior()
+
+        // Create WAF before CloudFront distribution if enabled
+        if (props.wafConfig?.enabled) {
+            this.webAcl = new CloudFrontWebAcl(this, `${this.resourceIdPrefix}-waf`, {
+                name: `${this.resourceIdPrefix}-waf`,
+                config: props.wafConfig,
+            });
+        }
+
         this.cdn = this.createCloudFrontDistribution(props);
         this.configureDeployments();
         this.createDnsRecords(props);
@@ -391,6 +408,7 @@ export class NuxtServerAppStack extends Stack {
             logBucket: this.accessLogsBucket,
             logFilePrefix: props.enableAccessLogsAnalysis ? 'unprocessed' : undefined,
             logIncludesCookies: props.enableAccessLogsAnalysis,
+            webAclId: this.webAcl?.webAcl.attrArn,
         });
     }
 
@@ -734,6 +752,7 @@ export class NuxtServerAppStack extends Stack {
 
         return bucket;
     }
+
 
     private createAccessLogsAnalysis(props: NuxtServerAppStackProps): void {
         if (!this.accessLogsBucket) {

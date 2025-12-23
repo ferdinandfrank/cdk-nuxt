@@ -16,6 +16,7 @@ Easily deploy Nuxt applications (Nuxt 3 and Nuxt 4) via CDK on AWS, including th
 - Scheduled pings of the Nuxt app to keep the Lambda warm for fast responses via [EventBridge](https://aws.amazon.com/eventbridge/) rules
 - Automatic cleanup of outdated static assets and build files
 - Access logs analysis via [Athena](https://aws.amazon.com/athena/) for the Nuxt app's CloudFront distribution
+- **Optional [AWS WAF](https://aws.amazon.com/waf/) integration** for protection against common web exploits, bots, and DDoS attacks ([see WAF documentation](docs/WAF.md))
 
 ## Table of Contents
 

@@ -191,6 +191,14 @@ const appStackProps: NuxtServerAppStackProps = {
     denyCacheKeyQueryParams: [],
 
     /**
+     * AWS WAF configuration to protect the CloudFront distribution.
+     * When enabled, provides protection against common web exploits, bots, and DDoS attacks.
+     *
+     * {@link https://github.com/ferdinandfrank/cdk-nuxt/blob/main/docs/WAF.md}
+     */
+    wafConfig: undefined,
+
+    /**
      * Stack tags that will be applied to all the taggable resources and the stack itself.
      */
     tags: {
