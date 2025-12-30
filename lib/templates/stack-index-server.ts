@@ -1,7 +1,36 @@
 #!/usr/bin/env node
 import {NuxtServerAppStack, type NuxtServerAppStackProps, App, CloudFrontWafStack} from "cdk-nuxt";
 
+const accountId = 'XXXXXXXX';
+const project = 'my-project';
+const service = 'nuxt-app';
+const environment = 'dev';
+
+// The tags to apply to all stack resources.
+// Modify as needed for analytics and cost allocation.
+const tags = {
+    project: project,
+    service: service,
+    environment: environment
+};
+
 const app = new App();
+
+// Optional: Create a separate WAF stack in us-east-1 (required for CloudFront WAF)
+// Uncomment the following lines to enable WAF protection:
+/*
+const wafStack = new CloudFrontWafStack(app, `${project}-${service}-${environment}-waf-stack`, {
+    name: `${project}-${service}-${environment}-waf`,
+    config: {
+        // Add WAF configuration as needed
+        // See https://github.com/ferdinandfrank/cdk-nuxt/blob/main/docs/WAF.md
+    },
+    env: {
+        account: accountId
+    },
+    tags: tags
+});
+*/
 
 const appStackProps: NuxtServerAppStackProps = {
     /**
@@ -9,7 +38,7 @@ const appStackProps: NuxtServerAppStackProps = {
      */
     env: {
         // The ID of your AWS account on which to deploy the stack.
-        account: 'XXXXXXXX',
+        account: accountId,
 
         // The AWS region where to deploy the Nuxt app.
         region: 'eu-central-1'
@@ -19,19 +48,19 @@ const appStackProps: NuxtServerAppStackProps = {
      * A string identifier for the project the Nuxt app is part of.
      * A project might have multiple different services.
      */
-    project: 'my-project',
+    project: project,
 
     /**
      * A string identifier for the project's service the Nuxt app is created for.
      * This can be seen as the name of the Nuxt app.
      */
-    service: 'nuxt-app',
+    service: service,
 
     /**
      * A string to identify the environment of the Nuxt app. This enables us
      * to deploy multiple different environments of the same Nuxt app, e.g., production and development.
      */
-    environment: 'dev',
+    environment: environment,
 
     /**
      * The domain (without the protocol) at which the Nuxt app shall be publicly available.
@@ -195,34 +224,15 @@ const appStackProps: NuxtServerAppStackProps = {
     /**
      * The ARN of an existing AWS WAF Web ACL to associate with the CloudFront distribution.
      * This should be used with a separate CloudFrontWafStack deployed in us-east-1.
-     * If you want to use a preconfigured WAF, create a separate stack as shown below and pass its ARN here.
+     * If you want to use a preconfigured WAF, create a separate stack as shown above and pass its ARN here.
      */
     webAclArn: undefined,
+    // webAclArn: wafStack.webAclArn, // Uncomment this line if using the WAF stack created above
 
     /**
      * Stack tags that will be applied to all the taggable resources and the stack itself.
      */
-    tags: {
-        service: 'nuxt-app'
-    },
+    tags: tags
 };
 
-// Optional: Create a separate WAF stack in us-east-1 (required for CloudFront WAF)
-// Uncomment the following lines to enable WAF protection:
-/*
-const wafStack = new CloudFrontWafStack(app, `${appStackProps.project}-${appStackProps.service}-${appStackProps.environment}-waf-stack`, {
-    name: `${appStackProps.project}-${appStackProps.service}-${appStackProps.environment}-waf`,
-    config: {
-        // Add WAF configuration as needed
-        // See https://github.com/ferdinandfrank/cdk-nuxt/blob/main/docs/WAF.md
-    },
-    env: {
-        account: appStackProps.env.account,
-    },
-});
-
-// Attach the WAF Web ACL ARN to the app stack
-appStackProps.webAclArn = wafStack.webAclArn;
-*/
-
-new NuxtServerAppStack(app, `${appStackProps.project}-${appStackProps.service}-${appStackProps.environment}-stack`, appStackProps);
+new NuxtServerAppStack(app, `${project}-${service}-${environment}-stack`, appStackProps);
