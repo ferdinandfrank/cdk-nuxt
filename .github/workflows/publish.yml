@@ -69,13 +69,24 @@ jobs:
       - name: Verify package publication
         run: |
           PKG=$(node -p "require('./package.json').name")
-          VER=$(node -p "require('./package.json').version")
-          PUBLISHED=$(pnpm view ${PKG}@${VER} version --registry=https://registry.npmjs.org/ || true)
-          if [ "$PUBLISHED" != "$VER" ]; then
-            echo "Publish failed or version mismatch (expected $VER, got $PUBLISHED)" >&2
-            exit 1
+          EXPECTED_VERSION=$(node -p "require('./package.json').version")
+          
+          # Retry logic for npm propagation
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+          PUBLISHED_VERSION=$(pnpm view ${PKG} version --registry=https://registry.npmjs.org/ || true)
+          if [ "$PUBLISHED_VERSION" = "$EXPECTED_VERSION" ]; then
+          echo "Package ${PKG}@${PUBLISHED_VERSION} successfully published."
+          exit 0
           fi
-          echo "Package ${PKG}@${VER} successfully published."
+          RETRY_COUNT=$((RETRY_COUNT + 1))
+          echo "Attempt $RETRY_COUNT/$MAX_RETRIES: Version not yet available (got '$PUBLISHED_VERSION', expected '$EXPECTED_VERSION'). Waiting..."
+          sleep 10
+          done
+          
+          echo "Publish verification failed after $MAX_RETRIES attempts (expected version: $EXPECTED_VERSION, got: $PUBLISHED_VERSION)." >&2
+          exit 1
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
