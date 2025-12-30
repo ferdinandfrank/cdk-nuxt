@@ -62,15 +62,11 @@ jobs:
           echo "TARBALL=$TARBALL" >> $GITHUB_ENV
 
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           TARBALL=$(ls -1t *.tgz | head -n1)
           pnpm npm publish "$TARBALL" --access public
 
       - name: Verify package publication
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           PKG=$(node -p "require('./package.json').name")
           VER=$(node -p "require('./package.json').version")
