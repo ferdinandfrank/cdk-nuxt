@@ -1,6 +1,26 @@
 # Changelog
 
 
+## v2.19.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.18.2...v2.19.0)
+
+### 🚀 Enhancements
+
+- Add support for custom WAF configurations and cross-regional WAF usages ([0daa215](https://github.com/ferdinandfrank/cdk-nuxt/commit/0daa215))
+
+### 🩹 Fixes
+
+- Standardize WAF stack naming and metrics prefix in documentation ([79d260f](https://github.com/ferdinandfrank/cdk-nuxt/commit/79d260f))
+
+### 🤖 CI
+
+- Add retry logic for npm version verification in publish workflow ([ebc7d43](https://github.com/ferdinandfrank/cdk-nuxt/commit/ebc7d43))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.18.2
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.18.1...v2.18.2)
