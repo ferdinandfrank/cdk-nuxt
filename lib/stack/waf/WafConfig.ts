@@ -2,11 +2,6 @@
  * Configuration options for AWS WAF Web ACL.
  */
 export interface WafConfig {
-    /**
-     * Whether to enable AWS WAF for the CloudFront distribution.
-     * @default false
-     */
-    readonly enabled: boolean;
 
     /**
      * Whether to enable AWS managed rule for common exploits (SQL injection, XSS, etc.).

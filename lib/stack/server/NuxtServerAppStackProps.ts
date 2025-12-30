@@ -1,5 +1,4 @@
 import {type NuxtAppStackProps} from "../NuxtAppStackProps";
-import {type WafConfig} from "../waf/WafConfig";
 
 /**
  * Defines the props required for the {@see NuxtServerAppStack}.
@@ -196,9 +195,10 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
     readonly serverRoutes?: string[];
 
     /**
-     * AWS WAF configuration to protect the CloudFront distribution.
-     * When enabled, provides protection against common web exploits, bots, and DDoS attacks.
-     * See {@see WafConfig} for available configuration options.
+     * The ARN of an existing AWS WAF Web ACL to associate with the CloudFront distribution.
+     * This should be used with a separate CloudFrontWafStack deployed in us-east-1.
+     *
+     * Example: 'arn:aws:wafv2:us-east-1:123456789012:global/webacl/my-web-acl/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111'
      */
-    readonly wafConfig?: WafConfig;
+    readonly webAclArn?: string;
 }

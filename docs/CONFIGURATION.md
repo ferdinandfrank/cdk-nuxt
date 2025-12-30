@@ -358,30 +358,35 @@ denyCacheKeyQueryParams: ['fbclid', 'gclid', 'utm_source', 'utm_medium', 'utm_ca
 
 ## Security Configuration
 
-### wafConfig
-**Type:** `WafConfig`  
-**Default:** `undefined` (disabled)
+### webAclArn
+**Type:** `string`  
+**Default:** `undefined` (no WAF protection)
 
-AWS WAF configuration to protect the CloudFront distribution. When enabled, provides protection against common web exploits, bots, and DDoS attacks.
+The ARN of an AWS WAF Web ACL to associate with the CloudFront distribution. This enables protection against common web exploits, bots, and DDoS attacks.
 
-**Example:**
-```typescript
-wafConfig: {
-  enabled: true,
-  rateLimit: 2000,
-  blockedCountries: ['CN', 'RU'],
-}
-```
-
-See [WAF Documentation](WAF.md) for complete configuration options.
+See [WAF Documentation](WAF.md) for details.
 
 ---
 
 ## Complete Configuration Example
 
 ```typescript
-import { App } from 'aws-cdk-lib';
-import { NuxtServerAppStack } from 'cdk-nuxt';
+import { App, CloudFrontWafStack, NuxtServerAppStack } from 'cdk-nuxt';
+
+const app = new App();
+
+// Optional: Create WAF stack
+const wafStack = new CloudFrontWafStack(app, 'my-company-website-production-waf', {
+  name: 'my-company-website-production-waf',
+  config: {
+    enableCommonRuleSet: true,
+    enableKnownBadInputsRuleSet: true,
+    rateLimit: 2000,
+  },
+  env: {
+    account: process.env.AWS_ACCOUNT_ID
+  }
+});
 
 const appStackProps: NuxtServerAppStackProps = {
   // AWS Environment
@@ -424,12 +429,7 @@ const appStackProps: NuxtServerAppStackProps = {
   denyCacheKeyQueryParams: ['fbclid', 'utm_source', 'utm_campaign'],
 
   // WAF Configuration
-  wafConfig: {
-    enabled: true,
-    enableCommonRuleSet: true,
-    enableKnownBadInputsRuleSet: true,
-    rateLimit: 2000,
-  },
+  webAclArn: wafStack.webAclArn,
 
   // Environment Variables (optional)
   entrypointEnv: JSON.stringify({
@@ -438,6 +438,6 @@ const appStackProps: NuxtServerAppStackProps = {
   }),
 };
 
-new NuxtServerAppStack(new App(), `${appStackProps.project}-${appStackProps.service}-${appStackProps.environment}-stack`, appStackProps);
+new NuxtServerAppStack(app, `${appStackProps.project}-${appStackProps.service}-${appStackProps.environment}-stack`, appStackProps);
 ```
 

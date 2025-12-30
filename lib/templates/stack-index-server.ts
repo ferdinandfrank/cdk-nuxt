@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-import {NuxtServerAppStack, type NuxtServerAppStackProps, App} from "cdk-nuxt";
+import {NuxtServerAppStack, type NuxtServerAppStackProps, App, CloudFrontWafStack} from "cdk-nuxt";
+
+const app = new App();
 
 const appStackProps: NuxtServerAppStackProps = {
     /**
@@ -191,12 +193,11 @@ const appStackProps: NuxtServerAppStackProps = {
     denyCacheKeyQueryParams: [],
 
     /**
-     * AWS WAF configuration to protect the CloudFront distribution.
-     * When enabled, provides protection against common web exploits, bots, and DDoS attacks.
-     *
-     * {@link https://github.com/ferdinandfrank/cdk-nuxt/blob/main/docs/WAF.md}
+     * The ARN of an existing AWS WAF Web ACL to associate with the CloudFront distribution.
+     * This should be used with a separate CloudFrontWafStack deployed in us-east-1.
+     * If you want to use a preconfigured WAF, create a separate stack as shown below and pass its ARN here.
      */
-    wafConfig: undefined,
+    webAclArn: undefined,
 
     /**
      * Stack tags that will be applied to all the taggable resources and the stack itself.
@@ -206,4 +207,22 @@ const appStackProps: NuxtServerAppStackProps = {
     },
 };
 
-new NuxtServerAppStack(new App(), `${appStackProps.project}-${appStackProps.service}-${appStackProps.environment}-stack`, appStackProps);
+// Optional: Create a separate WAF stack in us-east-1 (required for CloudFront WAF)
+// Uncomment the following lines to enable WAF protection:
+/*
+const wafStack = new CloudFrontWafStack(app, `${appStackProps.project}-${appStackProps.service}-${appStackProps.environment}-waf-stack`, {
+    name: `${appStackProps.project}-${appStackProps.service}-${appStackProps.environment}-waf`,
+    config: {
+        // Add WAF configuration as needed
+        // See https://github.com/ferdinandfrank/cdk-nuxt/blob/main/docs/WAF.md
+    },
+    env: {
+        account: appStackProps.env.account,
+    },
+});
+
+// Attach the WAF Web ACL ARN to the app stack
+appStackProps.webAclArn = wafStack.webAclArn;
+*/
+
+new NuxtServerAppStack(app, `${appStackProps.project}-${appStackProps.service}-${appStackProps.environment}-stack`, appStackProps);

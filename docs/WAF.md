@@ -11,28 +11,86 @@ This CDK extension provides a configurable AWS WAF (Web Application Firewall) to
 - **IP Whitelist/Blacklist**: Manual control over allowed/blocked IPs
 - **AWS Managed Rules**: Pre-configured rule sets from AWS
 
+## Important: Region Requirement
+
+> **AWS WAF for CloudFront must be deployed in the `us-east-1` region**, regardless of where your Nuxt app is deployed. This is an AWS requirement for CloudFront-scoped WAF resources.
+
 ## Usage
 
-### Basic Configuration
+There are two ways to use WAF with your Nuxt app:
+
+1. **Using `CloudFrontWafStack`** (recommended) - Provides full WAF configuration
+2. **Using a custom WAF ARN** - Reference any existing WAF Web ACL
+
+### Option 1: CloudFrontWafStack (Recommended)
+
+This is the recommended approach for most users. It creates a dedicated WAF stack in `us-east-1` with full configuration options:
 
 ```typescript
-import { NuxtServerAppStack, WafConfig } from 'cdk-nuxt';
+import { 
+  App, 
+  CloudFrontWafStack, 
+  NuxtServerAppStack, 
+  type NuxtServerAppStackProps 
+} from 'cdk-nuxt';
 
-const wafConfig: WafConfig = {
-  enabled: true,
+const app = new App();
+
+// 1. Create WAF stack in us-east-1 (required for CloudFront)
+const wafStack = new CloudFrontWafStack(app, 'MyApp-waf-stack', {
+  name: 'my-app-waf',
+   config: {
+    metricsPrefix: 'MyApp',
+    rateLimit: 2000,
+    // ... other WAF configuration
+  },
+  env: {
+    account: '123456789012',
+    // region: 'us-east-1', // us-east-1 will be enforced
+  },
+});
+
+// 2. Create Nuxt app stack in your desired region
+const appStackProps: NuxtServerAppStackProps = {
+  // ... your app configuration
+  webAclArn: wafStack.webAclArn, // Reference the WAF ARN
+  env: {
+    account: '123456789012',
+    region: 'eu-central-1', // Can be any region
+  }
 };
 
-new NuxtServerAppStack(this, 'MyNuxtApp', {
-  // ... other props
-  wafConfig,
+new NuxtServerAppStack(app, 'MyApp-stack', appStackProps);
+```
+
+### Option 2: Custom WAF ARN
+
+If you already have an existing WAF Web ACL or manage it separately, you can simply reference its ARN:
+
+```typescript
+import { App, NuxtServerAppStack } from 'cdk-nuxt';
+
+new NuxtServerAppStack(new App(), 'MyApp-stack', {
+  // ... your app configuration
+  webAclArn: 'arn:aws:wafv2:us-east-1:123456789012:global/webacl/my-web-acl/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111',
+  env: {
+    region: 'eu-central-1', // Can be any region
+  }
 });
 ```
 
+**Use cases for custom WAF ARN:**
+- You manage WAF centrally across multiple applications
+- You have custom WAF rules defined elsewhere
+- You use Terraform or another IaC tool for WAF management
+- You need to share a single WAF across multiple CloudFront distributions
+
 ### Advanced Configuration
+
+When using `CloudFrontWafStack`, you can customize the WAF behavior with the following options:
 
 ```typescript
 const wafConfig: WafConfig = {
-  enabled: true,
   
   // AWS Managed Rules (recommended for Nuxt)
   enableCommonRuleSet: true,              // Standard protection (enabled by default)
@@ -59,6 +117,37 @@ const wafConfig: WafConfig = {
   metricsPrefix: 'MyApp',                 // Prefix for CloudWatch metrics
 };
 ```
+
+## Deployment
+
+When using `CloudFrontWafStack`:
+
+1. **First deployment**: Both stacks will be deployed together
+   ```bash
+   cdk deploy --all
+   ```
+
+2. **Updating WAF only**: Deploy just the WAF stack
+   ```bash
+   cdk deploy MyApp-waf-stack
+   ```
+
+3. **Updating the app**: Deploy just the app stack
+   ```bash
+   cdk deploy MyApp-stack
+   ```
+
+When using a custom WAF ARN, the WAF is managed independently and only the app stack needs to be deployed.
+
+2. **Updating WAF only**: Deploy just the WAF stack
+   ```bash
+   cdk deploy MyApp-waf-stack
+   ```
+
+3. **Updating the app**: Deploy just the app stack
+   ```bash
+   cdk deploy MyApp-stack
+   ```
 
 ## Default Configuration for Nuxt
 
