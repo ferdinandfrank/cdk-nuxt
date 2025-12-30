@@ -116,6 +116,11 @@ First-time setup (once per AWS account/region):
 cdk bootstrap aws://YOUR_ACCOUNT_ID/YOUR_REGION
 ```
 
+> When using the [WAF via CloudFrontWafStack](docs/WAF.md) and using a different region than `us-east-1`, you also need to bootstrap `us-east-1` for the WAF resources:
+> ```bash
+> cdk bootstrap aws://YOUR_ACCOUNT_ID/us-east-1
+> ```
+
 Deploy your app:
 ```bash
 node_modules/.bin/cdk-nuxt-deploy-server

@@ -28,6 +28,11 @@ cdk bootstrap aws://123456789012/eu-central-1
 
 **Note:** Replace `ACCOUNT-NUMBER` with your AWS account ID and `REGION` with your desired AWS region (e.g., `eu-central-1`, `us-east-1`).
 
+> When using the [WAF via CloudFrontWafStack](docs/WAF.md) and using a different region than `us-east-1`, you also need to bootstrap `us-east-1` for the WAF resources:
+> ```bash
+> cdk bootstrap aws://YOUR_ACCOUNT_ID/us-east-1
+> ```
+
 For more details, see the [AWS CDK Getting Started Guide](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html).
 
 ---
