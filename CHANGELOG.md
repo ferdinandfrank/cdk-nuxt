@@ -1,6 +1,25 @@
 # Changelog
 
 
+## v2.18.1
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.18.0...v2.18.1)
+
+### 📖 Documentation
+
+- Add LICENSE file and update README to reference it ([7cb2e17](https://github.com/ferdinandfrank/cdk-nuxt/commit/7cb2e17))
+
+### 🤖 CI
+
+- Update publish workflow to add permissions for OIDC ([de927e6](https://github.com/ferdinandfrank/cdk-nuxt/commit/de927e6))
+- Remove NODE_AUTH_TOKEN from npm publish step in workflow ([b5516ee](https://github.com/ferdinandfrank/cdk-nuxt/commit/b5516ee))
+- Update Node.js version to 24 in publish workflow ([9aeebda](https://github.com/ferdinandfrank/cdk-nuxt/commit/9aeebda))
+- Update permissions in publish workflow to allow writing contents ([1c6f9e1](https://github.com/ferdinandfrank/cdk-nuxt/commit/1c6f9e1))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.18.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.17.0...v2.18.0)
