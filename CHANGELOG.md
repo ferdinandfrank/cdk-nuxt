@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v2.18.2
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.18.1...v2.18.2)
+
+### 💅 Refactors
+
+- Remove unused CloudFront script ([b5458fb](https://github.com/ferdinandfrank/cdk-nuxt/commit/b5458fb))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.18.1
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.18.0...v2.18.1)
