@@ -37,10 +37,10 @@ import {
 const app = new App();
 
 // 1. Create WAF stack in us-east-1 (required for CloudFront)
-const wafStack = new CloudFrontWafStack(app, 'MyApp-waf-stack', {
+const wafStack = new CloudFrontWafStack(app, 'my-app-waf-stack', {
   name: 'my-app-waf',
    config: {
-    metricsPrefix: 'MyApp',
+    metricsPrefix: 'my-app',
     rateLimit: 2000,
     // ... other WAF configuration
   },
@@ -60,7 +60,7 @@ const appStackProps: NuxtServerAppStackProps = {
   }
 };
 
-new NuxtServerAppStack(app, 'MyApp-stack', appStackProps);
+new NuxtServerAppStack(app, 'my-app-stack', appStackProps);
 ```
 
 ### Option 2: Custom WAF ARN
@@ -70,7 +70,7 @@ If you already have an existing WAF Web ACL or manage it separately, you can sim
 ```typescript
 import { App, NuxtServerAppStack } from 'cdk-nuxt';
 
-new NuxtServerAppStack(new App(), 'MyApp-stack', {
+new NuxtServerAppStack(new App(), 'my-app-stack', {
   // ... your app configuration
   webAclArn: 'arn:aws:wafv2:us-east-1:123456789012:global/webacl/my-web-acl/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111',
   env: {
@@ -114,7 +114,7 @@ const wafConfig: WafConfig = {
   ],
   
   // CloudWatch Metrics
-  metricsPrefix: 'MyApp',                 // Prefix for CloudWatch metrics
+  metricsPrefix: 'WafMetrics',                 // Prefix for CloudWatch metrics
 };
 ```
 
@@ -129,24 +129,24 @@ When using `CloudFrontWafStack`:
 
 2. **Updating WAF only**: Deploy just the WAF stack
    ```bash
-   cdk deploy MyApp-waf-stack
+   cdk deploy my-app-waf-stack
    ```
 
 3. **Updating the app**: Deploy just the app stack
    ```bash
-   cdk deploy MyApp-stack
+   cdk deploy my-app-stack
    ```
 
 When using a custom WAF ARN, the WAF is managed independently and only the app stack needs to be deployed.
 
 2. **Updating WAF only**: Deploy just the WAF stack
    ```bash
-   cdk deploy MyApp-waf-stack
+   cdk deploy my-app-waf-stack
    ```
 
 3. **Updating the app**: Deploy just the app stack
    ```bash
-   cdk deploy MyApp-stack
+   cdk deploy my-app-stack
    ```
 
 ## Default Configuration for Nuxt
