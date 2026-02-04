@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v2.20.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.19.1...v2.20.0)
+
+### 🚀 Enhancements
+
+- Add support for custom WAF rules with automatic priority assignment ([445249e](https://github.com/ferdinandfrank/cdk-nuxt/commit/445249e))
+
+### 🏡 Chore
+
+- Sync release v2.19.1 back to develop ([1c63c1b](https://github.com/ferdinandfrank/cdk-nuxt/commit/1c63c1b))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.19.1
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.19.0...v2.19.1)
