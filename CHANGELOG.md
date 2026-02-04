@@ -1,6 +1,26 @@
 # Changelog
 
 
+## v2.19.1
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.19.0...v2.19.1)
+
+### 🩹 Fixes
+
+- Refactor stack configuration to use correct variables for project details and tags ([2ce2d61](https://github.com/ferdinandfrank/cdk-nuxt/commit/2ce2d61))
+
+### 📖 Documentation
+
+- Add bootstrap instructions for WAF resources in non-default regions ([b3f27c5](https://github.com/ferdinandfrank/cdk-nuxt/commit/b3f27c5))
+
+### 🏡 Chore
+
+- Sync release v2.19.0 back to develop ([1c03b80](https://github.com/ferdinandfrank/cdk-nuxt/commit/1c03b80))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.19.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.18.2...v2.19.0)
