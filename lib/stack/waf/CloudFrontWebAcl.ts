@@ -213,6 +213,16 @@ export class CloudFrontWebAcl extends Construct {
             });
         }
 
+        // Custom rules (added at the end with automatically assigned priorities)
+        if (config.customRules && config.customRules.length > 0) {
+            config.customRules.forEach((customRule) => {
+                rules.push({
+                    ...customRule,
+                    priority: priority++,
+                } as CfnWebACL.RuleProperty);
+            });
+        }
+
         // Create the Web ACL
         this.webAcl = new CfnWebACL(this, 'WebAcl', {
             name: props.name,

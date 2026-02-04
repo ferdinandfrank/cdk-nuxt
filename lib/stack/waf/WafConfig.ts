@@ -73,6 +73,35 @@ export interface WafConfig {
      * @default 'WafMetrics'
      */
     readonly metricsPrefix?: string;
+
+    /**
+     * Custom WAF rules to add at the end of the rule set.
+     * These rules will be appended after all built-in managed rules.
+     *
+     * Note: Do not set the `priority` field - it will be automatically assigned.
+     *
+     * Example:
+     * ```typescript
+     * customRules: [{
+     *   name: 'BlockSpecificUserAgent',
+     *   statement: {
+     *     byteMatchStatement: {
+     *       searchString: 'BadBot',
+     *       fieldToMatch: { singleHeader: { name: 'user-agent' } },
+     *       textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
+     *       positionalConstraint: 'CONTAINS'
+     *     }
+     *   },
+     *   action: { block: {} },
+     *   visibilityConfig: {
+     *     sampledRequestsEnabled: true,
+     *     cloudWatchMetricsEnabled: true,
+     *     metricName: 'BlockSpecificUserAgent'
+     *   }
+     * }]
+     * ```
+     */
+    readonly customRules?: Omit<import('aws-cdk-lib/aws-wafv2').CfnWebACL.RuleProperty, 'priority'>[];
 }
 
 /**

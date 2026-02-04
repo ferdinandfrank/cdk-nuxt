@@ -115,6 +115,27 @@ const wafConfig: WafConfig = {
   
   // CloudWatch Metrics
   metricsPrefix: 'WafMetrics',                 // Prefix for CloudWatch metrics
+  
+  // Custom Rules (added at the end)
+  customRules: [
+    {
+      name: 'BlockSpecificUserAgent',
+      statement: {
+        byteMatchStatement: {
+          searchString: 'BadBot',
+          fieldToMatch: { singleHeader: { name: 'user-agent' } },
+          textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
+          positionalConstraint: 'CONTAINS'
+        }
+      },
+      action: { block: {} },
+      visibilityConfig: {
+        sampledRequestsEnabled: true,
+        cloudWatchMetricsEnabled: true,
+        metricName: 'BlockSpecificUserAgent'
+      }
+    }
+  ],
 };
 ```
 
@@ -199,6 +220,204 @@ Find metrics in CloudWatch under: `AWS/WAFV2` with the configured `metricsPrefix
 4. **Bot Control only when needed**: Enable Bot Control Rule only if you have a real bot problem (additional costs!).
 
 5. **Geo-blocking with caution**: Only block countries from which you definitely don't expect legitimate users.
+
+## Custom Rules
+
+You can add fully custom WAF rules that will be appended at the end of the built-in rules. Custom rules allow you to implement specific blocking or allowing logic based on your application's needs.
+
+### Important Notes
+
+- **Priority is automatic**: Do not specify the `priority` field - it will be automatically assigned to ensure custom rules are added after all built-in rules.
+- **Rule order matters**: Custom rules are executed in the order they are defined in the array.
+- **Bypass with IP allowlist**: IPs in the `allowedIpAddresses` list will bypass all rules, including custom rules.
+
+### Example: Block Specific User Agent
+
+Block requests from a specific bot based on the User-Agent header:
+
+```typescript
+customRules: [
+  {
+    name: 'BlockSpecificUserAgent',
+    statement: {
+      byteMatchStatement: {
+        searchString: 'BadBot',
+        fieldToMatch: { singleHeader: { name: 'user-agent' } },
+        textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
+        positionalConstraint: 'CONTAINS'
+      }
+    },
+    action: { block: {} },
+    visibilityConfig: {
+      sampledRequestsEnabled: true,
+      cloudWatchMetricsEnabled: true,
+      metricName: 'BlockSpecificUserAgent'
+    }
+  }
+]
+```
+
+### Example: Block Specific URL Path
+
+Block access to an admin path except from allowed IPs:
+
+```typescript
+customRules: [
+  {
+    name: 'BlockAdminPath',
+    statement: {
+      byteMatchStatement: {
+        searchString: '/admin',
+        fieldToMatch: { uriPath: {} },
+        textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
+        positionalConstraint: 'STARTS_WITH'
+      }
+    },
+    action: { block: {} },
+    visibilityConfig: {
+      sampledRequestsEnabled: true,
+      cloudWatchMetricsEnabled: true,
+      metricName: 'BlockAdminPath'
+    }
+  }
+]
+```
+
+### Example: Rate Limit for Specific Endpoint
+
+Apply a more restrictive rate limit to a specific API endpoint:
+
+```typescript
+customRules: [
+  {
+    name: 'RateLimitApiEndpoint',
+    statement: {
+      rateBasedStatement: {
+        limit: 100,  // 100 requests per 5 minutes
+        aggregateKeyType: 'IP',
+        scopeDownStatement: {
+          byteMatchStatement: {
+            searchString: '/api/expensive-operation',
+            fieldToMatch: { uriPath: {} },
+            textTransformations: [{ priority: 0, type: 'NONE' }],
+            positionalConstraint: 'EXACTLY'
+          }
+        }
+      }
+    },
+    action: { block: {} },
+    visibilityConfig: {
+      sampledRequestsEnabled: true,
+      cloudWatchMetricsEnabled: true,
+      metricName: 'RateLimitApiEndpoint'
+    }
+  }
+]
+```
+
+### Example: Allow Only Specific HTTP Methods
+
+Block all requests except GET and POST:
+
+```typescript
+customRules: [
+  {
+    name: 'AllowOnlyGetPost',
+    statement: {
+      notStatement: {
+        statement: {
+          orStatement: {
+            statements: [
+              {
+                byteMatchStatement: {
+                  searchString: 'GET',
+                  fieldToMatch: { method: {} },
+                  textTransformations: [{ priority: 0, type: 'NONE' }],
+                  positionalConstraint: 'EXACTLY'
+                }
+              },
+              {
+                byteMatchStatement: {
+                  searchString: 'POST',
+                  fieldToMatch: { method: {} },
+                  textTransformations: [{ priority: 0, type: 'NONE' }],
+                  positionalConstraint: 'EXACTLY'
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    action: { block: {} },
+    visibilityConfig: {
+      sampledRequestsEnabled: true,
+      cloudWatchMetricsEnabled: true,
+      metricName: 'AllowOnlyGetPost'
+    }
+  }
+]
+```
+
+### Example: Block Requests Without Referer
+
+Require a referer header for certain paths (simple CSRF protection):
+
+```typescript
+customRules: [
+  {
+    name: 'RequireReferer',
+    statement: {
+      andStatement: {
+        statements: [
+          {
+            byteMatchStatement: {
+              searchString: '/api/',
+              fieldToMatch: { uriPath: {} },
+              textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
+              positionalConstraint: 'STARTS_WITH'
+            }
+          },
+          {
+            notStatement: {
+              statement: {
+                sizeConstraintStatement: {
+                  fieldToMatch: { singleHeader: { name: 'referer' } },
+                  comparisonOperator: 'GT',
+                  size: 0,
+                  textTransformations: [{ priority: 0, type: 'NONE' }]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    action: { block: {} },
+    visibilityConfig: {
+      sampledRequestsEnabled: true,
+      cloudWatchMetricsEnabled: true,
+      metricName: 'RequireReferer'
+    }
+  }
+]
+```
+
+### Available Statement Types
+
+AWS WAF supports many statement types for custom rules:
+
+- **ByteMatchStatement**: Match strings in requests (headers, body, URI, etc.)
+- **SqliMatchStatement**: Detect SQL injection attempts
+- **XssMatchStatement**: Detect cross-site scripting attempts
+- **SizeConstraintStatement**: Match based on size of request components
+- **GeoMatchStatement**: Match based on country of origin
+- **IPSetReferenceStatement**: Match against IP sets
+- **RegexPatternSetReferenceStatement**: Match against regex patterns
+- **RateBasedStatement**: Rate limiting per IP
+- **AndStatement**, **OrStatement**, **NotStatement**: Combine multiple statements
+
+For complete documentation, see: [AWS WAF Rule Statement Documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statements.html)
 
 ## Troubleshooting
 
