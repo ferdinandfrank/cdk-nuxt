@@ -381,7 +381,7 @@ const wafStack = new CloudFrontWafStack(app, 'my-company-website-production-waf'
   config: {
     enableCommonRuleSet: true,
     enableKnownBadInputsRuleSet: true,
-    rateLimit: 2000,
+    rateLimit: 300,
   },
   env: {
     account: process.env.AWS_ACCOUNT_ID

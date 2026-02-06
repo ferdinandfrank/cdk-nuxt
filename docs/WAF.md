@@ -41,7 +41,7 @@ const wafStack = new CloudFrontWafStack(app, 'my-app-waf-stack', {
   name: 'my-app-waf',
    config: {
     metricsPrefix: 'my-app',
-    rateLimit: 2000,
+    rateLimit: 300,
     // ... other WAF configuration
   },
   env: {
@@ -100,7 +100,7 @@ const wafConfig: WafConfig = {
   enableBotControlRuleSet: false,         // Bot Control - PAID FEATURE! (disabled by default)
   
   // Rate Limiting
-  rateLimit: 2000,                        // Max 2000 requests per IP in 5 minutes (default)
+  rateLimit: 300,                        // Max 300 requests per IP in 5 minutes (default)
   
   // Geo-blocking
   blockedCountries: ['CN', 'RU', 'KP'],   // ISO 3166-1 alpha-2 country codes
@@ -181,7 +181,7 @@ The default configuration is optimized for Nuxt applications:
   enableAmazonIpReputationRuleSet: true,  // Amazon Threat Intelligence
   enableAnonymousIpRuleSet: false,        // No VPN blocking (to avoid blocking legitimate users)
   enableBotControlRuleSet: false,         // Not enabled (paid feature)
-  rateLimit: 2000,                        // DDoS protection: 2000 requests per IP in 5 minutes
+  rateLimit: 300,                        // DDoS protection: 300 requests per IP in 5 minutes
   metricsPrefix: 'WafMetrics',
 }
 ```

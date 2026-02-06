@@ -94,6 +94,7 @@ export class CloudFrontWebAcl extends Construct {
         }
 
         // Rate limiting (DDoS protection)
+        // Exclude static assets (build files, chunks) from rate limiting
         if (config.rateLimit) {
             rules.push({
                 name: 'RateLimiting',
@@ -102,6 +103,24 @@ export class CloudFrontWebAcl extends Construct {
                     rateBasedStatement: {
                         limit: config.rateLimit,
                         aggregateKeyType: 'IP',
+                        // Exclude requests to /_nuxt/* paths (build files)
+                        scopeDownStatement: {
+                            notStatement: {
+                                statement: {
+                                    byteMatchStatement: {
+                                        searchString: '/_nuxt/',
+                                        fieldToMatch: {
+                                            uriPath: {},
+                                        },
+                                        textTransformations: [{
+                                            priority: 0,
+                                            type: 'NONE',
+                                        }],
+                                        positionalConstraint: 'STARTS_WITH',
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
                 action: {block: {}},

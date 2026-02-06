@@ -45,8 +45,9 @@ export interface WafConfig {
     /**
      * The maximum number of requests allowed from a single IP within a 5-minute period
      * to protect against DDoS attacks.
+     * Does not apply to build files server under the `/_nuxt/` path.
      * Can be disabled by setting it to `undefined`.
-     * @default 2000
+     * @default 300
      */
     readonly rateLimit?: number | undefined;
 
@@ -113,7 +114,7 @@ export const DEFAULT_NUXT_WAF_CONFIG: Partial<WafConfig> = {
     enableAnonymousIpRuleSet: false,
     enableAmazonIpReputationRuleSet: true,
     enableBotControlRuleSet: false,
-    rateLimit: 2000,
+    rateLimit: 300,
     metricsPrefix: 'WafMetrics',
 };
 
