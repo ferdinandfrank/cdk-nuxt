@@ -159,6 +159,10 @@ export class AccessLogsTableConfig {
         name: 'sc_range_end',
         type: Schema.BIG_INT,
       },
+      {
+        name: 'sc_status',
+        type: Schema.INTEGER,
+      }
     ];
   }
 }
