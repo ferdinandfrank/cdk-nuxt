@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v2.21.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.20.0...v2.21.0)
+
+### 🚀 Enhancements
+
+- Add 'sc_status' field to AccessLogsTableConfig ([c61919c](https://github.com/ferdinandfrank/cdk-nuxt/commit/c61919c))
+- Update rate limiting configuration to 300 requests and exclude build files from rate limiting ([c4c0286](https://github.com/ferdinandfrank/cdk-nuxt/commit/c4c0286))
+
+### 🏡 Chore
+
+- Sync release v2.20.0 back to develop ([e2e8a43](https://github.com/ferdinandfrank/cdk-nuxt/commit/e2e8a43))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.20.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.19.1...v2.20.0)
