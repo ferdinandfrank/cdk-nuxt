@@ -161,7 +161,7 @@ export class AccessLogsTableConfig {
       },
       {
         name: 'sc_status',
-        type: Schema.INTEGER,
+        type: Schema.STRING,
       }
     ];
   }
