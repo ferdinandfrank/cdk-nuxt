@@ -309,8 +309,8 @@ export class NuxtServerAppStack extends Stack {
             code: Code.fromAsset(`${functionDirPath}/build/app`, {
                 exclude: ['*.d.ts']
             }),
-            timeout: Duration.minutes(5),
-            memorySize: 128,
+            timeout: Duration.minutes(15),
+            memorySize: 512,
             environment: {
                 STATIC_ASSETS_BUCKET: this.staticAssetsBucket.bucketName,
                 OUTDATED_ASSETS_RETENTION_DAYS: `${props.outdatedAssetsRetentionDays ?? 30}`,

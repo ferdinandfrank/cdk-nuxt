@@ -93,25 +93,39 @@ exports.handler = async (event: any, context: any) => {
         const deleteOlderThan = new Date(currentRevision.getTime() - retainAssetsInDays * ONE_DAY_IN_MILLISECONDS);
 
         console.log(`Starting cleanup of static assets older than ${deleteOlderThan.toISOString()}...`);
+        console.log(`Current revision: ${currentRevision.toISOString()}, Retention days: ${retainAssetsInDays}`);
 
         let assetKeysToDelete: string[] = [];
         let lastToken = undefined;
+        let totalAssetsScanned = 0;
+        let totalBatches = 0;
+        const assetsDeleteResults: DeleteObjectsCommandOutput[] = [];
 
         do {
             const curAssetsResult: ListObjectsV2CommandOutput = await client.send(
                 new ListObjectsV2Command({
                     Bucket: bucketName,
-                    MaxKeys: 250,
+                    Prefix: '_nuxt/', // Only scan _nuxt/ directory where build assets are stored
+                    MaxKeys: 1000,
                     ContinuationToken: lastToken,
                 })
             );
 
-            // Read object metadata in blocks of 10
-            let processableAssets = [...curAssetsResult.Contents!];
+            if (!curAssetsResult.Contents || curAssetsResult.Contents.length === 0) {
+                console.log('No assets found in current batch');
+                lastToken = curAssetsResult.NextContinuationToken;
+                continue;
+            }
+
+            totalAssetsScanned += curAssetsResult.Contents.length;
+            console.log(`Batch ${++totalBatches}: Scanning ${curAssetsResult.Contents.length} assets (Total: ${totalAssetsScanned})`);
+
+            // Read object metadata in blocks of 50 for better performance
+            let processableAssets = [...curAssetsResult.Contents];
 
             while (processableAssets.length > 0) {
-                const assetsBatch = processableAssets.slice(0, 10);
-                processableAssets = processableAssets.slice(10);
+                const assetsBatch = processableAssets.slice(0, 50);
+                processableAssets = processableAssets.slice(50);
 
                 const pendingMetadataRequests = assetsBatch.map(asset =>
                     client.send(
@@ -119,46 +133,57 @@ exports.handler = async (event: any, context: any) => {
                             Bucket: bucketName,
                             Key: asset.Key,
                         })
-                    )
+                    ).catch(error => {
+                        console.warn(`Failed to get metadata for ${asset.Key}:`, error.message);
+                        return { Metadata: {} }; // Return empty metadata on error
+                    })
                 );
 
                 const metadataResults = await Promise.all(pendingMetadataRequests);
 
                 // Assign metadata to assets
-                const metadataByAsset: AssetMetadata[] = (metadataResults.map((metadataResult, index) => ({
-                    key: assetsBatch[index].Key,
-                    metadata: metadataResult.Metadata,
-                })) as AssetMetadata[]);
+                const metadataByAsset: AssetMetadata[] = metadataResults.map((metadataResult, index) => ({
+                    key: assetsBatch[index].Key!,
+                    metadata: metadataResult.Metadata || {},
+                }));
 
                 const outdatedAssetKeys = filterOutdatedAssetKeys(metadataByAsset, deleteOlderThan);
                 assetKeysToDelete.push(...outdatedAssetKeys);
+
+                // Stream deletion: Delete in batches of 1000 to avoid memory issues and timeouts
+                if (assetKeysToDelete.length >= MAX_DELETE_OBJECT_KEYS) {
+                    console.log(`Deleting batch of ${assetKeysToDelete.length} assets...`);
+                    const results = await deleteAssets(assetKeysToDelete, client, bucketName);
+                    assetsDeleteResults.push(...results);
+                    assetKeysToDelete = []; // Clear the array
+                }
             }
             lastToken = curAssetsResult.NextContinuationToken;
         } while (lastToken !== undefined);
 
-        if (assetKeysToDelete.length === 0) {
-            console.log('No outdated assets to delete found');
-            return;
+        // Delete remaining assets
+        if (assetKeysToDelete.length > 0) {
+            console.log(`Deleting final batch of ${assetKeysToDelete.length} assets...`);
+            const results = await deleteAssets(assetKeysToDelete, client, bucketName);
+            assetsDeleteResults.push(...results);
         }
 
-        console.log('Deleting ' + assetKeysToDelete.length + ' assets...');
-
-        // Delete outdated assets (max. 1000 allowed per request)
-        const results = await deleteAssets(assetKeysToDelete, client, bucketName);
-        const failed = results.reduce((previousResult: boolean, currentResult: DeleteObjectsCommandOutput): boolean => {
-            const currentError: boolean = !!(currentResult.Errors && currentResult.Errors.length > 0);
-            if (currentError) {
+        // Check for deletion errors and report
+        const failed = assetsDeleteResults.reduce((previousResult: boolean, currentResult: DeleteObjectsCommandOutput): boolean => {
+            const hasCurrentError: boolean = !!(currentResult.Errors && currentResult.Errors.length > 0);
+            if (hasCurrentError) {
                 console.error('Failed to delete outdated static assets', currentResult.Errors);
             }
-            return previousResult || currentError;
+            return previousResult || hasCurrentError;
         }, false);
 
         if (failed) {
             throw new Error('Failed to delete outdated static assets');
         }
 
-        console.log('Cleanup of old static assets finished');
+        console.log(`Cleanup of old static assets finished. Total assets scanned: ${totalAssetsScanned}`);
     } catch (error) {
         console.error('### unexpected runtime error ###', error);
+        throw error; // Re-throw to mark Lambda as failed
     }
 };
