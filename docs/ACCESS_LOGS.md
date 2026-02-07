@@ -91,49 +91,34 @@ Once enabled, you can query your access logs using Amazon Athena in the AWS Cons
 
 ### Example Queries
 
-#### Get total requests per day
+#### Get most called pages in the last 24 hours
 ```sql
-SELECT 
-  date,
-  COUNT(*) as request_count
-FROM cloudfront_logs_by_date
-GROUP BY date
-ORDER BY date DESC;
+SELECT
+    uri,
+    AVG(time_taken) * 1000 AS avg_time,
+    COUNT(*) AS total_count,
+    100.0 * SUM(CASE WHEN result_type = 'Hit' THEN 1 ELSE 0 END) / COUNT(*) as cache_perc,
+    SUM(CASE WHEN result_type = 'Hit' THEN 1 ELSE 0 END) as hit_count,
+    SUM(CASE WHEN result_type IN ('RefreshHit') THEN 1 ELSE 0 END) as refresh_count,
+    SUM(CASE WHEN result_type IN ('Miss') THEN 1 ELSE 0 END) as miss_count,
+    SUM(CASE WHEN result_type IN ('Error') THEN 1 ELSE 0 END) as error_count
+FROM access_logs_database.access_logs_table_transformed
+WHERE date > now() - interval '1' day and uri not like '/_nuxt%'
+GROUP BY uri
+ORDER BY total_count desc;
 ```
 
-#### Analyze request by status code
+#### Analyze request by status code in the last 24 hours
 ```sql
 SELECT 
-  sc_status,
+  status,
   COUNT(*) as count
-FROM cloudfront_logs
-WHERE date = '2024-01-15'
-GROUP BY sc_status
+FROM access_logs_database.access_logs_table_transformed
+WHERE date > now() - interval '1' day
+GROUP BY status
 ORDER BY count DESC;
 ```
 
-#### Top requested paths
-```sql
-SELECT 
-  cs_uri_stem,
-  COUNT(*) as request_count
-FROM cloudfront_logs
-WHERE date = '2024-01-15'
-GROUP BY cs_uri_stem
-ORDER BY request_count DESC
-LIMIT 10;
-```
-
-#### Analyze requests by cookie
-```sql
-SELECT 
-  cs_cookie,
-  COUNT(*) as request_count
-FROM cloudfront_logs
-WHERE date = '2024-01-15' AND cs_cookie IS NOT NULL
-GROUP BY cs_cookie
-ORDER BY request_count DESC;
-```
 
 ## Cost Considerations
 
