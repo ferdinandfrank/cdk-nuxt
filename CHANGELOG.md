@@ -1,6 +1,30 @@
 # Changelog
 
 
+## v2.22.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.21.0...v2.22.0)
+
+### 🚀 Enhancements
+
+- Enhance static asset cleanup process with improved logging and batch deletion ([09a31da](https://github.com/ferdinandfrank/cdk-nuxt/commit/09a31da))
+
+### 🩹 Fixes
+
+- Change 'sc_status' field type from INTEGER to STRING in AccessLogsTableConfig ([3d6cec6](https://github.com/ferdinandfrank/cdk-nuxt/commit/3d6cec6))
+
+### 📖 Documentation
+
+- Update example queries in ACCESS_LOGS.md for improved clarity and relevance ([1c78e9d](https://github.com/ferdinandfrank/cdk-nuxt/commit/1c78e9d))
+
+### 🏡 Chore
+
+- Sync release v2.21.0 back to develop ([4ea7d73](https://github.com/ferdinandfrank/cdk-nuxt/commit/4ea7d73))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.21.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.20.0...v2.21.0)
