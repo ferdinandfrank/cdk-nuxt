@@ -93,6 +93,28 @@ You must fulfill the following requirements:
 
 > ⚠️ **Disclaimer:** This is not legal advice. Always consult a qualified data protection officer (DPO) or legal counsel before disabling IP anonymization, especially if you operate in the EU or serve EU users.
 
+### accessLogsRawRetention / accessLogsIntermediateRetention / accessLogsTransformedRetention
+
+You can control how long each stage of the access log pipeline is retained in S3 before being automatically deleted via S3 Lifecycle rules.
+
+| Prop | Stage | Default |
+|---|---|---|
+| `accessLogsRawRetention` | Raw, unprocessed CloudFront log files | 7 days |
+| `accessLogsIntermediateRetention` | Intermediate files grouped by date | 7 days |
+| `accessLogsTransformedRetention` | Final Parquet files queryable via Athena | 180 days |
+
+```typescript
+new NuxtServerAppStack(app, 'MyNuxtApp', {
+  // ...other props
+  enableAccessLogsAnalysis: true,
+  accessLogsRawRetention: Duration.days(3),
+  accessLogsIntermediateRetention: Duration.days(3),
+  accessLogsTransformedRetention: Duration.days(90),
+});
+```
+
+> 💡 **Tip:** If you disabled IP anonymization (`anonymizeAccessLogClientIp: false`), setting a short `accessLogsTransformedRetention` (e.g. 30–90 days) is a key measure for GDPR data minimization compliance.
+
 ## Created AWS Resources
 
 When access logs analysis is enabled, the following AWS resources are created:

@@ -755,6 +755,9 @@ export class NuxtServerAppStack extends Stack {
             resourcePrefix: `${this.resourceIdPrefix}-access-logs`,
             accessLogCookies: props.accessLogCookies,
             anonymizeClientIp: props.anonymizeAccessLogClientIp ?? true,
+            expireRawLogsAfter: props.accessLogsRawRetention,
+            expireIntermediateLogsAfter: props.accessLogsIntermediateRetention,
+            expireTransformedLogsAfter: props.accessLogsTransformedRetention,
         });
     }
 }

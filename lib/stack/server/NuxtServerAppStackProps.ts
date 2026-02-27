@@ -1,4 +1,5 @@
 import {type NuxtAppStackProps} from "../NuxtAppStackProps";
+import {Duration} from "aws-cdk-lib";
 
 /**
  * Defines the props required for the {@see NuxtServerAppStack}.
@@ -67,6 +68,24 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
      * Defaults to `true`.
      */
     readonly anonymizeAccessLogClientIp?: boolean;
+
+    /**
+     * The duration after which raw (unprocessed) access logs are deleted from S3.
+     * Defaults to 7 days.
+     */
+    readonly accessLogsRawRetention?: Duration;
+
+    /**
+     * The duration after which intermediate (grouped-by-date) access logs are deleted from S3.
+     * Defaults to 7 days.
+     */
+    readonly accessLogsIntermediateRetention?: Duration;
+
+    /**
+     * The duration after which transformed (Parquet) access logs are deleted from S3.
+     * Defaults to 180 days.
+     */
+    readonly accessLogsTransformedRetention?: Duration;
 
     /**
      * The number of days to retain static assets of outdated deployments in the S3 bucket.
