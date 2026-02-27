@@ -56,13 +56,15 @@ export class CloudFrontAccessLogsAnalysis extends AccessLogsAnalysis {
 
     /**
      * Returns rules to
-     * <ul>replaces the last part of an IP address (IPv4 and IPv6)</ul>
+     * <ul>optionally replace the last part of an IP address (IPv4 and IPv6) when {@link CloudFrontAccessLogsAnalysisProps.anonymizeClientIp} is true (default)</ul>
      * <ul>optionally remove all cookies, that are not whitelisted</ul>
      * <ul>optionally decode quotes in cookies</ul>
      */
     protected getColumnTransformationRules(props: CloudFrontAccessLogsAnalysisProps): ColumnTransformationRules {
         return {
-            request_ip: "regexp_replace(request_ip, '(.*\\.|:).*', '$1xxx')",
+            request_ip: (props.anonymizeClientIp ?? true)
+                ? "regexp_replace(request_ip, '(.*\\.|:).*', '$1xxx')"
+                : undefined,
             cookie: props.accessLogCookies
                 ? `replace( array_join( regexp_extract_all( cookie, '(${props.accessLogCookies.join(
                     '|'

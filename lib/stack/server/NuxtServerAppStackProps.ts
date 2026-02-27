@@ -56,6 +56,19 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
     readonly accessLogCookies?: string[];
 
     /**
+     * Whether to anonymize the client IP address in the access logs by replacing the last octet (IPv4)
+     * or the last group (IPv6) with 'xxx'.
+     *
+     * **DSGVO/Legal note:** IP addresses are considered personal data under the GDPR (cf. CJEU judgment C‑582/14).
+     * If you set this to `false`, you must ensure a legal basis under Art. 6 GDPR (e.g. legitimate interest),
+     * document it in your privacy policy, and limit the retention period to what is strictly necessary.
+     * When in doubt, consult a data protection officer or legal counsel before disabling this option.
+     *
+     * Defaults to `true`.
+     */
+    readonly anonymizeAccessLogClientIp?: boolean;
+
+    /**
      * The number of days to retain static assets of outdated deployments in the S3 bucket.
      * Useful to allow users to still access old assets after a new deployment when they are still browsing on an old version.
      * Defaults to 30 days.

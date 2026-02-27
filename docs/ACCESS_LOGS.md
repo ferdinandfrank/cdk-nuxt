@@ -58,6 +58,41 @@ This is useful for:
 
 **Note:** Only the cookies specified in this array will be logged. This helps reduce log size and focuses on relevant data.
 
+### anonymizeAccessLogClientIp
+
+Controls whether the client IP address is anonymized in the access logs. When enabled (default), the last octet of IPv4 addresses and the last group of IPv6 addresses are replaced with `xxx` before the logs are stored.
+
+```typescript
+new NuxtServerAppStack(app, 'MyNuxtApp', {
+  // ...other props
+  enableAccessLogsAnalysis: true,
+  anonymizeAccessLogClientIp: false, // disable anonymization (see legal note below!)
+});
+```
+
+#### ⚖️ Legal Note – GDPR / DSGVO
+
+> **TL;DR:** IP anonymization is enabled by default. Disable it only if you have a valid legal basis and have updated your privacy policy accordingly.
+
+Under the **General Data Protection Regulation (GDPR)** and the CJEU judgment **C‑582/14 (Breyer v. Germany)**, IP addresses are classified as **personal data**, because they can potentially be used to identify a natural person.
+
+**If you keep `anonymizeAccessLogClientIp: true` (default):**
+- The stored IP addresses can no longer be attributed to an individual.
+- The logs no longer contain personal data in this regard.
+- No specific legal basis is required for IP storage in the logs.
+
+**If you set `anonymizeAccessLogClientIp: false`:**
+You must fulfill the following requirements:
+
+| Requirement | Details |
+|---|---|
+| **Legal basis (Art. 6 GDPR)** | You need a valid legal basis, e.g. *legitimate interest* (Art. 6 para. 1 lit. f) for security monitoring or abuse prevention, or *fulfillment of a legal obligation* (lit. c). |
+| **Privacy policy** | The processing of IP addresses must be documented and communicated to users in your privacy policy (Art. 13/14 GDPR). |
+| **Data minimization (Art. 5 GDPR)** | The retention period must be limited to what is strictly necessary. Set `expireTransformedLogsAfter` to a short period (e.g. 30–90 days). |
+| **Data Processing Agreement** | If a third party processes the data on your behalf (e.g. AWS, Athena), a Data Processing Agreement (DPA/AV-Vertrag) must be in place. |
+
+> ⚠️ **Disclaimer:** This is not legal advice. Always consult a qualified data protection officer (DPO) or legal counsel before disabling IP anonymization, especially if you operate in the EU or serve EU users.
+
 ## Created AWS Resources
 
 When access logs analysis is enabled, the following AWS resources are created:
