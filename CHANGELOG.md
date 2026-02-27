@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v2.23.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.22.0...v2.23.0)
+
+### 🚀 Enhancements
+
+- Add client IP anonymization option in access logs ([598b2dd](https://github.com/ferdinandfrank/cdk-nuxt/commit/598b2dd))
+- Add configurable retention periods for access logs in S3 ([cef817e](https://github.com/ferdinandfrank/cdk-nuxt/commit/cef817e))
+
+### 🏡 Chore
+
+- Sync release v2.22.0 back to develop ([cb172ee](https://github.com/ferdinandfrank/cdk-nuxt/commit/cb172ee))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.22.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.21.0...v2.22.0)
