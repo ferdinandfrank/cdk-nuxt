@@ -15,7 +15,8 @@ import {
     OriginProtocolPolicy, OriginRequestPolicy,
     PriceClass,
     SecurityPolicyProtocol,
-    ViewerProtocolPolicy,OriginRequestCookieBehavior, OriginRequestHeaderBehavior, OriginRequestQueryStringBehavior
+    ViewerProtocolPolicy,OriginRequestCookieBehavior, OriginRequestHeaderBehavior, OriginRequestQueryStringBehavior,
+    FunctionEventType, type FunctionAssociation,
 } from "aws-cdk-lib/aws-cloudfront";
 import {Architecture, Code, Function, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {
@@ -36,6 +37,7 @@ import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import * as path from "path";
 import {writeFileSync, mkdirSync, existsSync} from "fs";
 import {type NuxtServerAppStackProps} from "./NuxtServerAppStackProps";
+import {type NuxtCloudFrontBehavior} from "./NuxtServerAppStackProps";
 import {HttpLambdaIntegration} from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import {DomainName, EndpointType, HttpApi, HttpMethod, SecurityPolicy} from "aws-cdk-lib/aws-apigatewayv2";
 
@@ -449,6 +451,11 @@ export class NuxtServerAppStack extends Stack {
             routingBehaviours = {...routingBehaviours, ...this.createServerRouteBehavior(props.serverRoutes)};
         }
 
+        // Inject custom behaviors (cache policy overrides and/or CloudFront Functions) before static asset behaviors
+        if (props.additionalBehaviors && props.additionalBehaviors.length > 0) {
+            routingBehaviours = {...routingBehaviours, ...this.createAdditionalBehaviors(props.additionalBehaviors)};
+        }
+
         routingBehaviours = {...routingBehaviours, ...this.createStaticAssetsRouteBehavior()};
 
         return routingBehaviours;
@@ -523,6 +530,36 @@ export class NuxtServerAppStack extends Stack {
         
         serverRoutes.forEach(route => {
             rules[route] = this.nuxtServerRouteBehavior;
+        });
+
+        return rules;
+    }
+
+    /**
+     * Creates behaviors for the CloudFront distribution based on the consumer-supplied {@link NuxtCloudFrontBehavior} list.
+     * Each behavior can override the cache policy, attach a CloudFront Function, or both.
+     *
+     * The provided {@link NuxtCloudFrontBehavior.cachePolicy} is used when specified; otherwise the
+     * default Nuxt app cache policy ({@link appCachePolicy}) is used.
+     * The provided {@link NuxtCloudFrontBehavior.fn} is attached as a function association when specified;
+     * otherwise no function association is added.
+     */
+    private createAdditionalBehaviors(behaviors: NuxtCloudFrontBehavior[]): Record<string, BehaviorOptions> {
+        const rules: Record<string, BehaviorOptions> = {};
+
+        behaviors.forEach(behavior => {
+            const functionAssociations: FunctionAssociation[] = behavior.fn
+                ? [{
+                    function: behavior.fn,
+                    eventType: behavior.eventType ?? FunctionEventType.VIEWER_REQUEST,
+                }]
+                : [];
+
+            rules[behavior.pathPattern] = {
+                ...this.nuxtServerRouteBehavior,
+                cachePolicy: behavior.cachePolicy ?? this.appCachePolicy,
+                ...(functionAssociations.length > 0 ? {functionAssociations} : {}),
+            };
         });
 
         return rules;

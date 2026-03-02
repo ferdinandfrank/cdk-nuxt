@@ -192,6 +192,63 @@ serverRoutes: [
 
 ---
 
+### additionalBehaviors
+**Type:** `CloudFrontBehavior[]`  
+**Default:** `undefined`
+
+An array of custom CloudFront behaviors to inject into the distribution for specific path patterns targeting the Nuxt app origin. 
+Use this to override the cache policy, attach a CloudFront Function, or both – independently for each path.
+
+Each element has the following shape:
+
+| Property | Type | Required | Description                                                                                                            |
+|---|---|---|------------------------------------------------------------------------------------------------------------------------|
+| `pathPattern` | `string` | ✅ | CloudFront behavior path pattern (e.g. `/users/*`)                                                                     |
+| `fn` | `cloudfront.Function` | ❌ | Pre-instantiated CloudFront Function to associate (e.g. for URI normalization). Invoked at `VIEWER_REQUEST` by default |
+| `eventType` | `FunctionEventType` | ❌ | Event type at which `fn` is invoked. Only relevant when `fn` is set. Defaults to `VIEWER_REQUEST`                      |
+| `cachePolicy` | `cloudfront.ICachePolicy` | ❌ | Cache policy override for this behavior. Falls back to the default Nuxt app cache policy                               |
+
+**Ordering:** Behaviors are added to the distribution in the order provided, **before** the static-assets behaviors. More specific patterns should be listed first.
+
+**Example – cache policy only (no CloudFront Function):**
+```typescript
+import { CachePolicy } from 'aws-cdk-lib/aws-cloudfront';
+
+additionalBehaviors: [
+  // Completely disable caching for a real-time endpoint
+  { pathPattern: '/api/realtime/*', cachePolicy: CachePolicy.CACHING_DISABLED },
+]
+```
+
+**Example – CloudFront Function only (for URI normalization):**
+```typescript
+import { Function, FunctionCode } from 'aws-cdk-lib/aws-cloudfront';
+
+const normalizeUri = new Function(this, 'NormalizeUri', {
+  code: FunctionCode.fromInline(`
+    function handler(event) {
+      var request = event.request;
+      // Remove trailing slash except for root path
+      request.uri = request.uri.replace(/\\/+$/, '') || '/';
+      return request;
+    }
+  `),
+});
+
+additionalBehaviors: [
+  { pathPattern: '/users/*', fn: normalizeUri },
+]
+```
+
+**Example – both combined:**
+```typescript
+additionalBehaviors: [
+  { pathPattern: '/posts/*', fn: normalizeUri, cachePolicy: CachePolicy.CACHING_DISABLED },
+]
+```
+
+---
+
 ### enableAccessLogsAnalysis
 **Type:** `boolean`  
 **Default:** `false`
@@ -415,6 +472,25 @@ const appStackProps: NuxtServerAppStackProps = {
   serverRoutes: [
     '/sitemap.xml',
     '/_ipx/*',
+  ],
+
+  // Custom CloudFront Behaviors (optional)
+  additionalBehaviors: [
+    // Cache policy only – disable caching for a specific route
+    { pathPattern: '/api/realtime/*', cachePolicy: CachePolicy.CACHING_DISABLED },
+    // CloudFront Function for URI normalization
+    {
+      pathPattern: '/users/*',
+      fn: new Function(stack, 'NormalizeUri', {
+        code: FunctionCode.fromInline(`
+          function handler(event) {
+            var request = event.request;
+            request.uri = request.uri.replace(/\\/+$/, '') || '/';
+            return request;
+          }
+        `),
+      }),
+    },
   ],
 
   // Access Logs

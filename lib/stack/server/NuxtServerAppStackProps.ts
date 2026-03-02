@@ -1,5 +1,40 @@
 import {type NuxtAppStackProps} from "../NuxtAppStackProps";
 import {Duration} from "aws-cdk-lib";
+import {Function as CloudFrontFunction, FunctionEventType, ICachePolicy} from "aws-cdk-lib/aws-cloudfront";
+
+/**
+ * Defines a custom CloudFront behavior attached to a specific path pattern targeting the Nuxt app origin.
+ * Use this to override the cache policy and/or attach a CloudFront Function for specific routes.
+ */
+export interface NuxtCloudFrontBehavior {
+
+    /**
+     * The CloudFront distribution behavior path pattern to which this behavior shall be applied.
+     *
+     * @example '/users/*'
+     */
+    readonly pathPattern: string;
+
+    /**
+     * An optional pre-instantiated CloudFront Function to associate with this behavior.
+     * The function will be invoked on VIEWER_REQUEST events by default.
+     * If omitted, no CloudFront Function is attached.
+     */
+    readonly fn?: CloudFrontFunction;
+
+    /**
+     * The event type at which the CloudFront Function shall be invoked.
+     * Only relevant when {@link fn} is specified.
+     * Defaults to {@link FunctionEventType.VIEWER_REQUEST}.
+     */
+    readonly eventType?: FunctionEventType;
+
+    /**
+     * An optional cache policy to use for this behavior.
+     * Falls back to the default Nuxt app cache policy if not specified.
+     */
+    readonly cachePolicy?: ICachePolicy;
+}
 
 /**
  * Defines the props required for the {@see NuxtServerAppStack}.
@@ -225,6 +260,55 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
      * Examples: `['/sitemap.xml', '/robots.txt', '/__sitemap__/*', '/_ipx/*']`
      */
     readonly serverRoutes?: string[];
+
+    /**
+     * An array of custom CloudFront behaviors to inject into the CloudFront distribution for specific path patterns targeting the Nuxt app origin.
+     * Use this to override the cache policy and/or attach a CloudFront Function for specific routes.
+     *
+     * Each entry can independently define:
+     * - A custom cache policy (e.g., to disable caching for certain paths)
+     * - A CloudFront Function (e.g., for URI normalization at the edge)
+     * - Or both combined
+     *
+     * The behaviors are added to the distribution **before** the static-assets behaviors and in the order
+     * provided, so more specific patterns should be listed first.
+     *
+     * **Example – cache policy only:**
+     * ```typescript
+     * import { CachePolicy } from 'aws-cdk-lib/aws-cloudfront';
+     *
+     * additionalBehaviors: [
+     *   { pathPattern: '/api/realtime/*', cachePolicy: CachePolicy.CACHING_DISABLED },
+     * ]
+     * ```
+     *
+     * **Example – CloudFront Function only:**
+     * ```typescript
+     * import { Function, FunctionCode } from 'aws-cdk-lib/aws-cloudfront';
+     *
+     * const normalizeUri = new Function(this, 'NormalizeUri', {
+     *   code: FunctionCode.fromInline(`
+     *     function handler(event) {
+     *       var request = event.request;
+     *       request.uri = request.uri.replace(/\\/+$/, '') || '/';
+     *       return request;
+     *     }
+     *   `),
+     * });
+     *
+     * additionalBehaviors: [
+     *   { pathPattern: '/users/*', fn: normalizeUri },
+     * ]
+     * ```
+     *
+     * **Example – both combined:**
+     * ```typescript
+     * additionalBehaviors: [
+     *   { pathPattern: '/posts/*', fn: normalizeUri, cachePolicy: CachePolicy.CACHING_DISABLED },
+     * ]
+     * ```
+     */
+    readonly additionalBehaviors?: NuxtCloudFrontBehavior[];
 
     /**
      * The ARN of an existing AWS WAF Web ACL to associate with the CloudFront distribution.
