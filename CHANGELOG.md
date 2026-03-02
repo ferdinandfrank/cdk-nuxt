@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v2.24.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.23.0...v2.24.0)
+
+### 🚀 Enhancements
+
+- Add support for custom CloudFront behaviors with cache policy and function associations ([9b3d06b](https://github.com/ferdinandfrank/cdk-nuxt/commit/9b3d06b))
+
+### 🏡 Chore
+
+- Sync release v2.23.0 back to develop ([bb39c35](https://github.com/ferdinandfrank/cdk-nuxt/commit/bb39c35))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.23.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.22.0...v2.23.0)
