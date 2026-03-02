@@ -15,8 +15,9 @@ import {
     OriginProtocolPolicy, OriginRequestPolicy,
     PriceClass,
     SecurityPolicyProtocol,
-    ViewerProtocolPolicy,OriginRequestCookieBehavior, OriginRequestHeaderBehavior, OriginRequestQueryStringBehavior,
+    ViewerProtocolPolicy, OriginRequestCookieBehavior, OriginRequestHeaderBehavior, OriginRequestQueryStringBehavior,
     FunctionEventType, type FunctionAssociation,
+    Function as CloudFrontFunction,
 } from "aws-cdk-lib/aws-cloudfront";
 import {Architecture, Code, Function, Runtime, Tracing} from "aws-cdk-lib/aws-lambda";
 import {
@@ -539,21 +540,28 @@ export class NuxtServerAppStack extends Stack {
      * Creates behaviors for the CloudFront distribution based on the consumer-supplied {@link NuxtCloudFrontBehavior} list.
      * Each behavior can override the cache policy, attach a CloudFront Function, or both.
      *
+     * When {@link NuxtCloudFrontBehavior.fnCode} is provided, this method creates the `cloudfront.Function`
+     * resource inside the stack itself so that it is always correctly scoped.
+     *
      * The provided {@link NuxtCloudFrontBehavior.cachePolicy} is used when specified; otherwise the
      * default Nuxt app cache policy ({@link appCachePolicy}) is used.
-     * The provided {@link NuxtCloudFrontBehavior.fn} is attached as a function association when specified;
-     * otherwise no function association is added.
      */
     private createAdditionalBehaviors(behaviors: NuxtCloudFrontBehavior[]): Record<string, BehaviorOptions> {
         const rules: Record<string, BehaviorOptions> = {};
 
-        behaviors.forEach(behavior => {
-            const functionAssociations: FunctionAssociation[] = behavior.fn
-                ? [{
-                    function: behavior.fn,
+        behaviors.forEach((behavior, index) => {
+            let functionAssociations: FunctionAssociation[] = [];
+
+            if (behavior.fnCode) {
+                // Create the CloudFront Function inside the stack so it is always correctly scoped.
+                const cfFunction = new CloudFrontFunction(this, `${this.resourceIdPrefix}-behavior-fn-${index}`, {
+                    code: behavior.fnCode,
+                });
+                functionAssociations = [{
+                    function: cfFunction,
                     eventType: behavior.eventType ?? FunctionEventType.VIEWER_REQUEST,
-                }]
-                : [];
+                }];
+            }
 
             rules[behavior.pathPattern] = {
                 ...this.nuxtServerRouteBehavior,

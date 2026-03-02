@@ -193,20 +193,23 @@ serverRoutes: [
 ---
 
 ### additionalBehaviors
-**Type:** `CloudFrontBehavior[]`  
+**Type:** `NuxtCloudFrontBehavior[]`  
 **Default:** `undefined`
 
-An array of custom CloudFront behaviors to inject into the distribution for specific path patterns targeting the Nuxt app origin. 
+An array of custom CloudFront behaviors to inject into the distribution for specific path patterns targeting the Nuxt app origin.
 Use this to override the cache policy, attach a CloudFront Function, or both – independently for each path.
 
 Each element has the following shape:
 
-| Property | Type | Required | Description                                                                                                            |
-|---|---|---|------------------------------------------------------------------------------------------------------------------------|
-| `pathPattern` | `string` | ✅ | CloudFront behavior path pattern (e.g. `/users/*`)                                                                     |
-| `fn` | `cloudfront.Function` | ❌ | Pre-instantiated CloudFront Function to associate (e.g. for URI normalization). Invoked at `VIEWER_REQUEST` by default |
-| `eventType` | `FunctionEventType` | ❌ | Event type at which `fn` is invoked. Only relevant when `fn` is set. Defaults to `VIEWER_REQUEST`                      |
-| `cachePolicy` | `cloudfront.ICachePolicy` | ❌ | Cache policy override for this behavior. Falls back to the default Nuxt app cache policy                               |
+| Property | Type | Required | Description                                                                                                                                                                                                 |
+|---|---|---|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `pathPattern` | `string` | ✅ | CloudFront behavior path pattern (e.g. `/posts/*`)                                                                                                                                                          |
+| `fnCode` | `cloudfront.FunctionCode` | ❌ | The **code** of the CloudFront Function to attach (e.g. for URI normalization). The stack creates the Function resource internally so it is always correctly scoped. Invoked at `VIEWER_REQUEST` by default |
+| `eventType` | `FunctionEventType` | ❌ | Event type at which the function is invoked. Only relevant when `fnCode` is set. Defaults to `VIEWER_REQUEST`                                                                                               |
+| `cachePolicy` | `cloudfront.ICachePolicy` | ❌ | Cache policy override for this behavior. Falls back to the default Nuxt app cache policy                                                                                                                    |
+
+> **Why `fnCode` instead of a `cloudfront.Function` instance?**  
+> CloudFront Function constructs must be created in the scope of a `Stack`. Passing a pre-instantiated `Function` that was created outside the stack (e.g. directly in the `App` scope) causes a CDK `ValidationError`. By accepting only the function **code**, `NuxtServerAppStack` creates the `cloudfront.Function` resource itself, ensuring it is always correctly scoped.
 
 **Ordering:** Behaviors are added to the distribution in the order provided, **before** the static-assets behaviors. More specific patterns should be listed first.
 
@@ -222,28 +225,39 @@ additionalBehaviors: [
 
 **Example – CloudFront Function only (for URI normalization):**
 ```typescript
-import { Function, FunctionCode } from 'aws-cdk-lib/aws-cloudfront';
-
-const normalizeUri = new Function(this, 'NormalizeUri', {
-  code: FunctionCode.fromInline(`
-    function handler(event) {
-      var request = event.request;
-      // Remove trailing slash except for root path
-      request.uri = request.uri.replace(/\\/+$/, '') || '/';
-      return request;
-    }
-  `),
-});
+import { FunctionCode } from 'aws-cdk-lib/aws-cloudfront';
 
 additionalBehaviors: [
-  { pathPattern: '/users/*', fn: normalizeUri },
+  {
+    pathPattern: '/posts/*',
+    fnCode: FunctionCode.fromInline(`
+      function handler(event) {
+        var request = event.request;
+        // Remove trailing slash except for root path
+        request.uri = request.uri.replace(/\\/+$/, '') || '/';
+        return request;
+      }
+    `),
+  },
 ]
 ```
 
 **Example – both combined:**
 ```typescript
+import { FunctionCode, CachePolicy } from 'aws-cdk-lib/aws-cloudfront';
+
 additionalBehaviors: [
-  { pathPattern: '/posts/*', fn: normalizeUri, cachePolicy: CachePolicy.CACHING_DISABLED },
+  {
+    pathPattern: '/posts/*',
+    fnCode: FunctionCode.fromInline(`
+      function handler(event) {
+        var request = event.request;
+        request.uri = request.uri.replace(/\\/+$/, '') || '/';
+        return request;
+      }
+    `),
+    cachePolicy: CachePolicy.CACHING_DISABLED,
+  },
 ]
 ```
 
@@ -478,18 +492,16 @@ const appStackProps: NuxtServerAppStackProps = {
   additionalBehaviors: [
     // Cache policy only – disable caching for a specific route
     { pathPattern: '/api/realtime/*', cachePolicy: CachePolicy.CACHING_DISABLED },
-    // CloudFront Function for URI normalization
+    // CloudFront Function for URI normalization (stack creates the Function resource internally)
     {
-      pathPattern: '/users/*',
-      fn: new Function(stack, 'NormalizeUri', {
-        code: FunctionCode.fromInline(`
-          function handler(event) {
-            var request = event.request;
-            request.uri = request.uri.replace(/\\/+$/, '') || '/';
-            return request;
-          }
-        `),
-      }),
+      pathPattern: '/posts/*',
+      fnCode: FunctionCode.fromInline(`
+        function handler(event) {
+          var request = event.request;
+          request.uri = request.uri.replace(/\\/+$/, '') || '/';
+          return request;
+        }
+      `),
     },
   ],
 

@@ -1,6 +1,6 @@
 import {type NuxtAppStackProps} from "../NuxtAppStackProps";
 import {Duration} from "aws-cdk-lib";
-import {Function as CloudFrontFunction, FunctionEventType, ICachePolicy} from "aws-cdk-lib/aws-cloudfront";
+import {FunctionCode, FunctionEventType, ICachePolicy} from "aws-cdk-lib/aws-cloudfront";
 
 /**
  * Defines a custom CloudFront behavior attached to a specific path pattern targeting the Nuxt app origin.
@@ -11,20 +11,34 @@ export interface NuxtCloudFrontBehavior {
     /**
      * The CloudFront distribution behavior path pattern to which this behavior shall be applied.
      *
-     * @example '/users/*'
+     * @example '/posts/*'
      */
     readonly pathPattern: string;
 
     /**
-     * An optional pre-instantiated CloudFront Function to associate with this behavior.
+     * The code of the CloudFront Function to associate with this behavior.
+     * The stack will create the CloudFront Function resource internally.
      * The function will be invoked on VIEWER_REQUEST events by default.
      * If omitted, no CloudFront Function is attached.
+     *
+     * @example
+     * ```typescript
+     * import { FunctionCode } from 'aws-cdk-lib/aws-cloudfront';
+     *
+     * fnCode: FunctionCode.fromInline(`
+     *   function handler(event) {
+     *     var request = event.request;
+     *     request.uri = request.uri.replace(/\/+$/, '') || '/';
+     *     return request;
+     *   }
+     * `)
+     * ```
      */
-    readonly fn?: CloudFrontFunction;
+    readonly fnCode?: FunctionCode;
 
     /**
      * The event type at which the CloudFront Function shall be invoked.
-     * Only relevant when {@link fn} is specified.
+     * Only relevant when {@link fnCode} is specified.
      * Defaults to {@link FunctionEventType.VIEWER_REQUEST}.
      */
     readonly eventType?: FunctionEventType;
