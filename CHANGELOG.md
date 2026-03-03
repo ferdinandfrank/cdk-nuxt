@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v2.24.1
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.24.0...v2.24.1)
+
+### 🩹 Fixes
+
+- Update CloudFront behavior configuration to use fnCode for function associations to use correct stack scope ([9b7af3d](https://github.com/ferdinandfrank/cdk-nuxt/commit/9b7af3d))
+
+### 🏡 Chore
+
+- Sync release v2.24.0 back to develop ([3678466](https://github.com/ferdinandfrank/cdk-nuxt/commit/3678466))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.24.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.23.0...v2.24.0)
