@@ -136,6 +136,26 @@ The memory size (in MB) to allocate to the Nuxt app's Lambda function.
 
 ---
 
+### timeout
+**Type:** `Duration`  
+**Default:** `Duration.seconds(10)`
+
+The maximum execution duration for the Nuxt app's Lambda function.
+
+**Use case:** Increase this if your app performs long-running SSR operations such as large data fetching or complex server-side computations.
+
+> **Note:** The CloudFront origin read timeout is capped at **60 seconds**. Values above 60 seconds only benefit direct Lambda invocations and have no effect on requests arriving via CloudFront.
+
+**Examples:**
+```typescript
+import { Duration } from 'aws-cdk-lib';
+
+timeout: Duration.seconds(30)  // 30-second timeout
+timeout: Duration.minutes(1)   // 60-second timeout (CloudFront maximum)
+```
+
+---
+
 ### enableTracing
 **Type:** `boolean`  
 **Default:** `false`
@@ -477,6 +497,7 @@ const appStackProps: NuxtServerAppStackProps = {
 
   // Optional Properties
   memorySize: 1792,
+  timeout: Duration.seconds(10),
   enableTracing: true,
   enableApi: true,
   enableSitemap: false,

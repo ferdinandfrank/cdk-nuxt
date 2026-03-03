@@ -80,6 +80,15 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
     readonly memorySize?: number;
 
     /**
+     * The maximum execution duration for the Nuxt app's Lambda function.
+     * Increase this if your app performs long-running SSR operations (e.g. large data fetching).
+     * Note: The CloudFront read timeout is capped at 60 seconds, so values above 60 seconds
+     * only benefit direct invocations, not requests arriving via CloudFront.
+     * Defaults to {@link Duration.seconds(10)}.
+     */
+    readonly timeout?: Duration;
+
+    /**
      * Whether to enable AWS X-Ray for the Nuxt Lambda function.
      */
     readonly enableTracing?: boolean;

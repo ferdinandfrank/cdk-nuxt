@@ -276,7 +276,7 @@ export class NuxtServerAppStack extends Stack {
             code: Code.fromAsset(`${props.rootDir ?? '.' }/.output/server`, {
                 exclude: ['**.svg', '**.ico', '**.png', '**.jpg', '**.js.map'],
             }),
-            timeout: Duration.seconds(10),
+            timeout: props.timeout ?? Duration.seconds(10),
             memorySize: props.memorySize ?? 1792,
             allowPublicSubnet: false,
             tracing: props.enableTracing ? Tracing.ACTIVE : Tracing.DISABLED,
