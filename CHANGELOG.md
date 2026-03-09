@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v2.25.1
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.25.0...v2.25.1)
+
+### 📖 Documentation
+
+- Add repository guidelines and project structure documentation ([f00610b](https://github.com/ferdinandfrank/cdk-nuxt/commit/f00610b))
+
+### 🏡 Chore
+
+- Sync release v2.25.0 back to develop ([2a200f9](https://github.com/ferdinandfrank/cdk-nuxt/commit/2a200f9))
+- Update AWS CDK and related dependencies to version 2.241.0 ([d51441c](https://github.com/ferdinandfrank/cdk-nuxt/commit/d51441c))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.25.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.24.1...v2.25.0)
