@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v2.25.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.24.1...v2.25.0)
+
+### 🚀 Enhancements
+
+- Add configurable timeout for Nuxt app's Lambda function ([10595a7](https://github.com/ferdinandfrank/cdk-nuxt/commit/10595a7))
+
+### 🏡 Chore
+
+- Sync release v2.24.1 back to develop ([c933fee](https://github.com/ferdinandfrank/cdk-nuxt/commit/c933fee))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.24.1
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.24.0...v2.24.1)
