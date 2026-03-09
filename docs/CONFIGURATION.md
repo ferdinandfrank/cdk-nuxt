@@ -291,7 +291,7 @@ Whether to enable access logs analysis for the Nuxt app's CloudFront distributio
 
 **Additional dependency required:**
 ```bash
-pnpm add -D @aws-cdk/aws-glue-alpha@2.214.0-alpha.0
+pnpm add -D @aws-cdk/aws-glue-alpha@2.241.0-alpha.0
 ```
 
 See [Access Logs Documentation](ACCESS_LOGS.md) for details.
@@ -549,4 +549,3 @@ const appStackProps: NuxtServerAppStackProps = {
 
 new NuxtServerAppStack(app, `${appStackProps.project}-${appStackProps.service}-${appStackProps.environment}-stack`, appStackProps);
 ```
-

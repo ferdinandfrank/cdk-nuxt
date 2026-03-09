@@ -27,13 +27,13 @@ When enabling access logs analysis, you need to install an additional dependency
 
 ```bash
 # Using pnpm
-pnpm add -D @aws-cdk/aws-glue-alpha@2.214.0-alpha.0
+pnpm add -D @aws-cdk/aws-glue-alpha@2.241.0-alpha.0
 
 # Using npm
-npm install --save-dev @aws-cdk/aws-glue-alpha@2.214.0-alpha.0
+npm install --save-dev @aws-cdk/aws-glue-alpha@2.241.0-alpha.0
 
 # Using yarn
-yarn add -D @aws-cdk/aws-glue-alpha@2.214.0-alpha.0
+yarn add -D @aws-cdk/aws-glue-alpha@2.241.0-alpha.0
 ```
 
 ## Configuration Options
@@ -237,4 +237,3 @@ new NuxtServerAppStack(app, 'MyNuxtApp', {
 ```
 
 **Warning:** This will delete the Athena database and tables. The S3 bucket with logs will be retained but can be manually deleted if no longer needed.
-

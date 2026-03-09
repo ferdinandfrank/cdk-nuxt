@@ -47,18 +47,20 @@ Install the package and its peer dependencies:
 
 ```bash
 # Using pnpm (recommended)
-pnpm add -D cdk-nuxt aws-cdk@^2.214.0 aws-cdk-lib@^2.214.0 constructs@^10.4.2 typescript ts-node
+pnpm add -D cdk-nuxt aws-cdk@^2.1110.0 aws-cdk-lib@^2.241.0 constructs@^10.5.0 typescript ts-node
 
 # Using npm
-npm install --save-dev cdk-nuxt aws-cdk@^2.214.0 aws-cdk-lib@^2.214.0 constructs@^10.4.2 typescript ts-node
+npm install --save-dev cdk-nuxt aws-cdk@^2.1110.0 aws-cdk-lib@^2.241.0 constructs@^10.5.0 typescript ts-node
 
 # Using yarn
-yarn add -D cdk-nuxt aws-cdk@^2.214.0 aws-cdk-lib@^2.214.0 constructs@^10.4.2 typescript ts-node
+yarn add -D cdk-nuxt aws-cdk@^2.1110.0 aws-cdk-lib@^2.241.0 constructs@^10.5.0 typescript ts-node
 ```
+
+The AWS CDK CLI must be at least `2.1107.0` (check with `pnpm cdk --version`).
 
 **Optional:** If you plan to enable Access Logs Analysis:
 ```bash
-pnpm add -D @aws-cdk/aws-glue-alpha@2.214.0-alpha.0
+pnpm add -D @aws-cdk/aws-glue-alpha@2.241.0-alpha.0
 ```
 
 ### 2. Configure Nuxt
