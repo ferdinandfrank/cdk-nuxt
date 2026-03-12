@@ -50,6 +50,7 @@ export interface StaticAssetConfig {
 export const getNuxtAppStaticAssetConfigs = (rootDir: string = '.'): StaticAssetConfig[] => {
     const customAssetsSourcePath = `${rootDir}/.output/public`;
     const customAssetsTargetPath = '/';
+    const latestBuildManifestPattern = '_nuxt/builds/latest.json';
 
     const configs: StaticAssetConfig[] = [
 
@@ -59,13 +60,29 @@ export const getNuxtAppStaticAssetConfigs = (rootDir: string = '.'): StaticAsset
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
             contentType: 'text/plain; charset=UTF-8',
-            // Longer cache control since we automatically invalidate the revision file on every deployment
+            // Internal deployment marker used by the cleanup job to identify the newest uploaded asset revision.
             cacheControl: [
                 CacheControl.setPublic(),
                 CacheControl.maxAge(Duration.seconds(10)),
                 CacheControl.sMaxAge(Duration.days(14)),
             ],
-            invalidateOnChange: true
+        },
+
+        // Nuxt uses this file to detect that a newer deployment exists on the client.
+        // It is not build-hashed and therefore must not be treated as immutable.
+        // We also invalidate it on every deployment so Nuxt's outdated-build detection and any configured
+        // shell HTML invalidations are switched only after the new Lambda and assets are in place.
+        {
+            pattern: latestBuildManifestPattern,
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            cacheControl: [
+                CacheControl.setPublic(),
+                CacheControl.maxAge(Duration.seconds(0)),
+                CacheControl.sMaxAge(Duration.seconds(0)),
+                CacheControl.fromString('must-revalidate'),
+            ],
+            invalidateOnChange: true,
         },
 
         // Build files
@@ -73,6 +90,7 @@ export const getNuxtAppStaticAssetConfigs = (rootDir: string = '.'): StaticAsset
             pattern: '_nuxt/*',
             source: customAssetsSourcePath,
             target: customAssetsTargetPath,
+            exclude: [latestBuildManifestPattern],
 
             // Build assets are hashed whereby they are immutable and can be cached for a long time
             cacheControl: [

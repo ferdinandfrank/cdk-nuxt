@@ -153,6 +153,15 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
     readonly outdatedAssetsRetentionDays?: number;
 
     /**
+     * CloudFront paths to invalidate after each deployment.
+     * Useful for long-lived cached HTML or shared shell responses that should switch to the new deployment immediately
+     * while keeping immutable `/_nuxt/*` assets cached for a long time.
+     *
+     * Example: `['/login', '/register']`
+     */
+    readonly invalidatePathsOnDeploy?: string[];
+
+    /**
      * An array of HTTP headers to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
      * This should only be used for headers that do not affect the response.
      *

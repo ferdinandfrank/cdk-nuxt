@@ -46,6 +46,7 @@ import {DomainName, EndpointType, HttpApi, HttpMethod, SecurityPolicy} from "aws
  * CDK stack to deploy a dynamic Nuxt app (target=server) on AWS with Lambda, ApiGateway, S3 and CloudFront.
  */
 export class NuxtServerAppStack extends Stack {
+    private static readonly LATEST_BUILD_MANIFEST_INVALIDATION_PATH = '/_nuxt/builds/latest.json';
 
     /**
      * The identifier prefix of the resources created by the stack.
@@ -61,6 +62,13 @@ export class NuxtServerAppStack extends Stack {
      * @private
      */
     private readonly deploymentRevision: string;
+
+    /**
+     * Additional CloudFront paths to invalidate after a deployment.
+     *
+     * @private
+     */
+    private readonly deployInvalidationPaths: string[];
 
     /**
      * The identity to use for accessing the deployment assets on S3.
@@ -155,6 +163,7 @@ export class NuxtServerAppStack extends Stack {
 
         // Nuxt app resources
         this.deploymentRevision = this.createDeploymentRevision(props);
+        this.deployInvalidationPaths = this.normalizeInvalidationPaths(props.invalidatePathsOnDeploy);
         this.staticAssetConfigs = getNuxtAppStaticAssetConfigs(props.rootDir ?? '.');
         this.cdnAccessIdentity = this.createCdnAccessIdentity();
         this.staticAssetsBucket = this.createStaticAssetsBucket();
@@ -405,6 +414,22 @@ export class NuxtServerAppStack extends Stack {
     }
 
     /**
+     * Normalizes CloudFront invalidation paths by trimming whitespace, ensuring a leading slash, and removing duplicates.
+     *
+     * @private
+     */
+    private normalizeInvalidationPaths(paths: string[] | undefined): string[] {
+        return Array.from(
+            new Set(
+                (paths ?? [])
+                    .map(path => path.trim())
+                    .filter((path): path is string => path.length > 0)
+                    .map(path => path.startsWith('/') ? path : `/${path}`)
+            )
+        );
+    }
+
+    /**
      * Creates the CloudFront distribution behavior origin to route incoming requests to the Nuxt render Lambda function (via API gateway).
      */
     private createNuxtAppHttpOrigin(): HttpOrigin {
@@ -648,8 +673,15 @@ export class NuxtServerAppStack extends Stack {
         });
 
         // Returns a deployment for every configured static asset type to respect the different cache settings
-        return this.staticAssetConfigs.filter(asset => existsSync(asset.source)).map((asset, assetIndex) => {
-            return new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
+        const deployments = this.staticAssetConfigs.filter(asset => existsSync(asset.source)).map((asset, assetIndex) => {
+            const distributionPaths = asset.invalidateOnChange
+                ? this.normalizeInvalidationPaths([
+                    NuxtServerAppStack.LATEST_BUILD_MANIFEST_INVALIDATION_PATH,
+                    ...this.deployInvalidationPaths,
+                ])
+                : undefined;
+
+            const deployment = new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
                 sources: [Source.asset(asset.source, {
                     exclude: asset.exclude,
                 })],
@@ -662,7 +694,7 @@ export class NuxtServerAppStack extends Stack {
                 cacheControl: asset.cacheControl,
                 contentType: asset.contentType,
                 distribution: asset.invalidateOnChange ? this.cdn : undefined,
-                distributionPaths: asset.invalidateOnChange ? [`/${asset.pattern}`] : undefined,
+                distributionPaths: distributionPaths,
                 logGroup: logGroup,
 
                 metadata: {
@@ -673,8 +705,28 @@ export class NuxtServerAppStack extends Stack {
                 // Some Nuxt applications have a lot of assets to deploy whereby the function might run out of memory.
                 // Additionally, a high memory limit might speed up deployments.
                 memoryLimit: 1792
-            })
+            });
+
+            return {asset, deployment};
         });
+
+        const latestBuildDeployment = deployments.find(({asset}) => asset.pattern === '_nuxt/builds/latest.json')?.deployment;
+        const preLambdaDeployments = deployments
+            .filter(({asset}) => asset.pattern !== '_nuxt/builds/latest.json')
+            .map(({deployment}) => deployment);
+
+        preLambdaDeployments.forEach(deployment => {
+            this.appLambdaFunction.node.addDependency(deployment);
+        });
+
+        if (latestBuildDeployment) {
+            preLambdaDeployments.forEach(deployment => {
+                latestBuildDeployment.node.addDependency(deployment);
+            });
+            latestBuildDeployment.node.addDependency(this.appLambdaFunction);
+        }
+
+        return deployments.map(({deployment}) => deployment);
     }
 
     /**

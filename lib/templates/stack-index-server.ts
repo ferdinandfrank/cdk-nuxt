@@ -150,6 +150,14 @@ const appStackProps: NuxtServerAppStackProps = {
     outdatedAssetsRetentionDays: 30,
 
     /**
+     * CloudFront paths to invalidate after each deployment.
+     * Useful for long-lived cached HTML or shared shell responses that should immediately switch to the new deployment.
+     *
+     * Examples: ['/login', '/register']
+     */
+    invalidatePathsOnDeploy: [],
+
+    /**
      * An array of HTTP headers to forward to the Nuxt app on origin requests without affecting the cache key at CloudFront edge locations.
      * This should only be used for headers that do not affect the response.
      *

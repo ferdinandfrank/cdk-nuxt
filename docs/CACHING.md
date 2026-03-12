@@ -262,9 +262,14 @@ API endpoints (if `enableApi: true`):
 
 ### Issue: Pages not updating after deployment
 **Cause:** Aggressive caching
-**Solution:** Invalidate CloudFront cache after deployment:
+**Solution:** Either invalidate CloudFront cache after deployment:
 ```bash
 aws cloudfront create-invalidation --distribution-id <ID> --paths "/*"
+```
+
+Or configure targeted shell invalidation in the stack so only the cached HTML paths are refreshed on each deploy:
+```typescript
+invalidatePathsOnDeploy: ['/login', '/register']
 ```
 
 ### Issue: High Lambda costs
@@ -293,4 +298,3 @@ aws cloudfront create-invalidation --distribution-id <ID> --paths "/*"
 For advanced use cases, you can create custom CloudFront cache policies by extending the `NuxtServerAppStack` class and overriding the CloudFront configuration.
 
 Refer to the [AWS CloudFront documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html) for more details on cache policies.
-

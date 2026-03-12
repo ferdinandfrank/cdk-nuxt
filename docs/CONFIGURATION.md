@@ -328,6 +328,29 @@ The number of days to retain static assets of outdated deployments in the S3 buc
 
 ---
 
+### invalidatePathsOnDeploy
+**Type:** `string[]`  
+**Default:** `[]`
+
+CloudFront paths to invalidate after each deployment.
+
+**Use case:** Keep long-lived cached HTML or shared shell responses for cost reasons, but switch those paths to the new deployment immediately after rollout without invalidating immutable `/_nuxt/*` assets.
+
+**Examples:**
+```typescript
+invalidatePathsOnDeploy: [
+  '/login',
+  '/register'
+]
+```
+
+**Notes:**
+- Paths are normalized to start with `/`.
+- `/_nuxt/builds/latest.json` is refreshed automatically on deploy and is the deployment freshness signal used for Nuxt's outdated-build detection.
+- Prefer invalidating the normalized shell path instead of every user-facing route when you use a shared shell strategy.
+
+---
+
 ## Caching Configuration
 
 For detailed information about caching configuration, see the [Caching Documentation](CACHING.md).
