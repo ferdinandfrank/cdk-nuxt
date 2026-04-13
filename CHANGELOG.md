@@ -1,6 +1,26 @@
 # Changelog
 
 
+## v2.26.1
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.26.0...v2.26.1)
+
+### 🩹 Fixes
+
+- Serve PWA service worker scripts with no-cache headers ([7300fff](https://github.com/ferdinandfrank/cdk-nuxt/commit/7300fff))
+
+### 💅 Refactors
+
+- Decouple consumer CloudFront invalidations from latest.json ([f08dc2e](https://github.com/ferdinandfrank/cdk-nuxt/commit/f08dc2e))
+
+### 🏡 Chore
+
+- Sync release v2.26.0 back to develop ([6df04c9](https://github.com/ferdinandfrank/cdk-nuxt/commit/6df04c9))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.26.0
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.25.1...v2.26.0)
