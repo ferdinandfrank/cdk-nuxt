@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v2.26.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.25.1...v2.26.0)
+
+### 🚀 Enhancements
+
+- Add targeted CloudFront path invalidation and latest build manifest caching logic ([e6e2f95](https://github.com/ferdinandfrank/cdk-nuxt/commit/e6e2f95))
+
+### 🏡 Chore
+
+- Sync release v2.25.1 back to develop ([be7687d](https://github.com/ferdinandfrank/cdk-nuxt/commit/be7687d))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.25.1
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.25.0...v2.25.1)
