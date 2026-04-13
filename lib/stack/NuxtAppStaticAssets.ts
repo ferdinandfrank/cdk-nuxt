@@ -35,11 +35,6 @@ export interface StaticAssetConfig {
      * The cache settings to use for the uploaded source files when accessing them on the target path with the specified pattern.
      */
     cacheControl: CacheControl[],
-
-    /**
-     * Whether to invalidate the files matching the config's pattern in the distribution's edge caches after the files are uploaded to the destination bucket.
-     */
-    invalidateOnChange?: boolean;
 }
 
 /**
@@ -70,8 +65,9 @@ export const getNuxtAppStaticAssetConfigs = (rootDir: string = '.'): StaticAsset
 
         // Nuxt uses this file to detect that a newer deployment exists on the client.
         // It is not build-hashed and therefore must not be treated as immutable.
-        // We also invalidate it on every deployment so Nuxt's outdated-build detection and any configured
-        // shell HTML invalidations are switched only after the new Lambda and assets are in place.
+        // No CloudFront invalidation is needed: with s-maxage=0 + must-revalidate, every edge
+        // request triggers a conditional GET against S3 and the new ETag is picked up on the
+        // first request after the deployment.
         {
             pattern: latestBuildManifestPattern,
             source: customAssetsSourcePath,
@@ -82,7 +78,6 @@ export const getNuxtAppStaticAssetConfigs = (rootDir: string = '.'): StaticAsset
                 CacheControl.sMaxAge(Duration.seconds(0)),
                 CacheControl.fromString('must-revalidate'),
             ],
-            invalidateOnChange: true,
         },
 
         // Build files

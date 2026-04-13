@@ -46,7 +46,18 @@ import {DomainName, EndpointType, HttpApi, HttpMethod, SecurityPolicy} from "aws
  * CDK stack to deploy a dynamic Nuxt app (target=server) on AWS with Lambda, ApiGateway, S3 and CloudFront.
  */
 export class NuxtServerAppStack extends Stack {
-    private static readonly LATEST_BUILD_MANIFEST_INVALIDATION_PATH = '/_nuxt/builds/latest.json';
+    /**
+     * The static asset pattern whose post-Lambda {@link BucketDeployment} acts as the carrier for
+     * consumer-supplied CloudFront invalidations (via {@link NuxtServerAppStackProps.invalidatePathsOnDeploy}).
+     *
+     * We attach {@link BucketDeployment.distributionPaths} to this specific deployment so that:
+     *   - CDK reuses its built-in CloudFront invalidation mechanism (no new construct types),
+     *   - the invalidation fires AFTER the new Lambda and hashed assets are in place, since this
+     *     deployment is already part of the post-Lambda deployment phase in {@link configureDeployments},
+     *   - the files managed by {@link StaticAssetConfig} entries themselves are never invalidated
+     *     (they are either build-hashed immutable assets or served with `s-maxage=0, must-revalidate`).
+     */
+    private static readonly CONSUMER_INVALIDATION_CARRIER_PATTERN = '_nuxt/builds/latest.json';
 
     /**
      * The identifier prefix of the resources created by the stack.
@@ -672,14 +683,15 @@ export class NuxtServerAppStack extends Stack {
             removalPolicy: RemovalPolicy.DESTROY,
         });
 
-        // Returns a deployment for every configured static asset type to respect the different cache settings
+        // Returns a deployment for every configured static asset type to respect the different cache settings.
+        // Consumer-supplied CloudFront invalidation paths (props.invalidatePathsOnDeploy) are attached to a
+        // single, specific deployment — the "carrier" identified by CONSUMER_INVALIDATION_CARRIER_PATTERN —
+        // so the invalidation piggybacks on CDK's existing BucketDeployment invalidation mechanism while
+        // firing at the correct point in the deployment phase (see the post-Lambda logic below).
+        const hasConsumerInvalidations = this.deployInvalidationPaths.length > 0;
         const deployments = this.staticAssetConfigs.filter(asset => existsSync(asset.source)).map((asset, assetIndex) => {
-            const distributionPaths = asset.invalidateOnChange
-                ? this.normalizeInvalidationPaths([
-                    NuxtServerAppStack.LATEST_BUILD_MANIFEST_INVALIDATION_PATH,
-                    ...this.deployInvalidationPaths,
-                ])
-                : undefined;
+            const isInvalidationCarrier = asset.pattern === NuxtServerAppStack.CONSUMER_INVALIDATION_CARRIER_PATTERN;
+            const attachConsumerInvalidations = isInvalidationCarrier && hasConsumerInvalidations;
 
             const deployment = new BucketDeployment(this, `${this.resourceIdPrefix}-assets-deployment-${assetIndex}`, {
                 sources: [Source.asset(asset.source, {
@@ -693,8 +705,8 @@ export class NuxtServerAppStack extends Stack {
                 include: [asset.pattern],
                 cacheControl: asset.cacheControl,
                 contentType: asset.contentType,
-                distribution: asset.invalidateOnChange ? this.cdn : undefined,
-                distributionPaths: distributionPaths,
+                distribution: attachConsumerInvalidations ? this.cdn : undefined,
+                distributionPaths: attachConsumerInvalidations ? this.deployInvalidationPaths : undefined,
                 logGroup: logGroup,
 
                 metadata: {
