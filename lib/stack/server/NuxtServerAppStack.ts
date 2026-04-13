@@ -710,21 +710,32 @@ export class NuxtServerAppStack extends Stack {
             return {asset, deployment};
         });
 
-        const latestBuildDeployment = deployments.find(({asset}) => asset.pattern === '_nuxt/builds/latest.json')?.deployment;
+        // Patterns that must be uploaded AFTER the new Lambda + hashed assets are in place.
+        // These are non-hashed "switchover" files that flip clients onto the new build:
+        //   - latest.json: Nuxt's outdated-build manifest pointer
+        //   - sw.js / registerSW.js: PWA service worker bootstrap; once a client picks up the
+        //     new sw.js it will try to precache the new chunks, which must already exist
+        const postLambdaPatterns = new Set([
+            '_nuxt/builds/latest.json',
+            'sw.js',
+            'registerSW.js',
+        ]);
+
+        const postLambdaDeployments = deployments.filter(({asset}) => postLambdaPatterns.has(asset.pattern));
         const preLambdaDeployments = deployments
-            .filter(({asset}) => asset.pattern !== '_nuxt/builds/latest.json')
+            .filter(({asset}) => !postLambdaPatterns.has(asset.pattern))
             .map(({deployment}) => deployment);
 
         preLambdaDeployments.forEach(deployment => {
             this.appLambdaFunction.node.addDependency(deployment);
         });
 
-        if (latestBuildDeployment) {
-            preLambdaDeployments.forEach(deployment => {
-                latestBuildDeployment.node.addDependency(deployment);
+        postLambdaDeployments.forEach(({deployment}) => {
+            preLambdaDeployments.forEach(preLambda => {
+                deployment.node.addDependency(preLambda);
             });
-            latestBuildDeployment.node.addDependency(this.appLambdaFunction);
-        }
+            deployment.node.addDependency(this.appLambdaFunction);
+        });
 
         return deployments.map(({deployment}) => deployment);
     }

@@ -100,6 +100,44 @@ export const getNuxtAppStaticAssetConfigs = (rootDir: string = '.'): StaticAsset
             ],
         },
 
+        // Service worker bootstrap scripts emitted by PWA plugins (e.g. @vite-pwa/nuxt).
+        // These filenames are stable across deployments — they are NOT content-hashed — and
+        // they reference the hashed precache manifest baked into them. They MUST NOT be cached
+        // by the browser or CloudFront, otherwise:
+        //   - browsers keep registering the old service worker for up to max-age, so users
+        //     never receive new deployments until the cache expires,
+        //   - registration.update() and periodic update checks revalidate against a stale
+        //     edge copy and never observe new builds.
+        // The W3C service worker spec already caps browser caching of the SW script at 24 h,
+        // but explicit no-cache is the documented best practice (web.dev, MDN, Workbox docs).
+        // No CloudFront invalidation is needed: with s-maxage=0 + must-revalidate, every edge
+        // request triggers a conditional GET against S3 and the new ETag is picked up on the
+        // first request after the deployment.
+        // Two separate entries (one per file) because the pattern is also used as a CloudFront
+        // path pattern and CloudFront does not support brace expansion.
+        {
+            pattern: 'sw.js',
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            cacheControl: [
+                CacheControl.setPublic(),
+                CacheControl.maxAge(Duration.seconds(0)),
+                CacheControl.sMaxAge(Duration.seconds(0)),
+                CacheControl.fromString('must-revalidate'),
+            ],
+        },
+        {
+            pattern: 'registerSW.js',
+            source: customAssetsSourcePath,
+            target: customAssetsTargetPath,
+            cacheControl: [
+                CacheControl.setPublic(),
+                CacheControl.maxAge(Duration.seconds(0)),
+                CacheControl.sMaxAge(Duration.seconds(0)),
+                CacheControl.fromString('must-revalidate'),
+            ],
+        },
+
         // Files for native app links
         {
             pattern: '.well-known/*',
