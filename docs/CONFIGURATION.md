@@ -166,6 +166,23 @@ Whether to enable AWS X-Ray tracing for the Nuxt Lambda function. This helps deb
 
 ---
 
+### runtime
+**Type:** `Runtime`  
+**Default:** `Runtime.NODEJS_24_X`
+
+The Node.js Lambda runtime for the Nuxt app, the assets-cleanup function, and the access-logs analysis functions.
+
+**Use case:** Pin or advance the runtime independently of a package release — e.g. when AWS ends support for the current default.
+
+**Examples:**
+```typescript
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
+
+runtime: Runtime.NODEJS_22_X
+```
+
+---
+
 ### enableApi
 **Type:** `boolean`  
 **Default:** `false`

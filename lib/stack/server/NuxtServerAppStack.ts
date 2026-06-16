@@ -290,7 +290,7 @@ export class NuxtServerAppStack extends Stack {
         return new Function(this, funcName, {
             functionName: funcName,
             description: `Renders the ${this.resourceIdPrefix} Nuxt app.`,
-            runtime: Runtime.NODEJS_20_X,
+            runtime: props.runtime ?? Runtime.NODEJS_24_X,
             architecture: Architecture.ARM_64,
             handler: `${props.entrypoint ?? 'index'}.handler`,
             code: Code.fromAsset(`${props.rootDir ?? '.' }/.output/server`, {
@@ -326,7 +326,7 @@ export class NuxtServerAppStack extends Stack {
         const result: Function = new Function(this, functionName, {
             functionName: functionName,
             description: `Auto-deletes the outdated static assets in the ${this.staticAssetsBucket.bucketName} S3 bucket.`,
-            runtime: Runtime.NODEJS_20_X,
+            runtime: props.runtime ?? Runtime.NODEJS_24_X,
             architecture: Architecture.ARM_64,
             handler: 'index.handler',
             code: Code.fromAsset(`${functionDirPath}/build/app`, {
@@ -878,6 +878,7 @@ export class NuxtServerAppStack extends Stack {
             expireRawLogsAfter: props.accessLogsRawRetention,
             expireIntermediateLogsAfter: props.accessLogsIntermediateRetention,
             expireTransformedLogsAfter: props.accessLogsTransformedRetention,
+            runtime: props.runtime,
         });
     }
 }

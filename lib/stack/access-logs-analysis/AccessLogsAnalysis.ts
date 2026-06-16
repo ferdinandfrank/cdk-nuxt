@@ -29,6 +29,7 @@ export abstract class AccessLogsAnalysis extends Construct {
 
     protected readonly resourceIdPrefix: string;
     protected readonly bucket: Bucket;
+    protected readonly runtime: Runtime;
     protected readonly workgroup: CfnWorkGroup;
     protected readonly database: Database;
     protected readonly accessLogsByDateTable: CloudFrontAccessLogsByDateTable;
@@ -43,6 +44,7 @@ export abstract class AccessLogsAnalysis extends Construct {
         super(scope, id);
         this.resourceIdPrefix = props.resourcePrefix;
         this.bucket = props.bucket;
+        this.runtime = props.runtime ?? Runtime.NODEJS_24_X;
         this.setupLifecycleRules(props);
         this.workgroup = this.createWorkgroup();
         this.database = this.createGlueDatabase();
@@ -138,7 +140,7 @@ export abstract class AccessLogsAnalysis extends Construct {
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
-            runtime: Runtime.NODEJS_20_X,
+            runtime: this.runtime,
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/group-by-date/build/app'), {
                 exclude: ['*.d.ts']
             }),
@@ -188,7 +190,7 @@ export abstract class AccessLogsAnalysis extends Construct {
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
-            runtime: Runtime.NODEJS_20_X,
+            runtime: this.runtime,
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), {
                 exclude: ['*.d.ts']
             }),
@@ -243,7 +245,7 @@ export abstract class AccessLogsAnalysis extends Construct {
         const lambda = new Function(this, functionName, {
             functionName,
             architecture: Architecture.ARM_64,
-            runtime: Runtime.NODEJS_20_X,
+            runtime: this.runtime,
             code: Code.fromAsset(path.join(__dirname, '../../functions/access-logs-analysis/partitioning/build/app'), {
                 exclude: ['create-partition*', '*.d.ts']
             }),

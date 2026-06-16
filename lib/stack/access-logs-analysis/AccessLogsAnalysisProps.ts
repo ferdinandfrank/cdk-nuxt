@@ -1,5 +1,6 @@
 import {Bucket} from "aws-cdk-lib/aws-s3";
 import {Duration} from "aws-cdk-lib";
+import {Runtime} from "aws-cdk-lib/aws-lambda";
 
 export interface AccessLogsAnalysisProps {
     /**
@@ -36,4 +37,10 @@ export interface AccessLogsAnalysisProps {
      * Defaults to `true`.
      */
     readonly anonymizeClientIp?: boolean;
+
+    /**
+     * The Node.js Lambda runtime for the analysis functions.
+     * Defaults to {@link Runtime.NODEJS_24_X}.
+     */
+    readonly runtime?: Runtime;
 }

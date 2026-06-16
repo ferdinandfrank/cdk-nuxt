@@ -1,6 +1,7 @@
 import {type NuxtAppStackProps} from "../NuxtAppStackProps";
 import {Duration} from "aws-cdk-lib";
 import {FunctionCode, FunctionEventType, ICachePolicy} from "aws-cdk-lib/aws-cloudfront";
+import {Runtime} from "aws-cdk-lib/aws-lambda";
 
 /**
  * Defines a custom CloudFront behavior attached to a specific path pattern targeting the Nuxt app origin.
@@ -92,6 +93,12 @@ export interface NuxtServerAppStackProps extends NuxtAppStackProps {
      * Whether to enable AWS X-Ray for the Nuxt Lambda function.
      */
     readonly enableTracing?: boolean;
+
+    /**
+     * The Node.js Lambda runtime for the app, cleanup, and access-logs functions.
+     * Defaults to {@link Runtime.NODEJS_24_X}.
+     */
+    readonly runtime?: Runtime;
 
     /**
      * Whether to enable a global Sitemap bucket which is permanently accessible through multiple deployments.
