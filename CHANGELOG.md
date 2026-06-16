@@ -1,6 +1,26 @@
 # Changelog
 
 
+## v2.27.0
+
+[compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.26.1...v2.27.0)
+
+### 🚀 Enhancements
+
+- Make Lambda runtime configurable, default to nodejs24.x ([128a43a](https://github.com/ferdinandfrank/cdk-nuxt/commit/128a43a))
+
+### 📖 Documentation
+
+- Merge CLAUDE.md into AGENTS.md and symlink it ([378f229](https://github.com/ferdinandfrank/cdk-nuxt/commit/378f229))
+
+### 🏡 Chore
+
+- Sync release v2.26.1 back to develop ([03ee019](https://github.com/ferdinandfrank/cdk-nuxt/commit/03ee019))
+
+### ❤️ Contributors
+
+- Ferdinand Frank ([@ferdinandfrank](https://github.com/ferdinandfrank))
+
 ## v2.26.1
 
 [compare changes](https://github.com/ferdinandfrank/cdk-nuxt/compare/v2.26.0...v2.26.1)
